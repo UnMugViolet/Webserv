@@ -29,6 +29,11 @@ make go
 Made with Antonin Drean | Yann Guinio | Paul Jaguin. 
 The official Leak of Legends team.
 
+## Doc used
+
+- [webserv: Building a Non-Blocking Web Server in C++98 (A 42 project)](https://m4nnb3ll.medium.com/webserv-building-a-non-blocking-web-server-in-c-98-a-42-project-04c7365e4ec7)
+- [codequoi: Documentation sur les principes techniques derriere webserv](https://www.codequoi.com/programmation-reseau-via-socket-en-c/)
+
 ## 📜 License
 
 This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
