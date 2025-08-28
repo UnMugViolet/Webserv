@@ -19,10 +19,11 @@
 #include <iostream>
 #include <limits>
 
+#define CYAN "\033[0;36m"
 #define GREEN "\033[0;92m"
-#define YELLOW "\033[0;33m"
-#define RED "\033[0;31m"
 #define NEUTRAL "\033[0m"
+#define RED "\033[0;31m"
+#define YELLOW "\033[0;33m"
 
 #define BOLD "\033[1m"
 #define UNDERLINE "\033[4m"

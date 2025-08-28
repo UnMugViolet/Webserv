@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>404 - Page Not Found | Webserv</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		
+		body {
+			font-family: 'Arial', sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: white;
+		}
+		
+		.container {
+			text-align: center;
+			padding: 2rem;
+			background: rgba(255, 255, 255, 0.1);
+			border-radius: 20px;
+			backdrop-filter: blur(10px);
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+			max-width: 600px;
+			margin: 2rem;
+		}
+		
+		.error-code {
+			font-size: 8rem;
+			font-weight: bold;
+			margin-bottom: 1rem;
+			text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+			background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+		
+		.error-title {
+			font-size: 2.5rem;
+			margin-bottom: 1rem;
+			font-weight: 300;
+		}
+		
+		.error-message {
+			font-size: 1.2rem;
+			margin-bottom: 2rem;
+			opacity: 0.9;
+			line-height: 1.6;
+		}
+		
+		.home-button {
+			display: inline-block;
+			padding: 1rem 2rem;
+			background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+			color: white;
+			text-decoration: none;
+			border-radius: 50px;
+			font-weight: bold;
+			font-size: 1.1rem;
+			transition: all 0.3s ease;
+			box-shadow: 0 4px 15px 0 rgba(255, 107, 107, 0.3);
+		}
+		
+		.home-button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px 0 rgba(255, 107, 107, 0.4);
+		}
+		
+		.server-info {
+			margin-top: 3rem;
+			font-size: 0.9rem;
+			opacity: 0.7;
+			font-style: italic;
+		}
+		
+		@media (max-width: 768px) {
+			.error-code {
+				font-size: 6rem;
+			}
+			.error-title {
+				font-size: 2rem;
+			}
+			.error-message {
+				font-size: 1rem;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="error-code">404</div>
+		<h1 class="error-title">Page Not Found</h1>
+		<p class="error-message">
+			Oops! The page you're looking for seems to have vanished into the digital void.
+			<br>Don't worry, it happens to the best of us!
+		</p>
+		<a href="/" class="home-button">Take Me Home</a>
+		<div class="server-info">
+			Powered by Webserv - A 42 School Project
+		</div>
+	</div>
+</body>
+</html>

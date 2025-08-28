@@ -23,6 +23,15 @@ make
 make go
 ```
 
+## Structure
+
+- Webserv (main server class)
+- ConfigParser (configuration parser)
+- Server (individual server instance)
+- Request (HTTP request parser)
+- Response (HTTP response builder)
+- CGI (CGI handler)
+- Client (client connection handler)
 
 ## 🤼 Credits
 
