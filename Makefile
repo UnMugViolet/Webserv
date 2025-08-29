@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+         #
+#    By: andrean <andrean@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/08/28 18:53:38 by unmugviolet      ###   ########.fr        #
+#    Updated: 2025/08/29 11:05:30 by andrean          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ NAME = 			a.out
 ARGS =			./configs/default.conf
 
 MAIN_FILES = 	main.cpp
-SRC_FILES = 	Webserv.cpp ConfigParser.cpp
+SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp
 
 SRC_DIR =		./srcs/
 OBJ_DIR =		./objects/
