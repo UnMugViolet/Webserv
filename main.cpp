@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/08/28 18:53:35 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/01 16:03:14 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
 #include "ConfigParser.hpp"
+#include "CGI.hpp"
 #include "dict.hpp"
 
 int main(int ac, char **av)
@@ -37,7 +38,7 @@ int main(int ac, char **av)
 		std::vector<std::string> servers = parser.getServerNames();
 		if (!servers.empty())
 		{
-			std::string serverName = servers[0];
+			std::string serverName = servers[1];
 			std::cout << "\n" << YELLOW BOLD << "Testing server access:" << NEUTRAL << std::endl;
 			std::cout << "Server: " << serverName << std::endl;
 			std::cout << "Listen: " << parser.getServerValue(serverName, "listen") << std::endl;
@@ -54,6 +55,13 @@ int main(int ac, char **av)
 	{
 		std::cerr << RED BOLD << "Unexpected error: " << e.what() << NEUTRAL << std::endl;
 		return 1;
+	}
+
+	std::cout << "\n" << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
+	if (CGI::must_interpret("www/dynamic_website/cgi-bin/index.php"))
+	{
+		if (CGI::interpret("www/dynamic_website/cgi-bin/index.php") == -2)
+			exit(1);
 	}
 	
 	return 0;
