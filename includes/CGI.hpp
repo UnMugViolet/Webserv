@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include "unistd.h"
+#include "fcntl.h"
 #include "stdlib.h"
 #include "sys/wait.h"
 #include "sys/types.h"
@@ -13,6 +14,8 @@
 #define SHELL 3
 #define BINARY 4
 #define UNKNOWN 5
+#define HTML 6
+#define CSS 7
 
 class CGI
 {

@@ -1,0 +1,22 @@
+<?php
+include "../pages/MyTeubClass.php";
+
+new Teub("200cm ouais");
+
+
+echo "
+
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+	<meta charset=\"UTF-8\">
+	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+	<title>Static website</title>
+</head>
+<body>
+	<section>
+		<h1>Static websité</h1>
+	</section>
+</body>
+</html>
+";

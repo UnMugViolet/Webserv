@@ -33,8 +33,12 @@ int	CGI::_getType(std::string ext)
 		return (PHP);
 	else if (ext == "sh")
 		return (SHELL);
-	else if (ext == ".cgi")
+	else if (ext == "cgi")
 		return (BINARY);
+	else if (ext == "html")
+		return (HTML);
+	else if (ext == "css")
+		return (CSS);
 	else
 		return (UNKNOWN);
 }
@@ -43,6 +47,13 @@ int	CGI::interpret(const std::string &path)
 {
 	int type = _getType(_getExtension(path));
 
+	if (type == HTML || type == CSS)
+	{
+		int fd = open(path.c_str(), O_RDONLY);
+		if (fd == -1)
+			throw CGIException("webserver cannot open file: " + path);
+		return (fd);
+	}
 	if (type == UNKNOWN)
 		throw CGIException("Webserver does not interpret file: " + path);
 	int	fd[2];
@@ -58,6 +69,9 @@ int	CGI::interpret(const std::string &path)
 		const char	*cpath = path.c_str();
 		std::string	interpreter;
 		
+		close(fd[0]);
+		dup2(fd[1], STDOUT_FILENO);
+		close(fd[1]);
 		switch (type)
 		{
 			case PYTHON :
@@ -85,11 +99,12 @@ int	CGI::interpret(const std::string &path)
 		std::cerr << "execve failed with interpreter = " << interpreter << std::endl; 
         return (-2);
 	}
+	close(fd[1]);
 	int status;
     if (waitpid(pid, &status, 0) == -1)
        throw CGIException("waitpid failed");
     if (WIFEXITED(status))
-        return WEXITSTATUS(status);
+        return fd[0];
     else
         return -1;
 }
