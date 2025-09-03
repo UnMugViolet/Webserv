@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/01 16:03:14 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/03 12:10:08 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,15 +35,17 @@ int main(int ac, char **av)
 		parser.printConfig();
 		
 		// Test accessing server values
-		std::vector<std::string> servers = parser.getServerNames();
+		std::vector<std::string> servers = parser.getServerIds();
 		if (!servers.empty())
 		{
-			std::string serverName = servers[1];
-			std::cout << "\n" << YELLOW BOLD << "Testing server access:" << NEUTRAL << std::endl;
-			std::cout << "Server: " << serverName << std::endl;
-			std::cout << "Listen: " << parser.getServerValue(serverName, "listen") << std::endl;
-			std::cout << "Server Name: " << parser.getServerValue(serverName, "server_name") << std::endl;
-			std::cout << "Root: " << parser.getServerValue(serverName, "root") << std::endl;
+			for (size_t i = 0; i < servers.size(); i++) {
+				std::string serverName = servers[i];
+				std::cout << "\n" << YELLOW BOLD << "Testing server(s) access:" << NEUTRAL << std::endl;
+				std::cout << "Server: " << serverName << std::endl;
+				std::cout << "Listen: " << parser.getServerValue(serverName, "listen") << std::endl;
+				std::cout << "Server Name: " << parser.getServerValue(serverName, "server_name") << std::endl;
+				std::cout << "Root: " << parser.getServerValue(serverName, "root") << std::endl;
+			}
 		}
 	}
 	catch (const ConfigParser::ErrorException &e)
@@ -56,13 +58,17 @@ int main(int ac, char **av)
 		std::cerr << RED BOLD << "Unexpected error: " << e.what() << NEUTRAL << std::endl;
 		return 1;
 	}
-
-	std::cout << "\n" << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
-	if (CGI::must_interpret("www/dynamic_website/cgi-bin/index.php"))
+	try
 	{
-		if (CGI::interpret("www/dynamic_website/cgi-bin/index.php") == -2)
+		std::cout << "\n" << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
+		int fd = CGI::interpret("www/dynamic_website/cgi-bin/index.php");
+		(void)fd;
+	}
+	catch(const CGI::CGIException& e)
+	{
+		std::cerr << e.what() << '\n';
+		if (e.getExit() == 1)
 			exit(1);
 	}
-	
 	return 0;
 }

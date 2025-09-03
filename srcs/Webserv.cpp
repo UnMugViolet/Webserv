@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
+/*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/08/28 17:02:09 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/03 12:17:05 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,16 @@ Webserv::Webserv()
 {
 }
 
+Webserv::Webserv(ConfigParser &config)
+{
+	serverIds = config.getServerIds();
+}
+
 Webserv::~Webserv()
 {
 }
+
+// void	Webserv::initWebserv(ConfigParser &config)
+// {
+// 	// for (int i = 0; i < config.)
+// }

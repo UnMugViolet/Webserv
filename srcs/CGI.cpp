@@ -8,11 +8,16 @@ CGI::~CGI()
 {
 }
 
-bool	CGI::must_interpret(const std::string &path)
+int CGI::_checkAccess(const std::string &path, int type)
 {
-	if (path.find("/cgi-bin/") == std::string::npos)
-		return (false);
-	return (true);
+	if (access(path.c_str(), F_OK) == -1)
+		return (-1);
+	if (type == BINARY && access(path.c_str(), X_OK) == -1)
+		return (0);
+	if (access(path.c_str(), R_OK) == -1)
+		return (0);
+	return (1);
+	
 }
 
 std::string	CGI::_getExtension(const std::string &path)
@@ -47,6 +52,18 @@ int	CGI::interpret(const std::string &path)
 {
 	int type = _getType(_getExtension(path));
 
+	if (type == UNKNOWN)
+		throw CGIException("Webserver does not interpret file: " + path);
+	switch (_checkAccess(path, type))
+	{
+		case -1:
+			throw CGIException("File: " + path + " does not exist");
+		case 0:
+			throw CGIException(("No permission to access file: " + path));
+		case 1:
+			break;
+	}
+
 	if (type == HTML || type == CSS)
 	{
 		int fd = open(path.c_str(), O_RDONLY);
@@ -54,10 +71,8 @@ int	CGI::interpret(const std::string &path)
 			throw CGIException("webserver cannot open file: " + path);
 		return (fd);
 	}
-	if (type == UNKNOWN)
-		throw CGIException("Webserver does not interpret file: " + path);
+	
 	int	fd[2];
-
 	if (pipe(fd) == -1)
 		throw CGIException("Pipe failed");
 	pid_t	pid;
@@ -90,14 +105,12 @@ int	CGI::interpret(const std::string &path)
 				std::string tmp = "./" + path;
 				char *arg[2] = {(char *)tmp.c_str(), NULL};
 				execve(tmp.c_str(), arg, environ);
-				std::cerr << "execve failed" << std::endl; 
-                return (-2);
+				throw CGIException("execve failed", 1);
 			
 		}
 		const char *arg[3] = {interpreter.c_str(), cpath, NULL};
 		execve(interpreter.c_str(), (char *const *)arg, environ);
-		std::cerr << "execve failed with interpreter = " << interpreter << std::endl; 
-        return (-2);
+        throw CGIException("execve failed", 1);
 	}
 	close(fd[1]);
 	int status;
@@ -106,5 +119,5 @@ int	CGI::interpret(const std::string &path)
     if (WIFEXITED(status))
         return fd[0];
     else
-        return -1;
+        throw CGIException("exit failed");
 }

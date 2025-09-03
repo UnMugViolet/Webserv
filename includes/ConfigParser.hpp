@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "Webserv.hpp"
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <map>
 
 class ConfigParser {
 	private:
@@ -37,7 +37,7 @@ class ConfigParser {
 		std::string getServerValue(const std::string &serverName, const std::string &key) const;
 		bool hasKey(const std::string &key) const;
 		bool hasServerKey(const std::string &serverName, const std::string &key) const;
-		std::vector<std::string> getServerNames() const;
+		std::vector<std::string> getServerIds() const;
 		void printConfig() const;
 		
 		class ErrorException : public std::exception

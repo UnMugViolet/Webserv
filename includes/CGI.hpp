@@ -23,13 +23,13 @@ private:
 	/*attributes here*/
 	static int	_getType(std::string ext);
 	static std::string	_getExtension(const std::string &path);
+	static int	_checkAccess(const std::string &path, int type);
 public:
 	/*constructors and destructor*/
 	CGI();
 	~CGI();
 
 	/*member functions*/
-	static bool must_interpret(const std::string &path);
 	
 	static int	interpret(const std::string &path);
 
@@ -39,14 +39,25 @@ public:
 	{
 		private:
 			std::string _message;
+			int			_exit;
 		public:
 			CGIException(std::string message) throw()
 			{
 				_message = "CGIException error: " + message;
+				_exit = 0;
+			}
+			CGIException(std::string message, int exit) throw()
+			{
+				_message = "CGIException error: " + message;
+				_exit = exit;
 			}
 			virtual const char* what() const throw()
 			{
 				return (_message.c_str());
+			}
+			virtual int getExit() const throw()
+			{
+				return (_exit);
 			}
 			virtual ~CGIException() throw() {}
 	};

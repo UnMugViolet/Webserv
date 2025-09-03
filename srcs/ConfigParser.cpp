@@ -52,13 +52,13 @@ void ConfigParser::parseFile(const std::string &filePath)
 		if (line.find("server") == 0 && line.find("{") != std::string::npos)
 		{
 			// Create a default server name
-			std::string serverName = "server_" + _intToString(_serverBlocks.size());
-			_parseServerBlock(file, serverName);
+			std::string serverUid = "server_" + _intToString(_serverBlocks.size());
+			_parseServerBlock(file, serverUid);
 		}
 		else
 		{
 			// Parse global configuration (outside server blocks)
-			size_t pos = line.find(' ');
+			size_t pos = line.rfind(' ');
 			if (pos == std::string::npos)
 				continue;
 			
@@ -194,7 +194,7 @@ bool ConfigParser::hasServerKey(const std::string &serverName, const std::string
 	return false;
 }
 
-std::vector<std::string> ConfigParser::getServerNames() const
+std::vector<std::string> ConfigParser::getServerIds() const
 {
 	std::vector<std::string> names;
 	for (std::map<std::string, std::map<std::string, std::string> >::const_iterator it = _serverBlocks.begin();
