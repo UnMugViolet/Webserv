@@ -15,12 +15,28 @@ Add some explaination here
 ## 💿 Install
 
 ```sh
+sudo apt update && sudo apt upgrade -y
+sudo apt install siege -y
+sudo apt install g++ -y
+sudo apt intall curl -y
 make
 ```
 
 ## 🐩 Usage
+
+### Run the server with the default configuration file:
 ```sh
 make go
+```
+
+### Run the stress test with siege:
+```sh
+make stress
+```
+
+### Run the request test with curl:
+```sh 
+make curl
 ```
 
 ## Structure
@@ -37,6 +53,7 @@ make go
 
 Made with Antonin Drean | Yann Guinio | Paul Jaguin. 
 The official Leak of Legends team.
+
 
 ## Doc used
 

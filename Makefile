@@ -3,16 +3,19 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: andrean <andrean@student.42.fr>            +#+  +:+       +#+         #
+#    By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/08/29 11:05:30 by andrean          ###   ########.fr        #
+#    Updated: 2025/09/04 15:54:55 by unmugviolet      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = 			a.out
 
 ARGS =			./configs/default.conf
+
+ADDR =			http://localhost:
+PORT =			8080
 
 MAIN_FILES = 	main.cpp
 SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp
@@ -67,6 +70,16 @@ go: all
 gov: all
 	@ valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) $(ARGS)
 	@rm -rf $(NAME)
+
+stress: go
+	@siege $(ADDR)$(PORT)
+	@rm -rf $(NAME)
+
+curl: 
+	@$(MAKE) -j2 go &
+	@sleep 2
+	@curl $(ADDR)$(PORT)
+	@pkill $(NAME) || true
 	
 re: fclean all
 
