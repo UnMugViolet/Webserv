@@ -6,13 +6,15 @@
 #    By: andrean <andrean@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/08/29 11:05:30 by andrean          ###   ########.fr        #
+#    Updated: 2025/09/04 15:12:11 by andrean          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = 			a.out
 
 ARGS =			./configs/default.conf
+
+ADDR = 			http://localhost:8080
 
 MAIN_FILES = 	main.cpp
 SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp
@@ -67,6 +69,9 @@ go: all
 gov: all
 	@ valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) $(ARGS)
 	@rm -rf $(NAME)
+
+curl: go
+	@curl -v $(ADDR)
 	
 re: fclean all
 
