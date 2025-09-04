@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/04 15:53:34 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/04 16:14:01 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,8 +61,21 @@ int main(int ac, char **av)
 	try
 	{
 		std::cout << "\n" << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
-		int fd = CGI::interpret("www/dynamic_website/cgi-bin/index.php");
-		(void)fd;
+		int fd = CGI::interpret("www/dynamic_website/index.php");
+		// Read and write to stdout the result of the CGI
+		if (fd != -1) {
+			char buffer[1024];
+			ssize_t bytesRead;
+			while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
+				buffer[bytesRead] = '\0';
+				std::cout << buffer;
+			}
+			close(fd);
+			std::cout << std::endl;
+		} else {
+			std::cerr << "CGI interpretation failed." << std::endl;
+		}
+
 	}
 	catch(const CGI::CGIException& e)
 	{
@@ -70,6 +83,5 @@ int main(int ac, char **av)
 		if (e.getExit() == 1)
 			exit(1);
 	}
-	while (true);
 	return 0;
 }
