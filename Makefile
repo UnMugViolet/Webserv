@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+         #
+#    By: andrean <andrean@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/09/04 15:54:55 by unmugviolet      ###   ########.fr        #
+#    Updated: 2025/09/04 17:12:43 by andrean          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
