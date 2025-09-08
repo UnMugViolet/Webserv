@@ -167,6 +167,11 @@ std::string ConfigParser::getValue(const std::string &key) const
 	return "";
 }
 
+std::map<std::string, std::string> ConfigParser::getGlobalConfBlock() const
+{
+	return _configMap;
+}
+
 std::string ConfigParser::getServerValue(const std::string &serverName, const std::string &key) const
 {
 	std::map<std::string, std::map<std::string, std::string> >::const_iterator serverIt = _serverBlocks.find(serverName);

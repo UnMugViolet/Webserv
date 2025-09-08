@@ -33,6 +33,7 @@ class ConfigParser {
 		~ConfigParser();
 
 		void parseFile(const std::string &filePath);
+		std::map<std::string, std::string> getGlobalConfBlock() const;
 		std::string getValue(const std::string &key) const;
 		std::string getServerValue(const std::string &serverName, const std::string &key) const;
 		bool hasKey(const std::string &key) const;
