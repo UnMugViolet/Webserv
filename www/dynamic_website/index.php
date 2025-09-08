@@ -19,7 +19,6 @@
 	</section>
 	";
 
-?>
-
+	
 </body>
 </html>

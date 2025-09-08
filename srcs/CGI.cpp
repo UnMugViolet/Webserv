@@ -48,18 +48,19 @@ int	CGI::_getType(std::string ext)
 		return (UNKNOWN);
 }
 
+
 int	CGI::interpret(const std::string &path)
 {
 	int type = _getType(_getExtension(path));
 
 	if (type == UNKNOWN)
-		throw CGIException("Webserver does not interpret file: " + path);
+		throw CGIException("Webserver does not interpret file: " + path, false, 415);
 	switch (_checkAccess(path, type))
 	{
 		case -1:
-			throw CGIException("File: " + path + " does not exist");
+			throw CGIException("file " + path + " does not exist", false, 404);
 		case 0:
-			throw CGIException(("No permission to access file: " + path));
+			throw CGIException("Do not have permission to access :" + path + " on this server", false, 403);
 		case 1:
 			break;
 	}
@@ -68,17 +69,17 @@ int	CGI::interpret(const std::string &path)
 	{
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)
-			throw CGIException("webserver cannot open file: " + path);
+			throw CGIException("webserver cannot open file: " + path, false, 500);
 		return (fd);
 	}
 	
 	int	fd[2];
 	if (pipe(fd) == -1)
-		throw CGIException("Pipe failed");
+		throw CGIException("Internal error: pipe failed", false, 500);
 	pid_t	pid;
 	pid = fork();
 	if (pid == -1)
-		throw CGIException("fork failed");
+		throw CGIException("Internal error: fork failed", false, 500);
 	if (pid == 0)
 	{
 		const char	*cpath = path.c_str();
@@ -105,24 +106,24 @@ int	CGI::interpret(const std::string &path)
 				std::string tmp = "./" + path;
 				char *arg[2] = {(char *)tmp.c_str(), NULL};
 				execve(tmp.c_str(), arg, environ);
-				throw CGIException("execve failed", 1);
+				throw CGIException("Internal error: execve failed", true, 500);
 			
 		}
 		const char *arg[3] = {interpreter.c_str(), cpath, NULL};
 		execve(interpreter.c_str(), (char *const *)arg, environ);
-        throw CGIException("execve failed", 1);
+        throw CGIException("Internal error: execve failed", true, 500);
 	}
 	close(fd[1]);
 	int status;
     if (waitpid(pid, &status, 0) == -1)
-       throw CGIException("waitpid failed");
+       throw CGIException("Internal error: waitpid failed", true, 500);
     if (WIFEXITED(status))
 	{
 		if (status == 0)
         	return fd[0];
 		else
-			throw CGIException("exeception");
+			throw CGIException("exeception", false, 500);
 	}
     else
-        throw CGIException("exit failed");
+        throw CGIException("Internal error: exit failed", true, 500);
 }

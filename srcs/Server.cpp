@@ -98,14 +98,20 @@ int	Server::setClient()
 		throw servException("accept error");
 	}
 	//coucou
-	char buf[71] = "HTTP/1.1 200 OK\r\nContent-Length: 6\r\nContent-Type: text/plain\r\n\r\ncoucou";
+	char buf[91] = "HTTP/1.1 200 OK\r\nContent-Length: 23\r\nContent-Type: text/plain\r\n\r\nAlan c'est le plus beau";
 	if (send(cfd, buf, strlen(buf), 0) == -1)
 	{
 		std::cerr << "send error : " << strerror(errno) << std::endl;
 		return 1;
 	}
 	else
-		std::cout << "sent" << std::endl;
+	{
+		sockaddr_in serveraddr;
+		socklen_t serveraddr_len = sizeof(serveraddr);
+		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
+		std::cout << "Connection: client " << inet_ntoa(peeraddr.sin_addr) << ":" << ntohs(peeraddr.sin_port) 
+				  << " -> server " << inet_ntoa(serveraddr.sin_addr) << ":" << ntohs(serveraddr.sin_port) << std::endl;
+	}
 	_clientFds.push_back(cfd);
 	_handler.printRequest(cfd);
 	return (cfd);

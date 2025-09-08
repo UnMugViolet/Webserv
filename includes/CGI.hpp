@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 #include "unistd.h"
 #include "fcntl.h"
 #include "stdlib.h"
@@ -24,6 +25,7 @@ private:
 	static int	_getType(std::string ext);
 	static std::string	_getExtension(const std::string &path);
 	static int	_checkAccess(const std::string &path, int type);
+	std::string	http_status_to_error_page(unsigned int http_status, std::string &error_code);
 public:
 	/*constructors and destructor*/
 	CGI();
@@ -38,18 +40,17 @@ public:
 	class CGIException : public std::exception
 	{
 		private:
-			std::string _message;
-			int			_exit;
+			std::string 	_message;
+			int				_exit;
+			unsigned int	_http_status;
 		public:
-			CGIException(std::string message) throw()
+			CGIException(std::string message, bool must_exit_prog, unsigned int http_status) throw()
 			{
 				_message = "CGIException error: " + message;
-				_exit = 0;
-			}
-			CGIException(std::string message, int exit) throw()
-			{
-				_message = "CGIException error: " + message;
-				_exit = exit;
+				if (must_exit_prog)
+					_exit = must_exit_prog;
+				if (http_status != 0)
+					_http_status = http_status;
 			}
 			virtual const char* what() const throw()
 			{
@@ -58,6 +59,10 @@ public:
 			virtual int getExit() const throw()
 			{
 				return (_exit);
+			}
+			virtual unsigned int getHttpStatus() const throw()
+			{
+				return (_http_status);
 			}
 			virtual ~CGIException() throw() {}
 	};
