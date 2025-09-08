@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/08 12:23:53 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/08 15:16:51 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,16 +53,23 @@ void Webserv::serverLoop()
 	while (true)
 	{
 		readFd = fullReadFd;
-		select(maxFd + 1, &readFd, NULL, NULL, NULL);
-		for (size_t i = 0; i < _servers.size(); i++)
+		if (select(maxFd + 1, &readFd, NULL, NULL, NULL) < 0)
+			std::cerr << strerror(errno) << std::endl;
+		else
 		{
-			if (FD_ISSET(_servers[i].getSocket(), &readFd))
+			for (size_t i = 0; i < _servers.size(); i++)
 			{
-				FD_SET(_servers[i].setClient(), &fullReadFd);
+				if (FD_ISSET(_servers[i].getSocket(), &readFd))
+				{
+					fd = _servers[i].setClient();
+					FD_SET(fd, &fullReadFd);
+					if (fd > maxFd)
+						maxFd = fd;
+					
+				}
+				_servers[i].getRequests(readFd, fullReadFd);
 			}
-			_servers[i].getRequests(readFd);
 		}
-		
 	}
 }
 

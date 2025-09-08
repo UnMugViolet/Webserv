@@ -61,8 +61,11 @@ Server::Server(ConfigParser &config, std::string serverId)
 	//create listening socket with port number
 	sockaddr.sin_port = htons(portnbr);
 	_socketfd = socket(AF_INET, SOCK_STREAM, 0);
+	int opt = 1;
 	if (_socketfd == -1)
 		throw servException("socket failed");
+	if (setsockopt(_socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+		throw servException("setsockopt failed");
 	if (bind(_socketfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == -1)
 	{
 		close(_socketfd);
@@ -73,6 +76,10 @@ Server::Server(ConfigParser &config, std::string serverId)
 		close(_socketfd);
 		throw servException("listen failed");
 	}
+
+	//put max body size in handler
+	if (config.hasServerKey(serverId, "client_max_body_size"))
+		_handler.setMaxBodySize(config.getServerValue(serverId, "client_max_body_size"));
 }
 
 int	Server::getSocket() const
@@ -106,16 +113,27 @@ int	Server::setClient()
 				  << " -> server " << inet_ntoa(serveraddr.sin_addr) << ":" << ntohs(serveraddr.sin_port) << std::endl;
 	}
 	_clientFds.push_back(cfd);
+	_handler.printRequest(cfd);
 	return (cfd);
 }
 
-void	Server::getRequests(fd_set &readFd) const
+void	Server::unsetClient(int position)
+{
+	_clientFds.erase(_clientFds.begin()+position);
+}
+
+void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd)
 {
 	for (size_t i = 0; i < _clientFds.size(); i++)
 	{
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-			;// get request here
+			if (_handler.printRequest(_clientFds[i]) == -1)
+			{
+				FD_CLR(_clientFds[i], &fullReadFd);
+				close(_clientFds[i]);
+				unsetClient(i);
+			}
 		}
 	}
 }

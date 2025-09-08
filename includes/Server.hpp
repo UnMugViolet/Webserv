@@ -13,6 +13,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include "RequestHandler.hpp"
 
 class Server
 {
@@ -20,9 +21,8 @@ private:
 	/*attributes here*/
 	std::string _name;
 	int _socketfd;
-	// int _RequestMaxSize;
 	std::vector<int> _clientFds;
-	
+	RequestHandler	_handler;
 public:
 	/*constructors and destructor*/
 	Server();
@@ -33,7 +33,8 @@ public:
 	/*member functions*/
 	int		getSocket() const;
 	int		setClient();
-	void	getRequests(fd_set &readFd) const;
+	void	unsetClient(int position);
+	void	getRequests(fd_set &readFd, fd_set &fullReadFd);
 
 	/*operator overloads*/
 	Server&	operator=(const Server &other);
