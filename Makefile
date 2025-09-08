@@ -6,7 +6,7 @@
 #    By: andrean <andrean@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/09/08 12:30:32 by andrean          ###   ########.fr        #
+#    Updated: 2025/09/08 14:42:38 by andrean          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,7 @@ ADDR =			http://localhost:
 PORT =			8080
 
 MAIN_FILES = 	main.cpp
-SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp Server.cpp
+SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp Server.cpp RequestHandler.cpp
 
 SRC_DIR =		./srcs/
 OBJ_DIR =		./objects/
