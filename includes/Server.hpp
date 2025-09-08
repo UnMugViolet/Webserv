@@ -30,6 +30,7 @@ public:
 	~Server();
 
 	/*member functions*/
+	int	getSocket() const;
 
 	/*operator overloads*/
 	Server&	operator=(Server& src);

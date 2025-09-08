@@ -74,6 +74,12 @@ Server::Server(ConfigParser &config, std::string serverId)
 	}
 }
 
+int	Server::getSocket() const
+{
+	return (_socketfd);
+}
+
+
 Server::Server(Server& src)
 {
 	/*copy what needs to be here*/

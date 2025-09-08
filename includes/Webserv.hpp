@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:31 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/04 15:05:04 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/08 11:08:32 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "Server.hpp"
 
 class Webserv
 {
@@ -32,6 +33,8 @@ class Webserv
 		// Webserv(ConfigParser &config);
 		~Webserv();
 
+		void serverLoop(std::vector<Server> servers);
+		
 		class WebservException : public std::exception
 		{
 			private:

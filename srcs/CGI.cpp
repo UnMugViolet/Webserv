@@ -117,7 +117,12 @@ int	CGI::interpret(const std::string &path)
     if (waitpid(pid, &status, 0) == -1)
        throw CGIException("waitpid failed");
     if (WIFEXITED(status))
-        return fd[0];
+	{
+		if (status == 0)
+        	return fd[0];
+		else
+			throw CGIException("exeception");
+	}
     else
         throw CGIException("exit failed");
 }

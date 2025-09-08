@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/04 15:05:00 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/08 11:18:40 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,29 @@ Webserv::Webserv()
 	// 	sockfds.push_back(fd);
 	// }
 // }
+
+
+void Webserv::serverLoop(std::vector<Server> servers)
+{
+	int		fd;
+	int		maxFd = 0;
+	fd_set fullReadFd;
+	fd_set readFd;
+	FD_ZERO(&readFd);
+	FD_ZERO(&fullReadFd);
+	
+	for (int i = 0; i < servers.size(); i++)
+	{
+		fd = servers[i].getSocket();
+		if (fd > maxFd)
+			maxFd = fd;
+		FD_SET(fd, &fullReadFd);
+	}
+	while (true)
+	{
+		select()
+	}
+}
 
 Webserv::~Webserv()
 {
