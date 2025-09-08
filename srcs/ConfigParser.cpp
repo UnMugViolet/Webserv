@@ -72,7 +72,6 @@ void ConfigParser::parseFile(const std::string &filePath)
 			_configMap[key] = value;
 		}
 	}
-	
 	file.close();
 }
 
@@ -167,11 +166,6 @@ std::string ConfigParser::getValue(const std::string &key) const
 	return "";
 }
 
-std::map<std::string, std::string> ConfigParser::getGlobalConfBlock() const
-{
-	return _configMap;
-}
-
 std::string ConfigParser::getServerValue(const std::string &serverName, const std::string &key) const
 {
 	std::map<std::string, std::map<std::string, std::string> >::const_iterator serverIt = _serverBlocks.find(serverName);
@@ -250,4 +244,36 @@ std::string ConfigParser::_intToString(int num) const
 	std::ostringstream oss;
 	oss << num;
 	return oss.str();
+}
+
+std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::string &error_page) const
+{
+	std::ifstream file;
+	std::map<std::string, std::string> globalConf = parser._configMap;
+
+	// Try to use custom error page path if configured
+	std::map<std::string, std::string>::const_iterator it = globalConf.find("error_page");
+	
+	if (it != globalConf.end() && !it->second.empty())
+	{
+		file.open(it->second.c_str());
+	}
+	
+	// If no custom path or file doesn't open, use default path
+	if (!file.is_open())
+	{
+		std::string defaultPath = "default_errors/" + error_page;
+		file.open(defaultPath.c_str());
+	}
+	
+	// If still can't open, return a basic error message
+	if (!file.is_open())
+	{
+		return "<html><body><h1>Error " + error_page.substr(0, error_page.find('.')) + "</h1><p>An error occurred.</p></body></html>";
+	}
+	
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+	file.close();
+	return buffer.str();
 }

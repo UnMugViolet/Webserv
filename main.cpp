@@ -6,7 +6,7 @@
 /*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/08 14:09:57 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/08 15:46:00 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,38 +26,19 @@ int main(int ac, char **av)
 		return 1;
 	}
 
-	try
-	{
-		std::cout << "Using config file: " << av[1] << std::endl;
+	try {
+		std::cout << "Using config file: " << BOLD << av[1] << NEUTRAL << std::endl << std::endl;
 
 		// Test the ConfigParser
 		ConfigParser parser(av[1]);
 		parser.printConfig();
 
-		// Test accessing server values
-		std::vector<std::string> servers = parser.getServerIds();
-		if (!servers.empty())
-		{
-			for (size_t i = 0; i < servers.size(); i++)
-			{
-				std::string serverName = servers[i];
-				std::cout << "\n"
-						  << YELLOW BOLD << "Testing server(s) access:" << NEUTRAL << std::endl;
-				std::cout << "Server: " << serverName << std::endl;
-				std::cout << "Listen: " << parser.getServerValue(serverName, "listen") << std::endl;
-				std::cout << "Server Name: " << parser.getServerValue(serverName, "server_name") << std::endl;
-				std::cout << "Root: " << parser.getServerValue(serverName, "root") << std::endl;
-			}
-		}
-
-		try
-		{
+		try {
 			std::cout << "\n"
 					  << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
-			int fd = CGI::interpret("www/dynamic_website/ind=x.php");
+			int fd = CGI::interpret("www/dynamic_website/index.php");
 			// Read and write to stdout the result of the CGI
-			if (fd != -1)
-			{
+			if (fd != -1) {
 				char buffer[1024];
 				ssize_t bytesRead;
 				while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0)
@@ -67,29 +48,20 @@ int main(int ac, char **av)
 				}
 				close(fd);
 				std::cout << std::endl;
-			}
-			else
-			{
+			} else {
 				std::cerr << RED BOLD << "Failed to interpret CGI script." << NEUTRAL << std::endl;
 			}
-		}
-		catch (const CGI::CGIException &e)
-		{
+		} catch (const CGI::CGIException &e) {
 			unsigned int error_code = e.getHttpStatus();
 			std::ostringstream oss;
 			oss << error_code << ".html";
 			std::string error_page = oss.str();
-			std::string error_content;
+			std::string error_content = parser.getErrorPageContent(parser, error_page);
 
-			if (error_code != 0)
-			{
-				if (!error_page.empty())
-					std::cerr << "Error page: " << error_page << '\n';
-			}
+			// For demonstration, print the error page content to standard output
+			std::cout << error_content << std::endl;
+
 			std::cerr << e.what() << '\n';
-
-			if (e.getHttpStatus() != 0)
-				std::cerr << "HTTP Status: " << e.getHttpStatus() << '\n';
 
 			if (e.getExit() == 1)
 				exit(1);

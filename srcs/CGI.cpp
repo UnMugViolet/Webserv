@@ -119,10 +119,14 @@ int	CGI::interpret(const std::string &path)
        throw CGIException("Internal error: waitpid failed", true, 500);
     if (WIFEXITED(status))
 	{
-		if (status == 0)
+		if (WEXITSTATUS(status) == 0)
         	return fd[0];
 		else
-			throw CGIException("exeception", false, 500);
+		{
+			std::stringstream ss;
+			ss << WEXITSTATUS(status);
+			throw CGIException("interpreter exited with status " + ss.str() + " please make sure your script if correct", false, 500);
+		}
 	}
     else
         throw CGIException("Internal error: exit failed", true, 500);

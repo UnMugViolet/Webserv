@@ -19,6 +19,6 @@
 	</section>
 	";
 
-	
+?>
 </body>
 </html>

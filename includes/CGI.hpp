@@ -8,6 +8,7 @@
 #include "stdlib.h"
 #include "sys/wait.h"
 #include "sys/types.h"
+#include "dict.hpp"
 
 #define PYTHON 0
 #define PERL 1
@@ -46,7 +47,7 @@ public:
 		public:
 			CGIException(std::string message, bool must_exit_prog, unsigned int http_status) throw()
 			{
-				_message = "CGIException error: " + message;
+				_message = std::string(RED) + "CGIException error: " + message + std::string(NEUTRAL);
 				if (must_exit_prog)
 					_exit = must_exit_prog;
 				if (http_status != 0)
