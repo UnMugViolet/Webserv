@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/08 11:18:40 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/08 11:52:10 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,8 @@ void Webserv::serverLoop(std::vector<Server> servers)
 	int		maxFd = 0;
 	fd_set fullReadFd;
 	fd_set readFd;
+	sockaddr_in	peeraddr;
+	socklen_t	peer_addr_size = sizeof(peeraddr);
 	FD_ZERO(&readFd);
 	FD_ZERO(&fullReadFd);
 	
@@ -69,7 +71,17 @@ void Webserv::serverLoop(std::vector<Server> servers)
 	}
 	while (true)
 	{
-		select()
+		readFd = fullReadFd;
+		select(maxFd + 1, &readFd, NULL, NULL, NULL);
+		for (int i = 0; i < servers.size(); i++)
+		{
+			if (FD_ISSET(servers[i].getSocket(), &readFd))
+			{
+				FD_SET(servers[i].setClient(), &fullReadFd);
+			}
+			servers[i].getRequests(readFd);
+		}
+		
 	}
 }
 

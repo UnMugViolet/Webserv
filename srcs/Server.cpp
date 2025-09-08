@@ -79,6 +79,29 @@ int	Server::getSocket() const
 	return (_socketfd);
 }
 
+int	Server::setClient()
+{
+	sockaddr_in	peeraddr;
+	socklen_t	peer_addr_size = sizeof(peeraddr);
+
+	int cfd = accept(_socketfd, (struct sockaddr *)&peeraddr, &peer_addr_size);
+	if (cfd == -1)
+	{
+		throw servException("accept error");
+	}
+	_clientFds.push_back(cfd);
+}
+
+void	Server::getRequests(fd_set &readFd) const
+{
+	for (int i = 0; i < _clientFds.size(); i++)
+	{
+		if (FD_ISSET(_clientFds[i], &readFd))
+		{
+			;// get request here
+		}
+	}
+}
 
 Server::Server(Server& src)
 {

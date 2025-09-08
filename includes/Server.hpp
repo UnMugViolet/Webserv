@@ -30,7 +30,9 @@ public:
 	~Server();
 
 	/*member functions*/
-	int	getSocket() const;
+	int		getSocket() const;
+	int		setClient();
+	void	getRequests(fd_set &readFd) const;
 
 	/*operator overloads*/
 	Server&	operator=(Server& src);
