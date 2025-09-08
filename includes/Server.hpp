@@ -12,6 +12,7 @@
 #include "ConfigParser.hpp"
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 
 class Server
 {
@@ -19,13 +20,13 @@ private:
 	/*attributes here*/
 	std::string _name;
 	int _socketfd;
-	int _RequestMaxSize;
+	// int _RequestMaxSize;
 	std::vector<int> _clientFds;
 	
 public:
 	/*constructors and destructor*/
 	Server();
-	Server(Server& src);
+	Server(const Server &other);
 	Server(ConfigParser &config, std::string Name);
 	~Server();
 
@@ -35,7 +36,7 @@ public:
 	void	getRequests(fd_set &readFd) const;
 
 	/*operator overloads*/
-	Server&	operator=(Server& src);
+	Server&	operator=(const Server &other);
 	class servException : public std::exception
 		{
 			private:

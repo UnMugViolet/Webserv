@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:31 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/08 11:08:32 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/08 12:03:21 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,14 +26,13 @@
 class Webserv
 {
 	private:
-		// std::vector<std::string> serverIds;
-		// std::vector<int> sockfds;
+		std::vector<Server> _servers;
 	public:
 		Webserv();
-		// Webserv(ConfigParser &config);
+		Webserv(ConfigParser &config);
 		~Webserv();
 
-		void serverLoop(std::vector<Server> servers);
+		void serverLoop();
 		
 		class WebservException : public std::exception
 		{

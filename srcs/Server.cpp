@@ -7,7 +7,6 @@ Server::Server(ConfigParser &config, std::string serverId)
 {
 	sockaddr_in sockaddr;
 	int			gotit = 0;
-	
 
 	//define ipv4
 	sockaddr.sin_family = AF_INET;
@@ -45,14 +44,16 @@ Server::Server(ConfigParser &config, std::string serverId)
 		}
 
 	}
-	if (gotit = 0)
+	if (gotit == 0)
 		throw servException(serverId + "invalid server_name");
 
 	//get port number
 	int			portnbr;
 
 	if (config.hasServerKey(serverId,  "listen"))
-		portnbr = std::stoi(config.getServerValue(serverId, "listen"));
+		portnbr = atoi(config.getServerValue(serverId, "listen").c_str());
+	else
+		throw servException("no port number");
 	if (portnbr <= 0 || portnbr > 65535)
 		throw servException("invalid port number");
 
@@ -89,12 +90,22 @@ int	Server::setClient()
 	{
 		throw servException("accept error");
 	}
+	//coucou
+	char buf[71] = "HTTP/1.1 200 OK\r\nContent-Length: 6\r\nContent-Type: text/plain\r\n\r\ncoucou";
+	if (send(cfd, buf, strlen(buf), 0) == -1)
+	{
+		std::cerr << "send error : " << strerror(errno) << std::endl;
+		return 1;
+	}
+	else
+		std::cout << "sent" << std::endl;
 	_clientFds.push_back(cfd);
+	return (cfd);
 }
 
 void	Server::getRequests(fd_set &readFd) const
 {
-	for (int i = 0; i < _clientFds.size(); i++)
+	for (size_t i = 0; i < _clientFds.size(); i++)
 	{
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
@@ -103,18 +114,29 @@ void	Server::getRequests(fd_set &readFd) const
 	}
 }
 
-Server::Server(Server& src)
+Server::Server(const Server &other)
 {
-	/*copy what needs to be here*/
+	if (this != &other)
+	{
+		this->_name = other._name;
+		// this->_RequestMaxSize = other._RequestMaxSize;
+		this->_socketfd = other._socketfd;
+		this->_clientFds = other._clientFds;
+	}
 }
 
 Server::~Server()
 {
 }
 
-Server &Server::operator=(Server &other)
+Server &Server::operator=(const Server &other)
 {
 	if (this != &other)
-		*this = other;
+	{
+		this->_name = other._name;
+		// this->_RequestMaxSize = other._RequestMaxSize;
+		this->_socketfd = other._socketfd;
+		this->_clientFds = other._clientFds;
+	}
 	return *this;
 }

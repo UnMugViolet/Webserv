@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/08 11:52:10 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/08 12:23:53 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,70 +16,51 @@ Webserv::Webserv()
 {
 }
 
-// Webserv::Webserv(ConfigParser &config)
-// {
-	// int			portnb;
-	// sockaddr_in sockaddr;
-	// std::string	serverId;
+Webserv::Webserv(ConfigParser &config)
+{
+	std::string	serverId;
+	std::vector<std::string>	serverIds;
 	
-	// sockaddr.sin_family = AF_INET;
-
-	// serverIds = config.getServerIds();
-	// for (size_t i = 0; i < serverIds.size(); i++)
-	// {	
-	// 	sockaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	// 	serverId = serverIds[i];
-	// 	portnb = std::stoi(config.getServerValue(serverId, "listen"));
-	// 	if (portnb <= 0 || portnb > 65535)
-	// 		throw WebservException("invalid port number");
-	// 	sockaddr.sin_port = htons(portnb);
-	// 	int fd = socket(AF_INET, SOCK_STREAM, 0);
-	// 	if (fd == -1)
-	// 		throw WebservException("socket failed");
-	// 	if (bind(fd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == -1)
-	// 	{
-	// 		close(fd);
-	// 		throw WebservException("bind failed");
-	// 	}
-	// 	if (listen(fd, 10) == -1)
-	// 	{
-	// 		close(fd);
-	// 		throw WebservException("listen failed");
-	// 	}
-	// 	sockfds.push_back(fd);
-	// }
-// }
+	serverIds = config.getServerIds();
+	for (size_t i = 0; i < serverIds.size(); i++)
+	{
+		serverId = serverIds[i];
+		Server server(config, serverId);
+		_servers.push_back(server);
+	}
+}
 
 
-void Webserv::serverLoop(std::vector<Server> servers)
+void Webserv::serverLoop()
 {
 	int		fd;
 	int		maxFd = 0;
 	fd_set fullReadFd;
 	fd_set readFd;
-	sockaddr_in	peeraddr;
-	socklen_t	peer_addr_size = sizeof(peeraddr);
 	FD_ZERO(&readFd);
 	FD_ZERO(&fullReadFd);
 	
-	for (int i = 0; i < servers.size(); i++)
+	//mettre les fd d'ecoute de chaque serveur dans readFd
+	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		fd = servers[i].getSocket();
+		fd = _servers[i].getSocket();
 		if (fd > maxFd)
 			maxFd = fd;
 		FD_SET(fd, &fullReadFd);
 	}
+
+	//ecoute sur la liste de fd, puis boucle sur chaque fd de chaque serveur pour verifier lesquels sont actifs
 	while (true)
 	{
 		readFd = fullReadFd;
 		select(maxFd + 1, &readFd, NULL, NULL, NULL);
-		for (int i = 0; i < servers.size(); i++)
+		for (size_t i = 0; i < _servers.size(); i++)
 		{
-			if (FD_ISSET(servers[i].getSocket(), &readFd))
+			if (FD_ISSET(_servers[i].getSocket(), &readFd))
 			{
-				FD_SET(servers[i].setClient(), &fullReadFd);
+				FD_SET(_servers[i].setClient(), &fullReadFd);
 			}
-			servers[i].getRequests(readFd);
+			_servers[i].getRequests(readFd);
 		}
 		
 	}

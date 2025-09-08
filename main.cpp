@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/04 16:14:01 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/08 12:23:08 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,19 +47,7 @@ int main(int ac, char **av)
 				std::cout << "Root: " << parser.getServerValue(serverName, "root") << std::endl;
 			}
 		}
-	}
-	catch (const ConfigParser::ErrorException &e)
-	{
-		std::cerr << RED BOLD << e.what() << NEUTRAL << std::endl;
-		return 1;
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << RED BOLD << "Unexpected error: " << e.what() << NEUTRAL << std::endl;
-		return 1;
-	}
-	try
-	{
+
 		std::cout << "\n" << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
 		int fd = CGI::interpret("www/dynamic_website/index.php");
 		// Read and write to stdout the result of the CGI
@@ -76,6 +64,21 @@ int main(int ac, char **av)
 			std::cerr << "CGI interpretation failed." << std::endl;
 		}
 
+		std::cout << "\n" << YELLOW BOLD << "Testing loop:" << NEUTRAL << std::endl;
+		
+		Webserv	webserv(parser);
+
+		webserv.serverLoop();
+	}
+	catch (const ConfigParser::ErrorException &e)
+	{
+		std::cerr << RED BOLD << e.what() << NEUTRAL << std::endl;
+		return 1;
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << RED BOLD << "Unexpected error: " << e.what() << NEUTRAL << std::endl;
+		return 1;
 	}
 	catch(const CGI::CGIException& e)
 	{
@@ -83,5 +86,10 @@ int main(int ac, char **av)
 		if (e.getExit() == 1)
 			exit(1);
 	}
+	catch(const Webserv::WebservException& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	
 	return 0;
 }
