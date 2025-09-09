@@ -87,6 +87,19 @@ int	Server::getSocket() const
 	return (_socketfd);
 }
 
+static std::string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
+    std::ostringstream oss;
+
+    oss << "Connection: client "
+        << inet_ntoa(client.sin_addr) << ":"
+        << ntohs(client.sin_port)
+        << " -> server "
+        << inet_ntoa(server.sin_addr) << ":"
+        << ntohs(server.sin_port);
+
+    return oss.str();
+}
+
 int	Server::setClient()
 {
 	sockaddr_in	peeraddr;
@@ -109,8 +122,9 @@ int	Server::setClient()
 		sockaddr_in serveraddr;
 		socklen_t serveraddr_len = sizeof(serveraddr);
 		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
-		std::cout << "Connection: client " << inet_ntoa(peeraddr.sin_addr) << ":" << ntohs(peeraddr.sin_port) 
-				  << " -> server " << inet_ntoa(serveraddr.sin_addr) << ":" << ntohs(serveraddr.sin_port) << std::endl;
+		std::string connexion = get_connection_info(peeraddr, serveraddr);
+		Logger::access(this->_name, connexion);
+		std::cout << connexion << std::endl;
 	}
 	_clientFds.push_back(cfd);
 	_handler.printRequest(cfd);

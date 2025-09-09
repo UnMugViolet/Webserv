@@ -57,8 +57,9 @@ int	CGI::interpret(const std::string &path)
 		throw CGIException("Webserver does not interpret file: " + path, false, 415);
 	switch (_checkAccess(path, type))
 	{
-		case -1:
+		case -1: {
 			throw CGIException("file " + path + " does not exist", false, 404);
+		}
 		case 0:
 			throw CGIException("Do not have permission to access :" + path + " on this server", false, 403);
 		case 1:

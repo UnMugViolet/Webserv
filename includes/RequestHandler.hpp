@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <sys/socket.h>
+#include "Logger.hpp"
 
 class RequestHandler
 {

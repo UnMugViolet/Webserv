@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include "RequestHandler.hpp"
+#include "Logger.hpp"
 
 class Server
 {
@@ -23,6 +24,7 @@ private:
 	int _socketfd;
 	std::vector<int> _clientFds;
 	RequestHandler	_handler;
+
 public:
 	/*constructors and destructor*/
 	Server();

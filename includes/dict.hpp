@@ -29,6 +29,8 @@
 #define UNDERLINE "\033[4m"
 #define ITALIC "\033[3m"
 
+#define ACC_LOG "logs/access.log"
+#define ERR_LOG "logs/error.log"
 
 #define MAX_INT std::numeric_limits<int>::max()
 #define MIN_INT std::numeric_limits<int>::min()
