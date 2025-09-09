@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/08 15:16:51 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/09 09:04:01 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,10 +65,11 @@ void Webserv::serverLoop()
 					FD_SET(fd, &fullReadFd);
 					if (fd > maxFd)
 						maxFd = fd;
-					
 				}
 				_servers[i].getRequests(readFd, fullReadFd);
+				std::cout << "requested" << std::endl;
 			}
+			std::cout << "endloop" << std::endl;
 		}
 	}
 }

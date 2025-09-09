@@ -7,18 +7,25 @@ Server::Server(ConfigParser &config, std::string serverId)
 {
 	sockaddr_in sockaddr;
 	int			gotit = 0;
+	std::string	_name;
+	const char *	c_name;
 
+	uid = serverId;
 	//define ipv4
 	sockaddr.sin_family = AF_INET;
 
 	// get server name
-	if (config.hasServerKey(serverId, "server_name"))
+	if (config.hasServerKey(serverId, "server_name") && config.hasServerKey(serverId, "root"))
+	{
 		_name = config.getServerValue(serverId, "server_name");
+		_names[_name] = config.getServerValue(serverId, "root");
+	}
 	else
 		throw servException(serverId + ": no server_name");
 
 	// check if server_name is a valid ip
-	if (inet_pton(AF_INET, _name.c_str(), &(sockaddr.sin_addr)))
+	c_name = _name.c_str();
+	if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr)))
 		gotit = 1;
 	
 	// try getting ip address with server_name as alias
@@ -28,7 +35,7 @@ Server::Server(ConfigParser &config, std::string serverId)
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	int status = getaddrinfo(_name.c_str(), 0, &hints, &res);
+	int status = getaddrinfo(c_name, 0, &hints, &res);
 	if (status == 0)
 	{
 		r = res;
@@ -82,6 +89,17 @@ Server::Server(ConfigParser &config, std::string serverId)
 		_handler.setMaxBodySize(config.getServerValue(serverId, "client_max_body_size"));
 }
 
+void	Server::addVirtualHost(ConfigParser &config, std::string serverId)
+{
+	std::string _name;
+	
+	if (config.hasServerKey(serverId, "server_name") && config.hasServerKey(serverId, "root"))
+	{
+		_name = config.getServerValue(serverId, "server_name");
+		_names[_name] = config.getServerValue(serverId, "root");
+	}
+}
+
 int	Server::getSocket() const
 {
 	return (_socketfd);
@@ -123,11 +141,10 @@ int	Server::setClient()
 		socklen_t serveraddr_len = sizeof(serveraddr);
 		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
 		std::string connexion = get_connection_info(peeraddr, serveraddr);
-		Logger::access(this->_name, connexion);
+		Logger::access(this->uid, connexion);
 		std::cout << connexion << std::endl;
 	}
 	_clientFds.push_back(cfd);
-	_handler.printRequest(cfd);
 	return (cfd);
 }
 
@@ -147,6 +164,7 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd)
 				FD_CLR(_clientFds[i], &fullReadFd);
 				close(_clientFds[i]);
 				unsetClient(i);
+				std::cout << "Client disconnected" << std::endl;
 			}
 		}
 	}
@@ -156,7 +174,7 @@ Server::Server(const Server &other)
 {
 	if (this != &other)
 	{
-		this->_name = other._name;
+		this->_names = other._names;
 		// this->_RequestMaxSize = other._RequestMaxSize;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;
@@ -171,7 +189,7 @@ Server &Server::operator=(const Server &other)
 {
 	if (this != &other)
 	{
-		this->_name = other._name;
+		this->_names = other._names;
 		// this->_RequestMaxSize = other._RequestMaxSize;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;

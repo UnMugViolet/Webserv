@@ -20,7 +20,8 @@ class Server
 {
 private:
 	/*attributes here*/
-	std::string _name;
+	std::string	uid;
+	std::map<std::string, std::string>	_names;
 	int _socketfd;
 	std::vector<int> _clientFds;
 	RequestHandler	_handler;
@@ -33,6 +34,7 @@ public:
 	~Server();
 
 	/*member functions*/
+	void	addVirtualHost(ConfigParser &config, std::string serverId);
 	int		getSocket() const;
 	int		setClient();
 	void	unsetClient(int position);
