@@ -6,7 +6,7 @@
 /*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/09 11:51:15 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/09 12:31:55 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ int main(int ac, char **av)
 		// Test the ConfigParser
 		ConfigParser parser(av[1]);
 		parser.printConfig();
-
+		
 		try {
 			std::cout << "\n"
 					  << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
@@ -77,8 +77,7 @@ int main(int ac, char **av)
 		}
 
 	}
-	catch (const ConfigParser::ErrorException &e)
-	{
+	catch (const ConfigParser::ErrorException &e) {
 		std::cerr << RED BOLD << e.what() << NEUTRAL << std::endl;
 		return 1;
 	}

@@ -94,6 +94,7 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 {
 	std::string line;
 	std::map<std::string, std::string> serverConfig;
+	bool 		rootSet = false;
 	
 	while (std::getline(file, line))
 	{
@@ -128,6 +129,8 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 			std::string key = _trim(line.substr(0, pos));
 			std::string value = _trim(line.substr(pos + 1));
 			
+			if (key == "root")
+				rootSet = true;
 			if (key == "error_page")
 			{
 				size_t secondSpace = value.find(' ');
@@ -146,7 +149,8 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 			serverConfig[key] = value;
 		}
 	}
-	
+	if (!rootSet)
+		throw ErrorException("Server block missing 'root' directive for " + serverName);
 	_serverBlocks[serverName] = serverConfig;
 }
 
