@@ -284,8 +284,6 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	{
 		std::string serverErrorPage = parser.getServerValue(serverId, "error_page " + error_code_str);
 
-		std::cout << "serverErrorPage: " << serverErrorPage << std::endl;
-
 		file.open(serverErrorPage.c_str());
 		if (file.is_open())
 		{
@@ -324,6 +322,6 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	}
 
 	// Final fallback: return basic HTML error message
-	std::cout << "No error page found, using fallback HTML for the code: " << error_code_str << std::endl;
-	return "<html><body><h1>Error " + error_code_str + "</h1><p>An error occurred.</p></body></html>";
+	std::cout << std::string(RED) << "No error page found, using fallback HTML for the code: " << error_code_str << std::string(NEUTRAL) << std::endl;
+	return "<html><body><h1>Error " + error_code_str + "</h1><p>An undefined error occurred.</p></body></html>";
 }

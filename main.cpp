@@ -6,7 +6,7 @@
 /*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/09 10:31:50 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/09 11:32:48 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,6 @@ int main(int ac, char **av)
 			std::string tested_server = servers[1];
 			if (!servers.empty()) {
 				error_content = parser.getErrorPageContent(parser, tested_server, error_code);
-				std::cout << "Using server: " << tested_server << std::endl;
 			}
 
 			std::cout << error_content << std::endl; // DEBUG : display the error page content remove later
