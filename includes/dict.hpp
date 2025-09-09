@@ -39,4 +39,6 @@
 #define MAX_DOUBLE std::numeric_limits<double>::max()
 #define MIN_DOUBLE -std::numeric_limits<double>::max()
 
+#define DEFAULT_ERROR_PAGES_PATH "error_pages/default/"
+
 #endif

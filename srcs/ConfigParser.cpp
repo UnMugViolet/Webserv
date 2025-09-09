@@ -58,11 +58,26 @@ void ConfigParser::parseFile(const std::string &filePath)
 		else
 		{
 			// Parse global configuration (outside server blocks)
-			size_t pos = line.rfind(' ');
+			size_t pos = line.find(' ');
 			if (pos == std::string::npos)
 				continue;
 			
 			std::string key = _trim(line.substr(0, pos));
+			if (key == "error_page")
+			{
+				// Find the error code (skip any extra spaces)
+				size_t codeStart = pos + 1;
+				while (codeStart < line.length() && line[codeStart] == ' ')
+					codeStart++;
+				
+				size_t codeEnd = line.find(' ', codeStart);
+				if (codeEnd != std::string::npos)
+				{
+					std::string errorCode = _trim(line.substr(codeStart, codeEnd - codeStart));
+					key += " " + errorCode;
+					pos = codeEnd;
+				}
+			}
 			std::string value = _trim(line.substr(pos + 1));
 			
 			// Remove semicolon if present
@@ -112,6 +127,17 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 		{
 			std::string key = _trim(line.substr(0, pos));
 			std::string value = _trim(line.substr(pos + 1));
+			
+			if (key == "error_page")
+			{
+				size_t secondSpace = value.find(' ');
+				if (secondSpace != std::string::npos)
+				{
+					std::string errorCode = _trim(value.substr(0, secondSpace));
+					key += " " + errorCode;
+					value = _trim(value.substr(secondSpace + 1));
+				}
+			}
 			
 			// Remove semicolon if present
 			if (!value.empty() && value[value.length() - 1] == ';')
@@ -246,34 +272,60 @@ std::string ConfigParser::_intToString(int num) const
 	return oss.str();
 }
 
-std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::string &error_page) const
+std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::string &serverId, unsigned int error_code) const
 {
 	std::ifstream file;
-	std::map<std::string, std::string> globalConf = parser._configMap;
+	std::ostringstream oss;
+	oss << error_code;
+	std::string error_code_str = oss.str();
 
-	// Try to use custom error page path if configured
-	std::map<std::string, std::string>::const_iterator it = globalConf.find("error_page");
-	
+	std::cout << "Looking for error page for : " << "error_page " << error_code_str << std::endl;
+
+	// Priority 1: Check specific server error page first
+	if (parser.hasServerKey(serverId, "error_page " + error_code_str))
+	{
+		std::string serverErrorPage = parser.getServerValue(serverId, "error_page " + error_code_str);
+
+		std::cout << "serverErrorPage: " << serverErrorPage << std::endl;
+
+		file.open(serverErrorPage.c_str());
+		if (file.is_open())
+		{
+			std::stringstream buffer;
+			buffer << file.rdbuf();
+			file.close();
+			return buffer.str();
+		}
+	}
+
+	// Priority 2: Check global configuration error pages
+	std::map<std::string, std::string> globalConf = parser._configMap;
+	std::string globalErrorKey = "error_page " + error_code_str;
+	std::map<std::string, std::string>::const_iterator it = globalConf.find(globalErrorKey);
 	if (it != globalConf.end() && !it->second.empty())
 	{
 		file.open(it->second.c_str());
+		if (file.is_open())
+		{
+			std::stringstream buffer;
+			buffer << file.rdbuf();
+			file.close();
+			return buffer.str();
+		}
 	}
-	
-	// If no custom path or file doesn't open, use default path
-	if (!file.is_open())
+
+	// Priority 3: Use default error pages
+	std::string defaultPath = DEFAULT_ERROR_PAGES_PATH + error_code_str + ".html";
+	file.open(defaultPath.c_str());
+	if (file.is_open())
 	{
-		std::string defaultPath = "default_errors/" + error_page;
-		file.open(defaultPath.c_str());
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		file.close();
+		return buffer.str();
 	}
-	
-	// If still can't open, return a basic error message
-	if (!file.is_open())
-	{
-		return "<html><body><h1>Error " + error_page.substr(0, error_page.find('.')) + "</h1><p>An error occurred.</p></body></html>";
-	}
-	
-	std::stringstream buffer;
-	buffer << file.rdbuf();
-	file.close();
-	return buffer.str();
+
+	// Final fallback: return basic HTML error message
+	std::cout << "No error page found, using fallback HTML for the code: " << error_code_str << std::endl;
+	return "<html><body><h1>Error " + error_code_str + "</h1><p>An error occurred.</p></body></html>";
 }

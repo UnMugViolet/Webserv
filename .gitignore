@@ -40,6 +40,9 @@
 # debug information files
 *.dwo
 
+# Logs
+*.log
+
 # general
 .DS_Store
 .vscode/*

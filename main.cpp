@@ -6,7 +6,7 @@
 /*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/08 15:46:00 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/09 10:31:50 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ int main(int ac, char **av)
 		try {
 			std::cout << "\n"
 					  << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
-			int fd = CGI::interpret("www/dynamic_website/index.php");
+			int fd = CGI::interpret("www/dynamic_website/inde=.php"); // Hardcoded value remove later
 			// Read and write to stdout the result of the CGI
 			if (fd != -1) {
 				char buffer[1024];
@@ -53,13 +53,17 @@ int main(int ac, char **av)
 			}
 		} catch (const CGI::CGIException &e) {
 			unsigned int error_code = e.getHttpStatus();
-			std::ostringstream oss;
-			oss << error_code << ".html";
-			std::string error_page = oss.str();
-			std::string error_content = parser.getErrorPageContent(parser, error_page);
 
-			// For demonstration, print the error page content to standard output
-			std::cout << error_content << std::endl;
+			// Test the error page retrieval
+			std::vector<std::string> servers = parser.getServerIds();
+			std::string error_content;
+			std::string tested_server = servers[1];
+			if (!servers.empty()) {
+				error_content = parser.getErrorPageContent(parser, tested_server, error_code);
+				std::cout << "Using server: " << tested_server << std::endl;
+			}
+
+			std::cout << error_content << std::endl; // DEBUG : display the error page content remove later
 
 			std::cerr << e.what() << '\n';
 

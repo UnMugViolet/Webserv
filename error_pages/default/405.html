@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>404 - Page Not Found Default | Webserv</title>
+	<title>DEFAULT 405 - Method Not Allowed Default | Webserv</title>
 	<style>
 		* {
 			margin: 0;
@@ -13,7 +13,7 @@
 		
 		body {
 			font-family: 'Arial', sans-serif;
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 			min-height: 100vh;
 			display: flex;
 			align-items: center;
@@ -37,8 +37,8 @@
 			font-size: 8rem;
 			font-weight: bold;
 			margin-bottom: 1rem;
-			text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-			background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+			text-shadow: 0px 0px 0px rgba(0, 0,  0, 0.3);
+			background: linear-gradient(45deg, #4facfe, #00f2fe);
 			-webkit-background-clip: text;
 			-webkit-text-fill-color: transparent;
 			background-clip: text;
@@ -60,19 +60,19 @@
 		.home-button {
 			display: inline-block;
 			padding: 1rem 2rem;
-			background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+			background: linear-gradient(45deg, #4facfe, #00f2fe);
 			color: white;
 			text-decoration: none;
 			border-radius: 50px;
 			font-weight: bold;
 			font-size: 1.1rem;
 			transition: all 0.3s ease;
-			box-shadow: 0 4px 15px 0 rgba(255, 107, 107, 0.3);
+			box-shadow: 0 4px 15px 0 rgba(79, 172, 254, 0.3);
 		}
 		
 		.home-button:hover {
 			transform: translateY(-2px);
-			box-shadow: 0 6px 20px 0 rgba(255, 107, 107, 0.4);
+			box-shadow: 0 6px 20px 0 rgba(79, 172, 254, 0.4);
 		}
 		
 		.server-info {
@@ -97,13 +97,13 @@
 </head>
 <body>
 	<div class="container">
-		<div class="error-code">404</div>
-		<h1 class="error-title">Page Not Found</h1>
+		<div class="error-code">DEFAULT 405</div>
+		<h1 class="error-title">Method Not Allowed</h1>
 		<p class="error-message">
-			Oops! The page you're looking for seems to have vanished into the digital void.
-			<br>Don't worry, it happens to the best of us!
+			The HTTP method used is not allowed for this resource.
+			<br>Please check your request and try again with a supported method.
 		</p>
-		<a href="/" class="home-button">Take Me Home</a>
+		<a href="/" class="home-button">Return Home</a>
 		<div class="server-info">
 			Powered by Webserv - A 42 School Project
 		</div>
