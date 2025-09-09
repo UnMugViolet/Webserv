@@ -6,7 +6,7 @@
 #    By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/09/09 15:07:38 by yguinio          ###   ########.fr        #
+#    Updated: 2025/09/09 15:10:49 by yguinio          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,6 +23,7 @@ SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp Server.cpp RequestHandler.cpp 
 SRC_DIR =		./srcs/
 OBJ_DIR =		./objects/
 INC_DIR =		./includes/
+LOGS_DIR = 		./logs/
 
 OBJ =	$(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o)) \
 		$(MAIN_FILES:.cpp=.o)
@@ -54,13 +55,15 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(LOGS_DIR)
 
 clean: 
-	@rm -rf $(OBJ)
+	@rm -rf $(OBJ_DIR)
 	@echo "$(GREEN)$(NAME) object directory cleaned!$(DEFAULT)"
 
 fclean: clean
 	@rm -rf $(NAME)
+	@rm -rf $(LOGS_DIR)
 	@echo "$(CYAN)$(NAME) executables and objects removed succesfully!$(DEFAULT)"
 
 go: all
@@ -79,7 +82,6 @@ curl:
 	@$(MAKE) -j2 go &
 	@sleep 2
 	@curl $(ADDR)$(PORT)
-	@pkill $(NAME) || true
 	
 re: fclean all
 
