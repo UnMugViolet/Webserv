@@ -34,6 +34,7 @@ int	RequestHandler::printRequest(int fd) const
 		request.append(buff, received);
 		received = recv(fd, buff, 4096, 0);
 	}
+	Logger::access("", "http request: " + request);
 	std::cout << "http request : " << request << std::endl;
 	return (0);
 }

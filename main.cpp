@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
+/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/09 13:58:44 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/09 15:07:35 by yguinio          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ int main(int ac, char **av)
 		return 1;
 	}
 
+	Logger::init();
 	try {
 		std::cout << "Using config file: " << BOLD << av[1] << NEUTRAL << std::endl << std::endl;
 
@@ -36,7 +37,8 @@ int main(int ac, char **av)
 		try {
 			std::cout << "\n"
 					  << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
-			int fd = CGI::interpret("www/dynamic_website/inde.php"); // Hardcoded value remove later
+			Logger::access("", "Testing Cgi");
+			int fd = CGI::interpret("www/dynamic_website/index.php"); // Hardcoded value remove later
 			// Read and write to stdout the result of the CGI
 			if (fd != -1) {
 				char buffer[1024];
@@ -49,6 +51,7 @@ int main(int ac, char **av)
 				close(fd);
 				std::cout << std::endl;
 			} else {
+				Logger::error("" ,"Failed to interpret CGI script.");
 				std::cerr << RED BOLD << "Failed to interpret CGI script." << NEUTRAL << std::endl;
 			}
 		} catch (const CGI::CGIException &e) {

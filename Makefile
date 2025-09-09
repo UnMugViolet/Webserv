@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+         #
+#    By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/09/09 11:49:50 by pjaguin          ###   ########.fr        #
+#    Updated: 2025/09/09 15:07:38 by yguinio          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,7 @@ ADDR =			http://localhost:
 PORT =			8080
 
 MAIN_FILES = 	main.cpp
-SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp Server.cpp RequestHandler.cpp
+SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp Server.cpp RequestHandler.cpp Logger.cpp
 
 SRC_DIR =		./srcs/
 OBJ_DIR =		./objects/
@@ -82,5 +82,7 @@ curl:
 	@pkill $(NAME) || true
 	
 re: fclean all
+
+rego: re go
 
 .PHONY: all clean fclean re go gov
