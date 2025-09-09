@@ -282,13 +282,22 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	std::ostringstream oss;
 	oss << error_code;
 	std::string error_code_str = oss.str();
+	std::string context_path = parser.getServerValue(serverId, "root");
+
+	if (context_path.empty() || context_path[context_path.length() - 1] != '/')
+		context_path += '/';
 
 	// Priority 1: Check specific server error page first
 	if (parser.hasServerKey(serverId, "error_page " + error_code_str))
 	{
 		std::string serverErrorPage = parser.getServerValue(serverId, "error_page " + error_code_str);
+		if (serverErrorPage[0] == '/')
+			serverErrorPage = serverErrorPage.substr(1);
+		std::string relative_path = context_path + serverErrorPage;
 
-		file.open(serverErrorPage.c_str());
+		file.open(relative_path.c_str());
+		if (!file.is_open())
+			file.open(serverErrorPage.c_str());
 		if (file.is_open())
 		{
 			std::stringstream buffer;
@@ -302,6 +311,7 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	std::map<std::string, std::string> globalConf = parser._configMap;
 	std::string globalErrorKey = "error_page " + error_code_str;
 	std::map<std::string, std::string>::const_iterator it = globalConf.find(globalErrorKey);
+
 	if (it != globalConf.end() && !it->second.empty())
 	{
 		file.open(it->second.c_str());

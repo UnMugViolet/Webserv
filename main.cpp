@@ -6,7 +6,7 @@
 /*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/09 12:31:55 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/09 13:58:44 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ int main(int ac, char **av)
 		try {
 			std::cout << "\n"
 					  << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
-			int fd = CGI::interpret("www/dynamic_website/index.php"); // Hardcoded value remove later
+			int fd = CGI::interpret("www/dynamic_website/inde.php"); // Hardcoded value remove later
 			// Read and write to stdout the result of the CGI
 			if (fd != -1) {
 				char buffer[1024];
