@@ -43,6 +43,9 @@
 # Logs
 *.log
 
+# Program
+webserv
+
 # general
 .DS_Store
 .vscode/*
