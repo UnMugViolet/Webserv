@@ -279,8 +279,6 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	oss << error_code;
 	std::string error_code_str = oss.str();
 
-	std::cout << "Looking for error page for : " << "error_page " << error_code_str << std::endl;
-
 	// Priority 1: Check specific server error page first
 	if (parser.hasServerKey(serverId, "error_page " + error_code_str))
 	{
