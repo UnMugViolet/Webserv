@@ -146,6 +146,9 @@ int	RequestHandler::handleRequest(int fd, const std::string& serverRoot, ConfigP
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
 			std::string fullPath = serverRoot + headermap["path"];
+			std::string indexFile = config->getServerValue(serverId, "index");
+
+			std::cout << "Index file: " << indexFile << std::endl; // TODO - Implement the index searching logic
 			if (headermap["path"] == "/")
 				fullPath = serverRoot + "/index.php";
 			
