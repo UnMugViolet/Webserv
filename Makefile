@@ -6,13 +6,14 @@
 #    By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/09/10 14:22:28 by unmugviolet      ###   ########.fr        #
+#    Updated: 2025/09/10 14:33:00 by unmugviolet      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = 			webserv
 
 ARGS =			./configs/default.conf
+STRESS_ARGS =	./configs/stress.conf
 
 ADDR =			http://localhost:
 PORT =			8080
@@ -75,8 +76,8 @@ gov: all
 	@ valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) $(ARGS)
 	@rm -rf $(NAME)
 
-stress:
-	@$(MAKE) -j2 go &
+stress: all
+	@./$(NAME) $(STRESS_ARGS) &
 	@sleep 2
 	@siege -b $(ADDR)$(PORT) -t 1m
 	@rm -rf $(NAME)
