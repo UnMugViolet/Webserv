@@ -6,7 +6,7 @@
 #    By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/09/10 13:03:31 by unmugviolet      ###   ########.fr        #
+#    Updated: 2025/09/10 14:22:28 by unmugviolet      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -75,9 +75,15 @@ gov: all
 	@ valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) $(ARGS)
 	@rm -rf $(NAME)
 
-stress: go
-	@siege $(ADDR)$(PORT)
+stress:
+	@$(MAKE) -j2 go &
+	@sleep 2
+	@siege -b $(ADDR)$(PORT) -t 1m
 	@rm -rf $(NAME)
+	@$(MAKE) kill
+
+kill:
+	@pkill -9 webserv
 
 curl: 
 	@$(MAKE) -j2 go &
