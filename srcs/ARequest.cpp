@@ -78,9 +78,8 @@ int ARequest::sendCGIResponse(int clientFd, const std::string& scriptPath, Confi
 		char buffer[4096];
 		ssize_t bytesRead;
 		
-		while ((bytesRead = read(cgiOutputFd, buffer, sizeof(buffer) - 1)) > 0) {
-			buffer[bytesRead] = '\0';
-			cgiOutput += buffer;
+		while ((bytesRead = read(cgiOutputFd, buffer, sizeof(buffer))) > 0) {
+			cgiOutput.append(buffer, bytesRead);
 		}
 		
 		if (cgiOutputFd != -1) {
@@ -89,7 +88,8 @@ int ARequest::sendCGIResponse(int clientFd, const std::string& scriptPath, Confi
 		}
 		
 		// Send successful response with CGI output
-		return sendHTTPResponse(clientFd, 200, cgiOutput, "text/html");
+		std::string contentType = getContentType(scriptPath);
+		return sendHTTPResponse(clientFd, 200, cgiOutput, contentType);
 		
 	} catch (const CGI::CGIException& e) {
 		// Close the file descriptor if it was opened
@@ -115,5 +115,33 @@ int ARequest::sendCGIResponse(int clientFd, const std::string& scriptPath, Confi
 std::string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverId) const
 {
 	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverId, statusCode);
+}
+
+std::string ARequest::getContentType(const std::string& filePath) const
+{
+	size_t pos = filePath.rfind('.');
+	if (pos == std::string::npos)
+		return "text/html";
+	
+	std::string ext = filePath.substr(pos + 1);
+	
+	if (ext == "html" || ext == "htm")
+		return "text/html";
+	else if (ext == "css")
+		return "text/css";
+	else if (ext == "png")
+		return "image/png";
+	else if (ext == "jpg" || ext == "jpeg")
+		return "image/jpeg";
+	else if (ext == "gif")
+		return "image/gif";
+	else if (ext == "js")
+		return "application/javascript";
+	else if (ext == "json")
+		return "application/json";
+	else if (ext == "txt")
+		return "text/plain";
+	else
+		return "text/html";
 }
 

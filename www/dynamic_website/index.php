@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="./css/index.css"/>
+	<link rel="stylesheet" href="css/index.css"/>
 	<title>My dynamic website</title>
 </head>
 <body>
@@ -15,7 +15,7 @@
 
 	echo "<h1>Welcome to $project_name</h1>";
 	echo "
-		<img src=\"../img/webserv.png\" alt=\"image de badge 42\"/>
+		<img src=\"img/webserv.png\" alt=\"image de badge 42\"/>
 	</section>
 	";
 

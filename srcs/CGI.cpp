@@ -44,6 +44,14 @@ int	CGI::_getType(std::string ext)
 		return (HTML);
 	else if (ext == "css")
 		return (CSS);
+	else if (ext == "png")
+		return (PNG);
+	else if (ext == "jpg")
+		return (JPG);
+	else if (ext == "jpeg")
+		return (JPEG);
+	else if (ext == "gif")
+		return (GIF);
 	else
 		return (UNKNOWN);
 }
@@ -51,6 +59,8 @@ int	CGI::_getType(std::string ext)
 
 int	CGI::interpret(const std::string &path)
 {
+	if (access(path.c_str(), F_OK) == -1)
+		throw CGIException("file " + path + " does not exist", false, 404);
 	int type = _getType(_getExtension(path));
 
 	if (type == UNKNOWN)
@@ -66,7 +76,7 @@ int	CGI::interpret(const std::string &path)
 			break;
 	}
 
-	if (type == HTML || type == CSS)
+	if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF)
 	{
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)

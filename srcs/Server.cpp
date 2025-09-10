@@ -180,23 +180,6 @@ void	Server::unsetClient(int position)
 	_clientFds.erase(_clientFds.begin()+position);
 }
 
-void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd)
-{
-	for (size_t i = 0; i < _clientFds.size(); i++)
-	{
-		if (FD_ISSET(_clientFds[i], &readFd))
-		{
-			std::string serverRoot = getCurrentServerRoot();
-			if (_handler.handleRequest(_clientFds[i], serverRoot) == -1)
-			{
-				FD_CLR(_clientFds[i], &fullReadFd);
-				close(_clientFds[i]);
-				unsetClient(i);
-				std::cout << "Client disconnected" << std::endl;
-			}
-		}
-	}
-}
 
 void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* config)
 {
@@ -223,6 +206,7 @@ Server::Server(const Server &other)
 		this->_names = other._names;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;
+		this->_uid = other._uid;  // Lost 2 hours of my life because of this
 	}
 }
 

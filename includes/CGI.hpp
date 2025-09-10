@@ -20,6 +20,10 @@
 #define UNKNOWN 5
 #define HTML 6
 #define CSS 7
+#define PNG 8
+#define JPG 9
+#define JPEG 10
+#define GIF 11
 
 class CGI
 {
