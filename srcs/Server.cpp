@@ -16,20 +16,20 @@ Server::Server(ConfigParser &config, std::string serverId)
 	sockaddr.sin_family = AF_INET;
 
 	// get server name
-	if (config.hasServerKey(serverId, "server_name") && config.hasServerKey(serverId, "root"))
+	if (config.hasServerKey(serverId, "host") && config.hasServerKey(serverId, "root"))
 	{
-		_name = config.getServerValue(serverId, "server_name");
+		_name = config.getServerValue(serverId, "host");
 		_names[_name] = config.getServerValue(serverId, "root");
 	}
 	else
-		throw servException(serverId + ": no server_name");
+		throw servException(serverId + ": no host");
 
-	// check if server_name is a valid ip
+	// check if host is a valid ip
 	c_name = _name.c_str();
 	if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr)))
 		gotit = 1;
 	
-	// try getting ip address with server_name as alias
+	// try getting ip address with host as alias
 	struct addrinfo hints;
 	struct addrinfo *res;
 	struct addrinfo *r;
@@ -53,7 +53,7 @@ Server::Server(ConfigParser &config, std::string serverId)
 
 	}
 	if (gotit == 0)
-		throw servException(serverId + "invalid server_name");
+		throw servException(serverId + "invalid host");
 
 	//get port number
 	int			portnbr;
@@ -94,9 +94,9 @@ void	Server::addVirtualHost(ConfigParser &config, std::string serverId)
 {
 	std::string _name;
 	
-	if (config.hasServerKey(serverId, "server_name") && config.hasServerKey(serverId, "root"))
+	if (config.hasServerKey(serverId, "host") && config.hasServerKey(serverId, "root"))
 	{
-		_name = config.getServerValue(serverId, "server_name");
+		_name = config.getServerValue(serverId, "host");
 		_names[_name] = config.getServerValue(serverId, "root");
 	}
 }
