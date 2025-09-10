@@ -27,6 +27,7 @@ class Webserv
 {
 	private:
 		std::vector<Server> _servers;
+		ConfigParser* _config;  // Store pointer to config
 	public:
 		Webserv();
 		Webserv(ConfigParser &config);

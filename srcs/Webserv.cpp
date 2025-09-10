@@ -14,6 +14,7 @@
 
 Webserv::Webserv()
 {
+	_config = NULL;
 }
 
 Webserv::Webserv(ConfigParser &config)
@@ -21,6 +22,7 @@ Webserv::Webserv(ConfigParser &config)
 	std::string	serverId;
 	std::vector<std::string>	serverIds;
 	
+	_config = &config;  // Store the config pointer
 	serverIds = config.getServerIds();
 	for (size_t i = 0; i < serverIds.size(); i++)
 	{
@@ -66,7 +68,7 @@ void Webserv::serverLoop()
 					if (fd > maxFd)
 						maxFd = fd;
 				}
-				_servers[i].getRequests(readFd, fullReadFd);
+				_servers[i].getRequests(readFd, fullReadFd, _config);  // Pass the config
 			}
 		}
 	}

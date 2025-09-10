@@ -42,6 +42,7 @@ public:
 	int			setClient();
 	void		unsetClient(int position);
 	void		getRequests(fd_set &readFd, fd_set &fullReadFd);
+	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* config);  // Overload with config
 
 	/*operator overloads*/
 	Server&	operator=(const Server &other);

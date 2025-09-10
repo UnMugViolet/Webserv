@@ -112,7 +112,7 @@ int ARequest::sendCGIResponse(int clientFd, const std::string& scriptPath, Confi
 	}
 }
 
-std::string ARequest::loadErrorPage(int statusCode, const ConfigParser* config, const std::string& serverId) const
+std::string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverId) const
 {
 	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverId, statusCode);
 }

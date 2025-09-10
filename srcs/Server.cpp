@@ -3,6 +3,7 @@
 Server::Server()
 {
 }
+
 Server::Server(ConfigParser &config, std::string serverId)
 {
 	sockaddr_in sockaddr;
@@ -187,6 +188,24 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd)
 		{
 			std::string serverRoot = getCurrentServerRoot();
 			if (_handler.handleRequest(_clientFds[i], serverRoot) == -1)
+			{
+				FD_CLR(_clientFds[i], &fullReadFd);
+				close(_clientFds[i]);
+				unsetClient(i);
+				std::cout << "Client disconnected" << std::endl;
+			}
+		}
+	}
+}
+
+void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* config)
+{
+	for (size_t i = 0; i < _clientFds.size(); i++)
+	{
+		if (FD_ISSET(_clientFds[i], &readFd))
+		{
+			std::string serverRoot = getCurrentServerRoot();
+			if (_handler.handleRequest(_clientFds[i], serverRoot, config, _uid) == -1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
 				close(_clientFds[i]);
