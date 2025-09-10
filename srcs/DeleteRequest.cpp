@@ -13,9 +13,8 @@ DeleteRequest::DeleteRequest(std::map<std::string, std::string> header)
 	return ;
 }
 
-DeleteRequest::DeleteRequest(DeleteRequest& src)
+DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 {
-	/*copy what needs to be here*/
 	return ;
 }
 
@@ -24,9 +23,10 @@ DeleteRequest::~DeleteRequest()
 	return ;
 }
 
-DeleteRequest&	DeleteRequest::operator=(DeleteRequest& src)
+DeleteRequest	&DeleteRequest::operator=(DeleteRequest &src)
 {
-	/*copy what needs to be here*/
+	if (this != &src)
+		ARequest::operator=(src);
 	return (*this);
 }
 

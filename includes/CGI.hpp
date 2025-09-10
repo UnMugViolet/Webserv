@@ -10,6 +10,7 @@
 #include "sys/types.h"
 #include "dict.hpp"
 #include "Logger.hpp"
+#include <sys/socket.h>
 
 #define PYTHON 0
 #define PERL 1

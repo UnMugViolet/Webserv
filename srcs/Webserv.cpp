@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/09 09:04:01 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/10 13:17:11 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,9 +67,7 @@ void Webserv::serverLoop()
 						maxFd = fd;
 				}
 				_servers[i].getRequests(readFd, fullReadFd);
-				std::cout << "requested" << std::endl;
 			}
-			std::cout << "endloop" << std::endl;
 		}
 	}
 }

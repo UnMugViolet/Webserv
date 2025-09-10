@@ -88,6 +88,7 @@ int	CGI::interpret(const std::string &path)
 		
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
+		dup2(fd[1], STDERR_FILENO); // Redirect stderr to the pipe as well to get the error output on the client side
 		close(fd[1]);
 		switch (type)
 		{
@@ -120,13 +121,15 @@ int	CGI::interpret(const std::string &path)
        throw CGIException("Internal error: waitpid failed", true, 500);
     if (WIFEXITED(status))
 	{
-		if (WEXITSTATUS(status) == 0)
+		int exitStatus = WEXITSTATUS(status);
+		if (exitStatus == 0)
         	return fd[0];
 		else
 		{
-			std::stringstream ss;
-			ss << WEXITSTATUS(status);
-			throw CGIException("interpreter exited with status " + ss.str() + " please make sure your script if correct", false, 500);
+			// For script errors (like PHP syntax/runtime errors), 
+			// still return the file descriptor so we can read any error output
+			// The caller will decide what to do with the content
+			return fd[0];
 		}
 	}
     else

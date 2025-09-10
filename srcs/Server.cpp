@@ -10,7 +10,7 @@ Server::Server(ConfigParser &config, std::string serverId)
 	std::string	_name;
 	const char *	c_name;
 
-	uid = serverId;
+	this->_uid = serverId;
 	//define ipv4
 	sockaddr.sin_family = AF_INET;
 
@@ -105,6 +105,38 @@ int	Server::getSocket() const
 	return (_socketfd);
 }
 
+std::string Server::getUid() const
+{
+	return _uid;
+}
+
+std::string Server::getCurrentServerRoot() const
+{
+	// Return the root for this server instance
+	if (!_names.empty())
+		return _names.begin()->second;
+	return "www";
+}
+
+std::string Server::getServerRoot(const std::string& serverName) const
+{
+	// If no specific server name is provided, return the first (default) root
+	if (serverName.empty() && !_names.empty())
+		return _names.begin()->second;
+	
+	// Try to find the specific server name
+	std::map<std::string, std::string>::const_iterator it = _names.find(serverName);
+	if (it != _names.end())
+		return it->second;
+	
+	// Fallback to first available root if server name not found
+	if (!_names.empty())
+		return _names.begin()->second;
+		
+	// Default fallback
+	return "www";
+}
+
 static std::string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
     std::ostringstream oss;
 
@@ -128,22 +160,16 @@ int	Server::setClient()
 	{
 		throw servException("accept error");
 	}
-	//coucou
-	char buf[91] = "HTTP/1.1 200 OK\r\nContent-Length: 23\r\nContent-Type: text/plain\r\n\r\nAlan c'est le plus beau";
-	if (send(cfd, buf, strlen(buf), 0) == -1)
-	{
-		std::cerr << "send error : " << strerror(errno) << std::endl;
-		return 1;
-	}
-	else
-	{
-		sockaddr_in serveraddr;
-		socklen_t serveraddr_len = sizeof(serveraddr);
-		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
-		std::string connexion = get_connection_info(peeraddr, serveraddr);
-		Logger::access(this->uid, connexion);
-		std::cout << connexion << std::endl;
-	}
+
+	// Log the connection info with server details
+	sockaddr_in serveraddr;
+	socklen_t serveraddr_len = sizeof(serveraddr);
+	getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
+	std::string connexion = get_connection_info(peeraddr, serveraddr);
+	std::string logInfo = connexion + " [Server: " + _uid + ", Root: " + getCurrentServerRoot() + "]";
+	Logger::access(this->_uid, logInfo);
+	std::cout << logInfo << std::endl;
+
 	_clientFds.push_back(cfd);
 	return (cfd);
 }
@@ -159,7 +185,8 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd)
 	{
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-			if (_handler.printRequest(_clientFds[i]) == -1)
+			std::string serverRoot = getCurrentServerRoot();
+			if (_handler.handleRequest(_clientFds[i], serverRoot) == -1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
 				close(_clientFds[i]);
@@ -175,7 +202,6 @@ Server::Server(const Server &other)
 	if (this != &other)
 	{
 		this->_names = other._names;
-		// this->_RequestMaxSize = other._RequestMaxSize;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;
 	}
@@ -190,7 +216,6 @@ Server &Server::operator=(const Server &other)
 	if (this != &other)
 	{
 		this->_names = other._names;
-		// this->_RequestMaxSize = other._RequestMaxSize;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;
 	}

@@ -13,10 +13,16 @@ GetRequest::GetRequest(std::map<std::string, std::string> header)
 	return ;
 }
 
-GetRequest::GetRequest(GetRequest& src)
+GetRequest::GetRequest(GetRequest &src) : ARequest(src)
 {
-	/*copy what needs to be here*/
 	return ;
+}
+
+GetRequest&	GetRequest::operator=(GetRequest &src)
+{
+	if (this != &src)
+		ARequest::operator=(src);
+	return (*this);
 }
 
 GetRequest::~GetRequest()
@@ -24,9 +30,5 @@ GetRequest::~GetRequest()
 	return ;
 }
 
-GetRequest&	GetRequest::operator=(GetRequest& src)
-{
-	/*copy what needs to be here*/
-	return (*this);
-}
+
 

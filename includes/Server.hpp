@@ -20,11 +20,11 @@ class Server
 {
 private:
 	/*attributes here*/
-	std::string	uid;
+	std::string							_uid;
 	std::map<std::string, std::string>	_names;
-	int _socketfd;
-	std::vector<int> _clientFds;
-	RequestHandler	_handler;
+	int 								_socketfd;
+	std::vector<int>					_clientFds;
+	RequestHandler						_handler;
 
 public:
 	/*constructors and destructor*/
@@ -34,11 +34,14 @@ public:
 	~Server();
 
 	/*member functions*/
-	void	addVirtualHost(ConfigParser &config, std::string serverId);
-	int		getSocket() const;
-	int		setClient();
-	void	unsetClient(int position);
-	void	getRequests(fd_set &readFd, fd_set &fullReadFd);
+	void		addVirtualHost(ConfigParser &config, std::string serverId);
+	int			getSocket() const;
+	std::string	getUid() const;
+	std::string getServerRoot(const std::string &serverName = "") const;
+	std::string getCurrentServerRoot() const;
+	int			setClient();
+	void		unsetClient(int position);
+	void		getRequests(fd_set &readFd, fd_set &fullReadFd);
 
 	/*operator overloads*/
 	Server&	operator=(const Server &other);

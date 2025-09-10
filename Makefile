@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+         #
+#    By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/09/09 15:10:49 by yguinio          ###   ########.fr        #
+#    Updated: 2025/09/10 13:03:31 by unmugviolet      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,8 @@ ADDR =			http://localhost:
 PORT =			8080
 
 MAIN_FILES = 	main.cpp
-SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp Server.cpp RequestHandler.cpp Logger.cpp
+SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp Server.cpp RequestHandler.cpp Logger.cpp \
+				ARequest.cpp GetRequest.cpp PostRequest.cpp DeleteRequest.cpp
 
 SRC_DIR =		./srcs/
 OBJ_DIR =		./objects/

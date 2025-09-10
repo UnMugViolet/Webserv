@@ -15,9 +15,11 @@ PostRequest::PostRequest(std::map<std::string, std::string> header)
 	return ;
 }
 
-PostRequest::PostRequest(PostRequest& src)
+PostRequest::PostRequest(PostRequest& src) : ARequest(src)
 {
-	/*copy what needs to be here*/
+	this->_Content_length = src._Content_length;
+	this->_Content_type = src._Content_type;
+	this->_body = src._body;
 	return ;
 }
 
@@ -28,7 +30,13 @@ PostRequest::~PostRequest()
 
 PostRequest&	PostRequest::operator=(PostRequest& src)
 {
-	/*copy what needs to be here*/
+	if (this != &src)
+	{
+		ARequest::operator=(src);
+		this->_Content_length = src._Content_length;
+		this->_Content_type = src._Content_type;
+		this->_body = src._body;
+	}
 	return (*this);
 }
 

@@ -1,13 +1,18 @@
 #include "ARequest.hpp"
+#include "CGI.hpp"
+#include <string.h>
+#include <sstream>
+#include "ConfigParser.hpp"
 
 ARequest::ARequest()
 {
 	return ;
 }
 
-ARequest::ARequest(ARequest& src)
+ARequest::ARequest(ARequest &src)
 {
-	/*copy what needs to be here*/
+	if (this != &src)
+		*this = src;
 	return ;
 }
 
@@ -16,9 +21,99 @@ ARequest::~ARequest()
 	return ;
 }
 
-ARequest&	ARequest::operator=(ARequest& src)
+ARequest&	ARequest::operator=(ARequest &src)
 {
-	/*copy what needs to be here*/
+	if (this != &src)
+	{
+		this->_method = src._method;
+		this->_path = src._path;
+		this->_host = src._host;
+		this->_keep_alive = src._keep_alive;
+		this->_client = src._client;
+	}
 	return (*this);
+}
+
+int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string& body, const std::string& contentType)
+{
+	std::ostringstream response;
+	std::string statusText;
+	
+	// Set status text based on code
+	switch (statusCode) {
+		case 200: statusText = "OK"; break;
+		case 404: statusText = "Not Found"; break;
+		case 500: statusText = "Internal Server Error"; break;
+		case 403: statusText = "Forbidden"; break;
+		case 415: statusText = "Unsupported Media Type"; break;
+		default: statusText = "Unknown"; break;
+	}
+	
+	// Build HTTP response
+	response << "HTTP/1.1 " << statusCode << " " << statusText << "\r\n";
+	response << "Content-Type: " << contentType << "\r\n";
+	response << "Content-Length: " << body.length() << "\r\n";
+	if (!_keep_alive)
+		response << "Connection: close\r\n";
+	response << "\r\n";
+	response << body;
+	
+	std::string responseStr = response.str();
+	if (send(clientFd, responseStr.c_str(), responseStr.length(), 0) == -1) {
+		std::cerr << "Failed to send HTTP response" << std::endl;
+		return -1;
+	}
+	return 0;
+}
+
+int ARequest::sendCGIResponse(int clientFd, const std::string& scriptPath, ConfigParser* config, const std::string& serverId)
+{
+	int cgiOutputFd = -1;
+	try {
+		// Execute CGI script
+		cgiOutputFd = CGI::interpret(scriptPath);
+		
+		// Read the CGI output
+		std::string cgiOutput;
+		char buffer[4096];
+		ssize_t bytesRead;
+		
+		while ((bytesRead = read(cgiOutputFd, buffer, sizeof(buffer) - 1)) > 0) {
+			buffer[bytesRead] = '\0';
+			cgiOutput += buffer;
+		}
+		
+		if (cgiOutputFd != -1) {
+			close(cgiOutputFd);
+			cgiOutputFd = -1;
+		}
+		
+		// Send successful response with CGI output
+		return sendHTTPResponse(clientFd, 200, cgiOutput, "text/html");
+		
+	} catch (const CGI::CGIException& e) {
+		// Close the file descriptor if it was opened
+		if (cgiOutputFd != -1) {
+			close(cgiOutputFd);
+		}
+		
+		// Handle true CGI execution errors (file not found, permission denied, etc.)
+		// These are cases where the script couldn't even run
+		std::string errorPage = loadErrorPage(e.getHttpStatus(), config, serverId);
+		return sendHTTPResponse(clientFd, e.getHttpStatus(), errorPage, "text/html");
+	} catch (...) {
+		// Handle any other exceptions
+		if (cgiOutputFd != -1) {
+			close(cgiOutputFd);
+		}
+		
+		std::string errorPage = loadErrorPage(500, config, serverId);
+		return sendHTTPResponse(clientFd, 500, errorPage, "text/html");
+	}
+}
+
+std::string ARequest::loadErrorPage(int statusCode, const ConfigParser* config, const std::string& serverId) const
+{
+	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverId, statusCode);
 }
 

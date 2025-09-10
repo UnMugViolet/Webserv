@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/09 15:07:35 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/09/10 13:23:53 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,44 +34,6 @@ int main(int ac, char **av)
 		ConfigParser parser(av[1]);
 		parser.printConfig();
 		
-		try {
-			std::cout << "\n"
-					  << YELLOW BOLD << "Testing Cgi:" << NEUTRAL << std::endl;
-			Logger::access("", "Testing Cgi");
-			int fd = CGI::interpret("www/dynamic_website/index.php"); // Hardcoded value remove later
-			// Read and write to stdout the result of the CGI
-			if (fd != -1) {
-				char buffer[1024];
-				ssize_t bytesRead;
-				while ((bytesRead = read(fd, buffer, sizeof(buffer) - 1)) > 0)
-				{
-					buffer[bytesRead] = '\0';
-					std::cout << buffer;
-				}
-				close(fd);
-				std::cout << std::endl;
-			} else {
-				Logger::error("" ,"Failed to interpret CGI script.");
-				std::cerr << RED BOLD << "Failed to interpret CGI script." << NEUTRAL << std::endl;
-			}
-		} catch (const CGI::CGIException &e) {
-			unsigned int error_code = e.getHttpStatus();
-
-			// Test the error page retrieval
-			std::vector<std::string> servers = parser.getServerIds();
-			std::string error_content;
-			std::string tested_server = servers[1];
-			if (!servers.empty()) {
-				error_content = parser.getErrorPageContent(parser, tested_server, error_code);
-			}
-
-			std::cout << error_content << std::endl; // DEBUG : display the error page content remove later
-
-			std::cerr << e.what() << '\n';
-
-			if (e.getExit() == 1)
-				exit(1);
-		}
 		try {			
 			Webserv webserv(parser);
 			webserv.serverLoop();
