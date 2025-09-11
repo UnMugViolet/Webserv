@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "RequestHandler.hpp"
 
 Server::Server()
 {
@@ -11,11 +12,12 @@ Server::Server(ConfigParser &config, std::string serverId)
 	std::string	_name;
 	const char *	c_name;
 
+	this->_handler = new RequestHandler;
 	this->_uid = serverId;
 	//define ipv4
 	sockaddr.sin_family = AF_INET;
 
-	// get server name
+	// get server name + root
 	if (config.hasServerKey(serverId, "host") && config.hasServerKey(serverId, "root"))
 	{
 		_name = config.getServerValue(serverId, "host");
@@ -87,17 +89,65 @@ Server::Server(ConfigParser &config, std::string serverId)
 
 	//put max body size in handler
 	if (config.hasServerKey(serverId, "client_max_body_size"))
-		_handler.setMaxBodySize(config.getServerValue(serverId, "client_max_body_size"));
+		_handler->setMaxBodySize(config.getServerValue(serverId, "client_max_body_size"));
 }
 
-void	Server::addVirtualHost(ConfigParser &config, std::string serverId)
+int	Server::addVirtualHost(ConfigParser &config, std::string serverId)
 {
 	std::string _name;
-	
+	sockaddr_in sockaddr;
+
+	sockaddr.sin_family = AF_INET;
 	if (config.hasServerKey(serverId, "host") && config.hasServerKey(serverId, "root"))
 	{
+		int gotit = 0;
+
+		sockaddr_in serveraddr;
+		socklen_t serveraddr_len = sizeof(serveraddr);
+		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
+
 		_name = config.getServerValue(serverId, "host");
-		_names[_name] = config.getServerValue(serverId, "root");
+
+		// check if host is a valid ip
+		const char *c_name = _name.c_str();
+		if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr)))
+			gotit = 1;
+
+		// try getting ip address with host as alias
+		struct addrinfo hints;
+		struct addrinfo *res;
+		struct addrinfo *r;
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		int status = getaddrinfo(c_name, 0, &hints, &res);
+		if (status == 0)
+		{
+			r = res;
+			while (r != NULL)
+			{
+				if (r->ai_family == AF_INET)
+				{
+					gotit = 1;
+					struct sockaddr_in *ipv4 = (struct sockaddr_in *)r->ai_addr;
+					sockaddr.sin_addr = ipv4->sin_addr;
+				}
+				r = r->ai_next;
+			}
+		}
+		if (gotit == 0)
+			throw servException(serverId + " invalid host");
+		if (inet_ntoa(serveraddr.sin_addr) == inet_ntoa(sockaddr.sin_addr))
+		{
+			_names[_name] = config.getServerValue(serverId, "root");
+			return 1;
+		}
+		return 0;
+	}
+	else
+	{
+		std::cerr << "invalid conf for: " << serverId << std::endl;
+		return (1);
 	}
 }
 
@@ -188,7 +238,7 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
 			std::string serverRoot = getCurrentServerRoot();
-			if (_handler.handleRequest(_clientFds[i], serverRoot, config, _uid) == -1)
+			if (_handler->handleRequest(_clientFds[i], *this, config, _uid) == -1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
 				close(_clientFds[i]);
@@ -212,6 +262,7 @@ Server::Server(const Server &other)
 
 Server::~Server()
 {
+	delete _handler;
 }
 
 Server &Server::operator=(const Server &other)
