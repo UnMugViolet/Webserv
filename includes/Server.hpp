@@ -13,8 +13,9 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
-#include "RequestHandler.hpp"
 #include "Logger.hpp"
+
+class RequestHandler;
 
 class Server
 {
@@ -24,7 +25,7 @@ private:
 	std::map<std::string, std::string>	_names;
 	int 								_socketfd;
 	std::vector<int>					_clientFds;
-	RequestHandler						_handler;
+	RequestHandler						*_handler;
 
 public:
 	/*constructors and destructor*/
@@ -34,7 +35,7 @@ public:
 	~Server();
 
 	/*member functions*/
-	void		addVirtualHost(ConfigParser &config, std::string serverId);
+	int			addVirtualHost(ConfigParser &config, std::string serverId);
 	int			getSocket() const;
 	std::string	getUid() const;
 	std::string getServerRoot(const std::string &serverName = "") const;

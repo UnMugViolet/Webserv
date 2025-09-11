@@ -1,5 +1,6 @@
 #include "RequestHandler.hpp"
 #include "ConfigParser.hpp"
+#include "Server.hpp"
 
 RequestHandler::RequestHandler()
 {
@@ -70,6 +71,7 @@ std::map<std::string, std::string>	RequestHandler::parseHeader(std::string heade
 
 int	RequestHandler::handleRequest(int fd, const std::string &serverRoot, ConfigParser *config, const std::string &serverUid) const
 {
+	std::string serverRoot;
 	const size_t BUFFER_SIZE = 4096;
 	const size_t MAX_HEADER_SIZE = 8192; // 8KB for headers
 	size_t headerlimit;
@@ -113,6 +115,16 @@ int	RequestHandler::handleRequest(int fd, const std::string &serverRoot, ConfigP
 	try {
 		headermap = parseHeader(header);
 		
+		// get virtual server root
+		if (headermap.find("Host") == headermap.end())
+		{
+			std::cerr << "No host, bad request" << std::endl;
+			return -1;
+		}
+		std::string host = headermap["Host"];
+		std::cout << "host is: " << host << std::endl;
+		serverRoot = server.getServerRoot(host);
+		std::cout << "server root: " << serverRoot << std::endl;
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
 		{

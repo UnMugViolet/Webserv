@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/10 13:17:11 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/11 10:59:57 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,14 +19,32 @@ Webserv::Webserv()
 
 Webserv::Webserv(ConfigParser &config)
 {
-	std::string	serverId;
+	std::string					serverId;
 	std::vector<std::string>	serverIds;
+
 	
 	_config = &config;  // Store the config pointer
 	serverIds = config.getServerIds();
 	for (size_t i = 0; i < serverIds.size(); i++)
 	{
+		int	gotServ = 0;
 		serverId = serverIds[i];
+
+		std::string port;
+		if (config.hasServerKey(serverId, "listen"))
+		{
+			port = config.getServerValue(serverId, "listen");
+			for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
+			{
+				if (config.getServerValue(it->getUid(), "listen") == port)
+				{
+					gotServ = it->addVirtualHost(config, serverId);;
+					break ;
+				}
+			}
+			if (gotServ)
+				continue;
+		}
 		Server server(config, serverId);
 		_servers.push_back(server);
 	}
