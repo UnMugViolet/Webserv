@@ -69,7 +69,7 @@ std::map<std::string, std::string>	RequestHandler::parseHeader(std::string heade
 	return (headers);
 }
 
-int	RequestHandler::handleRequest(int fd, const std::string &serverRoot, ConfigParser *config, const std::string &serverUid) const
+int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *config, const std::string &serverUid) const
 {
 	std::string serverRoot;
 	const size_t BUFFER_SIZE = 4096;

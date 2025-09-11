@@ -30,7 +30,7 @@ public:
 
 	/*member functions*/
 	int									printRequest(int fd) const;
-	int									handleRequest(int fd, const Server &server, ConfigParser *config = NULL, const std::string &serverId = "") const;
+	int									handleRequest(int fd, Server const &server, ConfigParser *config, std::string const &serverUid) const;
 	void								setMaxBodySize(std::string size);
 	std::string							trim(const std::string &str) const;
 	std::map<std::string, std::string>	parseHeader(std::string header) const;
