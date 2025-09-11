@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/10 13:23:53 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/11 12:15:41 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,16 +26,19 @@ int main(int ac, char **av)
 		return 1;
 	}
 
-	Logger::init();
 	try {
 		std::cout << "Using config file: " << BOLD << av[1] << NEUTRAL << std::endl << std::endl;
 
 		// Test the ConfigParser
-		ConfigParser parser(av[1]);
-		parser.printConfig();
-		
+		ConfigParser config(av[1]);
+		config.printConfig();
+
+		// Init Logger and passing conf in order to create the log files
+		Logger logger(config);
+		logger.init();
+
 		try {			
-			Webserv webserv(parser);
+			Webserv webserv(config);
 			webserv.serverLoop();
 		} catch (const Webserv::WebservException &e) {
 			std::cerr << e.what() << '\n';

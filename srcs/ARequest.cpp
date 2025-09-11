@@ -66,7 +66,7 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string& 
 	return 0;
 }
 
-int ARequest::sendCGIResponse(int clientFd, const std::string& scriptPath, ConfigParser* config, const std::string& serverId)
+int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, ConfigParser *config, const std::string &serverId)
 {
 	int cgiOutputFd = -1;
 	try {

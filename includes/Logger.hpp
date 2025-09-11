@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:43:52 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/09 14:14:02 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/09/11 12:31:31 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,15 +17,18 @@
 #include <ctime>
 #include <string>
 #include "dict.hpp"
+#include "ConfigParser.hpp"
+
+class ConfigParser;
 
 class Logger {
 	private:
-		static std::ofstream accessLog;
-		static std::ofstream errorLog;
-		static std::string timeStamp();
-
+		static std::ofstream _accessLogStream;
+		static std::ofstream _errorLogStream;
+		static std::string	 _accessFile;
+		static std::string	 _errorFile;
 	public:
-		Logger();
+		Logger(ConfigParser &config);
 		~Logger();
 		
 		static void init();

@@ -158,9 +158,7 @@ int	Server::setClient()
 
 	int cfd = accept(_socketfd, (struct sockaddr *)&peeraddr, &peer_addr_size);
 	if (cfd == -1)
-	{
 		throw servException("accept error");
-	}
 
 	// Log the connection info with server details
 	sockaddr_in serveraddr;
@@ -221,6 +219,7 @@ Server &Server::operator=(const Server &other)
 		this->_names = other._names;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;
+		this->_uid = other._uid;
 	}
 	return *this;
 }

@@ -54,7 +54,7 @@ public:
 			CGIException(std::string message, bool must_exit_prog, unsigned int http_status) throw()
 			{
 				_message = "CGIException error: " + message;
-				Logger::error("", _message);
+				Logger::error("here", _message);
 				_message = std::string(RED) + _message + std::string(NEUTRAL);
 				if (must_exit_prog)
 					_exit = must_exit_prog;

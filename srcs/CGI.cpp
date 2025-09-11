@@ -59,12 +59,8 @@ int	CGI::_getType(std::string ext)
 
 int	CGI::interpret(const std::string &path)
 {
-	if (access(path.c_str(), F_OK) == -1)
-		throw CGIException("file " + path + " does not exist", false, 404);
 	int type = _getType(_getExtension(path));
 
-	if (type == UNKNOWN)
-		throw CGIException("Webserver does not interpret file: " + path, false, 415);
 	switch (_checkAccess(path, type))
 	{
 		case -1: {
@@ -75,6 +71,8 @@ int	CGI::interpret(const std::string &path)
 		case 1:
 			break;
 	}
+	if (type == UNKNOWN)
+		throw CGIException("Webserver does not interpret file: " + path, false, 415);
 
 	if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF)
 	{

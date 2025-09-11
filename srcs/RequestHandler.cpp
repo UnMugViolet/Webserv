@@ -68,7 +68,7 @@ std::map<std::string, std::string>	RequestHandler::parseHeader(std::string heade
 	return (headers);
 }
 
-int	RequestHandler::handleRequest(int fd, const std::string& serverRoot, ConfigParser* config, const std::string& serverId) const
+int	RequestHandler::handleRequest(int fd, const std::string &serverRoot, ConfigParser *config, const std::string &serverUid) const
 {
 	const size_t BUFFER_SIZE = 4096;
 	const size_t MAX_HEADER_SIZE = 8192; // 8KB for headers
@@ -95,7 +95,7 @@ int	RequestHandler::handleRequest(int fd, const std::string& serverRoot, ConfigP
 		// Prevent header from being too large
 		if (header.size() > MAX_HEADER_SIZE)
 		{
-			Logger::error("", "Header too large");
+			Logger::error(serverUid, "Header too large");
 			return -1;
 		}
 		
@@ -108,7 +108,7 @@ int	RequestHandler::handleRequest(int fd, const std::string& serverRoot, ConfigP
 	body = header.substr(headerlimit + 4, std::string::npos);
 	header.erase(headerlimit, std::string::npos);
 	
-	Logger::access("", "http request: " + header);
+	Logger::access(serverUid, "http request: " + header);
 	
 	try {
 		headermap = parseHeader(header);
@@ -146,13 +146,14 @@ int	RequestHandler::handleRequest(int fd, const std::string& serverRoot, ConfigP
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
 			std::string fullPath = serverRoot + headermap["path"];
-			std::string indexFile = config->getServerValue(serverId, "index");
+			std::string indexFile = config->getServerValue(serverUid, "index");
 
+			std::cout << std::string(RED) << fullPath << std::endl;
 			std::cout << "Index file: " << indexFile << std::endl; // TODO - Implement the index searching logic
 			if (headermap["path"] == "/")
 				fullPath = serverRoot + "/index.php";
 			
-			if (requestObject.sendCGIResponse(fd, fullPath, config, serverId) == -1)
+			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 				std::cerr << "Failed to send GET response" << std::endl;
 		}
 		else if (headermap["method"] == "POST")
@@ -163,7 +164,7 @@ int	RequestHandler::handleRequest(int fd, const std::string& serverRoot, ConfigP
 			if (headermap["path"] == "/")
 				fullPath = serverRoot + "/index.php";
 				
-			if (requestObject.sendCGIResponse(fd, fullPath, config, serverId) == -1)
+			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 				std::cerr << "Failed to send POST response" << std::endl;
 		}
 		else if (headermap["method"] == "DELETE")
@@ -176,7 +177,7 @@ int	RequestHandler::handleRequest(int fd, const std::string& serverRoot, ConfigP
 		}
 		else
 		{
-			Logger::error("", "Unknown method in HEADER: " + headermap["method"]); 
+			Logger::error(serverUid, "Unknown method in HEADER: " + headermap["method"]); 
 			return (-1);
 		}
 	}

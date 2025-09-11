@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+         #
+#    By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/09/10 14:33:00 by unmugviolet      ###   ########.fr        #
+#    Updated: 2025/09/11 12:41:29 by pjaguin          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,7 @@ STRESS_ARGS =	./configs/stress.conf
 ADDR =			http://localhost:
 PORT =			8080
 
-MAIN_FILES = 	main.cpp
+MAIN_FILE = 	main.cpp
 SRC_FILES = 	Webserv.cpp ConfigParser.cpp CGI.cpp Server.cpp RequestHandler.cpp Logger.cpp \
 				ARequest.cpp GetRequest.cpp PostRequest.cpp DeleteRequest.cpp
 
@@ -28,7 +28,7 @@ INC_DIR =		./includes/
 LOGS_DIR = 		./logs/
 
 OBJ =	$(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o)) \
-		$(MAIN_FILES:.cpp=.o)
+		$(MAIN_FILE:.cpp=.o)
 
 CC = c++
 MAKE = make
@@ -46,6 +46,7 @@ all: $(NAME)
 $(NAME) : $(OBJ)
 	@echo "$(GREEN)$(NAME) compiled!$(DEFAULT)"
 	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	@mkdir -p $(LOGS_DIR)
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
 	@echo "$(YELLOW)Compiling: $< $(DEF_COLOR)"
@@ -57,10 +58,9 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
-	@mkdir -p $(LOGS_DIR)
 
 clean: 
-	@rm -rf $(OBJ_DIR)
+	@rm -rf $(OBJ)
 	@echo "$(GREEN)$(NAME) object directory cleaned!$(DEFAULT)"
 
 fclean: clean
