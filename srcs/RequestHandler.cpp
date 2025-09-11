@@ -25,12 +25,11 @@ RequestHandler::~RequestHandler()
 {
 	return ;
 }
-
-int RequestHandler::_checkAccess(const std::string &path, int type)
+int RequestHandler::_checkAccess(const std::string &path)
 {
 	if (access(path.c_str(), F_OK) == -1)
 		return (-1);
-	if (type == BINARY && access(path.c_str(), X_OK) == -1)
+	if (_getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
 		return (0);
 	if (access(path.c_str(), R_OK) == -1)
 		return (0);
@@ -60,10 +59,18 @@ std::string RequestHandler::getIndex(const std::string &indexes, const std::stri
 			break ;
 		space2 = indexes.find(' ', space1);
 		goodIndex = indexes.substr(space1, space2);
+		std::cout << goodIndex << std::endl;
+		if (goodIndex[0] != '/')
+			goodIndex = "/" + goodIndex;
 		fullPath = root + goodIndex;
-		if (access(fullPath.c_str(), R_OK) == )
-			;
+		std::cout << fullPath << std::endl;
+		if (_checkAccess(fullPath) == 1)
+		{
+			std::cout << goodIndex << std::endl;
+			return (goodIndex);
+		}
 	}
+	return ("");
 }
 
 std::string	RequestHandler::trim(const std::string &str) const
@@ -206,11 +213,11 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			if (serverRoot[serverRoot.length() - 1] == '/')
 				serverRoot = serverRoot.substr(0, serverRoot.length() -1);
 			std::string fullPath = serverRoot + headermap["path"];
-			std::string indexFile = config->getServerValue(serverUid, "index");
+			std::string indexFile = getIndex(config->getServerValue(serverUid, "index"), serverRoot);
 
 			std::cout << "Index file: " << indexFile << std::endl; // TODO - Implement the index searching logic
 			if (headermap["path"] == "/")
-				fullPath = serverRoot + "/index.html";
+				fullPath = serverRoot + indexFile;
 			
 			// Check if file exists
 			std::ifstream file(fullPath.c_str());
