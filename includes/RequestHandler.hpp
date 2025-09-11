@@ -30,6 +30,9 @@ public:
 
 	/*member functions*/
 	int									printRequest(int fd) const;
+	static std::string					_getExtension(const std::string &path);
+	static int							_checkAccess(const std::string &path, int type);
+	std::string							getIndex(const std::string &indexes, const std::string &root) const;
 	int									handleRequest(int fd, Server const &server, ConfigParser *config, std::string const &serverUid);
 	void								setMaxBodySize(std::string size);
 	std::string							trim(const std::string &str) const;

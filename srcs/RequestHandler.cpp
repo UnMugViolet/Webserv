@@ -26,6 +26,46 @@ RequestHandler::~RequestHandler()
 	return ;
 }
 
+int RequestHandler::_checkAccess(const std::string &path, int type)
+{
+	if (access(path.c_str(), F_OK) == -1)
+		return (-1);
+	if (type == BINARY && access(path.c_str(), X_OK) == -1)
+		return (0);
+	if (access(path.c_str(), R_OK) == -1)
+		return (0);
+	return (1);
+	
+}
+
+std::string	RequestHandler::_getExtension(const std::string &path)
+{
+	size_t pos = path.rfind('.');
+	if (pos == std::string::npos)
+		return ("");
+	return (path.substr(pos + 1));
+}
+
+std::string RequestHandler::getIndex(const std::string &indexes, const std::string &root) const
+{
+	std::string	fullPath;
+	std::string	goodIndex;
+	size_t	space1;
+	size_t	space2 = 0;
+
+	while (true)
+	{
+		space1 = indexes.find_first_not_of(" ", space2);
+		if (space1 == std::string::npos)
+			break ;
+		space2 = indexes.find(' ', space1);
+		goodIndex = indexes.substr(space1, space2);
+		fullPath = root + goodIndex;
+		if (access(fullPath.c_str(), R_OK) == )
+			;
+	}
+}
+
 std::string	RequestHandler::trim(const std::string &str) const
 {
 	size_t first = str.find_first_not_of(" \r\n\t");
