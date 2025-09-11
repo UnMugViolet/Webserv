@@ -2,6 +2,7 @@
 #include "CGI.hpp"
 #include <string.h>
 #include <sstream>
+#include <vector>
 #include "ConfigParser.hpp"
 
 ARequest::ARequest()
@@ -112,16 +113,61 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, Confi
 	}
 }
 
+int ARequest::sendStaticFileResponse(int clientFd, const std::string &filePath)
+{
+	std::ifstream file(filePath.c_str(), std::ios::binary);
+	if (!file.is_open()) {
+		return -1; // File not found
+	}
+
+	// Get file size
+	file.seekg(0, std::ios::end);
+	size_t fileSize = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	// Read file content
+	std::vector<char> buffer(fileSize);
+	file.read(buffer.data(), fileSize);
+	file.close();
+
+	// Get content type
+	std::string contentType = getContentType(filePath);
+
+	// Send HTTP headers
+	std::ostringstream response;
+	response << "HTTP/1.1 200 OK\r\n";
+	response << "Content-Type: " << contentType << "\r\n";
+	response << "Content-Length: " << fileSize << "\r\n";
+	if (!_keep_alive)
+		response << "Connection: close\r\n";
+	response << "\r\n";
+
+	// Send headers first
+	std::string headers = response.str();
+	if (send(clientFd, headers.c_str(), headers.length(), 0) == -1) {
+		std::cerr << "Failed to send HTTP headers" << std::endl;
+		return -1;
+	}
+
+	// Send file content
+	if (send(clientFd, buffer.data(), buffer.size(), 0) == -1) {
+		std::cerr << "Failed to send file content" << std::endl;
+		return -1;
+	}
+
+	return 0;
+}
+
 std::string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverUid) const
 {
 	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, statusCode);
 }
 
-std::string ARequest::getContentType(const std::string& filePath) const
+std::string ARequest::getContentType(const std::string &filePath) const
 {
 	size_t pos = filePath.rfind('.');
 	if (pos == std::string::npos)
-		return "text/html";
+		return "application/octet-stream";
 	
 	std::string ext = filePath.substr(pos + 1);
 	
@@ -129,19 +175,31 @@ std::string ARequest::getContentType(const std::string& filePath) const
 		return "text/html";
 	else if (ext == "css")
 		return "text/css";
-	else if (ext == "png")
-		return "image/png";
-	else if (ext == "jpg" || ext == "jpeg")
-		return "image/jpeg";
-	else if (ext == "gif")
-		return "image/gif";
 	else if (ext == "js")
 		return "application/javascript";
+	else if (ext == "png")
+		return "image/png";
+	else if (ext == "ico")
+		return "image/x-icon";
+	else if (ext == "jpg" || ext == "jpeg")
+		return "image/jpeg";
+	else if (ext == "mp3")
+		return "audio/mpeg";
+	else if (ext == "wav")
+		return "audio/wav";
+	else if (ext == "ogg")
+		return "audio/ogg";
+	else if (ext == "gif")
+		return "image/gif";
 	else if (ext == "json")
 		return "application/json";
 	else if (ext == "txt")
 		return "text/plain";
+	else if (ext == "php")
+		return "application/x-httpd-php";
+	else if (ext == "pdf")
+		return "application/pdf";
 	else
-		return "text/html";
+		return "application/octet-stream";
 }
 

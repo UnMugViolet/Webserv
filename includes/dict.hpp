@@ -44,4 +44,21 @@
 #define DEFAULT_ERROR_LOG_FILE "error.log"
 #define DEFAULT_ACCESS_LOG_FILE "access.log"
 
+// Languages
+#define PYTHON 0
+#define PERL 1
+#define PHP 2
+#define SHELL 3
+#define BINARY 4
+#define UNKNOWN 5
+#define HTML 6
+#define CSS 7
+#define PNG 8
+#define JPG 9
+#define JPEG 10
+#define GIF 11
+#define ICO 12
+#define JS 13
+#define MP3 14
+
 #endif

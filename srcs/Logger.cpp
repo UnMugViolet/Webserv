@@ -6,7 +6,7 @@
 /*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:49:10 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/11 14:25:27 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/11 14:48:27 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,15 +64,15 @@ void	Logger::access(const std::string &serverUid, const std::string &msg)
 	if (!_accessLogStream.is_open())
         std::cerr << "Logger: _accessLogStream not open!" << std::endl;
 	else {
-		_accessLogStream << "[" << serverUid << "]\n" << msg << std::endl;
+		_accessLogStream << "[" << serverUid << "]\n" << msg << std::endl << std::endl;
 	}
 }
 
 void	Logger::error(const std::string &serverUid, const std::string &msg)
 {
 	if (!_errorLogStream.is_open())
-        std::cerr << "Logger: _errorLogStream not open!" << std::endl;
+        std::cerr << "Logger: _errorLogStream not open!" << std::endl << std::endl;
 	else {
-		_errorLogStream << "[" << serverUid << "]\n" << msg << std::endl;
+		_errorLogStream << "[" << serverUid << "]\n" << msg << std::endl << std::endl;
 	}
 }

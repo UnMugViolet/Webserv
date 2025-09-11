@@ -163,10 +163,33 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 
 			std::cout << "Index file: " << indexFile << std::endl; // TODO - Implement the index searching logic
 			if (headermap["path"] == "/")
-				fullPath = serverRoot + "/index.php";
+				fullPath = serverRoot + "/index.html";
 			
-			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
-				std::cerr << "Failed to send GET response" << std::endl;
+			// Check if file exists
+			std::ifstream file(fullPath.c_str());
+			if (!file.is_open()) {
+				// File not found - send 404 error
+				std::string errorPage = requestObject.loadErrorPage(404, config, serverUid);
+				if (requestObject.sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 404 response" << std::endl;
+			} else {
+				file.close();
+				
+				// Check if it's a CGI script (ends with .php, .py, etc.)
+				std::string contentType = requestObject.getContentType(fullPath);
+				if (contentType == "application/x-httpd-php" || fullPath.find(".php") != std::string::npos) {
+					// Handle as CGI
+					if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
+						std::cerr << "Failed to send CGI response" << std::endl;
+				} else {
+					// Handle as static file
+					if (requestObject.sendStaticFileResponse(fd, fullPath) == -1) {
+						std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
+						if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
+							std::cerr << "Failed to send 500 response" << std::endl;
+					}
+				}
+			}
 		}
 		else if (headermap["method"] == "POST")
 		{
