@@ -217,7 +217,7 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 	{
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-			if (_handler->handleRequest(_clientFds[i], *this, config) == -1)
+			if (_handler->handleRequest(_clientFds[i], *this, config, _uid) == -1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
 				close(_clientFds[i]);
