@@ -107,8 +107,14 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 	}
 	
 	// Extract body if present
+	if (headerlimit == std::string::npos)
+	{
+		std::cout << header << std::endl;
+	}
 	body = header.substr(headerlimit + 4, std::string::npos);
+	std::cout << "header here\n";
 	header.erase(headerlimit, std::string::npos);
+	std::cout << "header there\n";
 	
 	Logger::access(serverUid, "http request: " + header);
 	
@@ -123,7 +129,10 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		}
 		std::string host = headermap["Host"];
 		std::cout << "host is: " << host << std::endl;
-		serverRoot = server.getServerRoot(host);
+		std::string serverId = server.getId(host);
+		setMaxBodySize(config->getServerValue(serverId, "client_max_body_size"));
+		serverRoot = config->getServerValue(serverId, "root");
+		std::cout << "server root: " << serverRoot << std::endl;
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
 		{
