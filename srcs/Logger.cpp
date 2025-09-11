@@ -6,7 +6,7 @@
 /*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:49:10 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/11 14:00:19 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/11 14:25:27 by pjaguin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,20 +59,20 @@ void	Logger::init()
     _errorLogStream.open(_errorFile.c_str(), std::ios::app);
 }
 
-void	Logger::access(const std::string &serverId, const std::string &msg)
+void	Logger::access(const std::string &serverUid, const std::string &msg)
 {
 	if (!_accessLogStream.is_open())
         std::cerr << "Logger: _accessLogStream not open!" << std::endl;
 	else {
-		_accessLogStream << "[" << serverId << "]\n" << msg << std::endl;
+		_accessLogStream << "[" << serverUid << "]\n" << msg << std::endl;
 	}
 }
 
-void	Logger::error(const std::string &serverId, const std::string &msg)
+void	Logger::error(const std::string &serverUid, const std::string &msg)
 {
 	if (!_errorLogStream.is_open())
         std::cerr << "Logger: _errorLogStream not open!" << std::endl;
 	else {
-		_errorLogStream << "[" << serverId << "]\n" << msg << std::endl;
+		_errorLogStream << "[" << serverUid << "]\n" << msg << std::endl;
 	}
 }

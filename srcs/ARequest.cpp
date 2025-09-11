@@ -66,12 +66,12 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string& 
 	return 0;
 }
 
-int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, ConfigParser *config, const std::string &serverId)
+int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, ConfigParser *config, const std::string &serverUid)
 {
 	int cgiOutputFd = -1;
 	try {
 		// Execute CGI script
-		cgiOutputFd = CGI::interpret(scriptPath);
+		cgiOutputFd = CGI::interpret(scriptPath, serverUid);
 		
 		// Read the CGI output
 		std::string cgiOutput;
@@ -91,7 +91,7 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, Confi
 		std::string contentType = getContentType(scriptPath);
 		return sendHTTPResponse(clientFd, 200, cgiOutput, contentType);
 		
-	} catch (const CGI::CGIException& e) {
+	} catch (const CGI::CGIException &e) {
 		// Close the file descriptor if it was opened
 		if (cgiOutputFd != -1) {
 			close(cgiOutputFd);
@@ -99,7 +99,7 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, Confi
 		
 		// Handle true CGI execution errors (file not found, permission denied, etc.)
 		// These are cases where the script couldn't even run
-		std::string errorPage = loadErrorPage(e.getHttpStatus(), config, serverId);
+		std::string errorPage = loadErrorPage(e.getHttpStatus(), config, serverUid);
 		return sendHTTPResponse(clientFd, e.getHttpStatus(), errorPage, "text/html");
 	} catch (...) {
 		// Handle any other exceptions
@@ -107,14 +107,14 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, Confi
 			close(cgiOutputFd);
 		}
 		
-		std::string errorPage = loadErrorPage(500, config, serverId);
+		std::string errorPage = loadErrorPage(500, config, serverUid);
 		return sendHTTPResponse(clientFd, 500, errorPage, "text/html");
 	}
 }
 
-std::string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverId) const
+std::string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverUid) const
 {
-	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverId, statusCode);
+	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, statusCode);
 }
 
 std::string ARequest::getContentType(const std::string& filePath) const

@@ -57,38 +57,38 @@ int	CGI::_getType(std::string ext)
 }
 
 
-int	CGI::interpret(const std::string &path)
+int	CGI::interpret(const std::string &path, std::string const serverUid)
 {
 	int type = _getType(_getExtension(path));
 
 	switch (_checkAccess(path, type))
 	{
 		case -1: {
-			throw CGIException("file " + path + " does not exist", false, 404);
+			throw CGIException("file " + path + " does not exist", false, 404, serverUid);
 		}
 		case 0:
-			throw CGIException("Do not have permission to access :" + path + " on this server", false, 403);
+			throw CGIException("Do not have permission to access :" + path + " on this server", false, 403, serverUid);
 		case 1:
 			break;
 	}
 	if (type == UNKNOWN)
-		throw CGIException("Webserver does not interpret file: " + path, false, 415);
+		throw CGIException("Webserver does not interpret file: " + path, false, 415, serverUid);
 
 	if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF)
 	{
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)
-			throw CGIException("webserver cannot open file: " + path, false, 500);
+			throw CGIException("webserver cannot open file: " + path, false, 500, serverUid);
 		return (fd);
 	}
 	
 	int	fd[2];
 	if (pipe(fd) == -1)
-		throw CGIException("Internal error: pipe failed", false, 500);
+		throw CGIException("Internal error: pipe failed", false, 500, serverUid);
 	pid_t	pid;
 	pid = fork();
 	if (pid == -1)
-		throw CGIException("Internal error: fork failed", false, 500);
+		throw CGIException("Internal error: fork failed", false, 500, serverUid);
 	if (pid == 0)
 	{
 		const char	*cpath = path.c_str();
@@ -116,17 +116,17 @@ int	CGI::interpret(const std::string &path)
 				std::string tmp = "./" + path;
 				char *arg[2] = {(char *)tmp.c_str(), NULL};
 				execve(tmp.c_str(), arg, environ);
-				throw CGIException("Internal error: execve failed", true, 500);
+				throw CGIException("Internal error: execve failed", true, 500, serverUid);
 			
 		}
 		const char *arg[3] = {interpreter.c_str(), cpath, NULL};
 		execve(interpreter.c_str(), (char *const *)arg, environ);
-        throw CGIException("Internal error: execve failed", true, 500);
+        throw CGIException("Internal error: execve failed", true, 500, serverUid);
 	}
 	close(fd[1]);
 	int status;
     if (waitpid(pid, &status, 0) == -1)
-       throw CGIException("Internal error: waitpid failed", true, 500);
+       throw CGIException("Internal error: waitpid failed", true, 500, serverUid);
     if (WIFEXITED(status))
 	{
 		int exitStatus = WEXITSTATUS(status);
@@ -141,5 +141,5 @@ int	CGI::interpret(const std::string &path)
 		}
 	}
     else
-        throw CGIException("Internal error: exit failed", true, 500);
+        throw CGIException("Internal error: exit failed", true, 500, serverUid);
 }

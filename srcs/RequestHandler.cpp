@@ -124,7 +124,6 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		std::string host = headermap["Host"];
 		std::cout << "host is: " << host << std::endl;
 		serverRoot = server.getServerRoot(host);
-		std::cout << "server root: " << serverRoot << std::endl;
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
 		{
@@ -157,10 +156,11 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		{
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
+			if (serverRoot[serverRoot.length() - 1] == '/')
+				serverRoot = serverRoot.substr(0, serverRoot.length() -1);
 			std::string fullPath = serverRoot + headermap["path"];
 			std::string indexFile = config->getServerValue(serverUid, "index");
 
-			std::cout << std::string(RED) << fullPath << std::endl;
 			std::cout << "Index file: " << indexFile << std::endl; // TODO - Implement the index searching logic
 			if (headermap["path"] == "/")
 				fullPath = serverRoot + "/index.php";

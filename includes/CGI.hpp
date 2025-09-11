@@ -40,7 +40,7 @@ public:
 
 	/*member functions*/
 	
-	static int	interpret(const std::string &path);
+	static int	interpret(const std::string &path, std::string const serverUid);
 
 	/*operator overloads*/
 
@@ -50,11 +50,12 @@ public:
 			std::string 	_message;
 			int				_exit;
 			unsigned int	_http_status;
+			std::string		_serverUid;
 		public:
-			CGIException(std::string message, bool must_exit_prog, unsigned int http_status) throw()
+			CGIException(std::string message, bool must_exit_prog, unsigned int http_status, std::string const serverUid) throw()
 			{
 				_message = "CGIException error: " + message;
-				Logger::error("here", _message);
+				Logger::error(serverUid, _message);
 				_message = std::string(RED) + _message + std::string(NEUTRAL);
 				if (must_exit_prog)
 					_exit = must_exit_prog;
