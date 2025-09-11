@@ -22,10 +22,11 @@ class Server
 private:
 	/*attributes here*/
 	std::string							_uid;
-	std::map<std::string, std::string>	_names;
+	std::map<std::string, std::string>	_IdList;
 	int 								_socketfd;
 	std::vector<int>					_clientFds;
 	RequestHandler						*_handler;
+	ConfigParser						*_config;
 
 public:
 	/*constructors and destructor*/
@@ -38,6 +39,7 @@ public:
 	int			addVirtualHost(ConfigParser &config, std::string serverId);
 	int			getSocket() const;
 	std::string	getUid() const;
+	std::string getId(const std::string &name) const;
 	std::string getServerRoot(const std::string &serverName = "") const;
 	std::string getCurrentServerRoot() const;
 	int			setClient();

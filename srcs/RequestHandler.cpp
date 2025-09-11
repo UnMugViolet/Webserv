@@ -69,7 +69,7 @@ std::map<std::string, std::string>	RequestHandler::parseHeader(std::string heade
 	return (headers);
 }
 
-int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *config, const std::string &serverUid) const
+int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *config, const std::string &serverUid)
 {
 	std::string serverRoot;
 	const size_t BUFFER_SIZE = 4096;
@@ -107,6 +107,10 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 	}
 	
 	// Extract body if present
+	if (headerlimit == std::string::npos)
+	{
+		std::cout << header << std::endl;
+	}
 	body = header.substr(headerlimit + 4, std::string::npos);
 	header.erase(headerlimit, std::string::npos);
 	
@@ -123,7 +127,10 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		}
 		std::string host = headermap["Host"];
 		std::cout << "host is: " << host << std::endl;
-		serverRoot = server.getServerRoot(host);
+		std::string serverId = server.getId(host);
+		setMaxBodySize(config->getServerValue(serverId, "client_max_body_size"));
+		serverRoot = config->getServerValue(serverId, "root");
+		std::cout << "server root: " << serverRoot << std::endl;
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
 		{

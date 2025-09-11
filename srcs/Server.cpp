@@ -12,16 +12,17 @@ Server::Server(ConfigParser &config, std::string serverId)
 	std::string	_name;
 	const char *	c_name;
 
+	this->_config = &config;
 	this->_handler = new RequestHandler;
 	this->_uid = serverId;
 	//define ipv4
 	sockaddr.sin_family = AF_INET;
 
 	// get server name + root
-	if (config.hasServerKey(serverId, "host") && config.hasServerKey(serverId, "root"))
+	if (config.hasServerKey(serverId, "host"))
 	{
 		_name = config.getServerValue(serverId, "host");
-		_names[_name] = config.getServerValue(serverId, "root");
+		_IdList[_name] = _uid;
 	}
 	else
 		throw servException(serverId + ": no host");
@@ -139,7 +140,7 @@ int	Server::addVirtualHost(ConfigParser &config, std::string serverId)
 			throw servException(serverId + " invalid host");
 		if (inet_ntoa(serveraddr.sin_addr) == inet_ntoa(sockaddr.sin_addr))
 		{
-			_names[_name] = config.getServerValue(serverId, "root");
+			_IdList[_name] = serverId;
 			return 1;
 		}
 		return 0;
@@ -161,31 +162,12 @@ std::string Server::getUid() const
 	return _uid;
 }
 
-std::string Server::getCurrentServerRoot() const
+std::string Server::getId(const std::string &name) const
 {
-	// Return the root for this server instance
-	if (!_names.empty())
-		return _names.begin()->second;
-	return "www";
-}
-
-std::string Server::getServerRoot(const std::string& serverName) const
-{
-	// If no specific server name is provided, return the first (default) root
-	if (serverName.empty() && !_names.empty())
-		return _names.begin()->second;
-	
-	// Try to find the specific server name
-	std::map<std::string, std::string>::const_iterator it = _names.find(serverName);
-	if (it != _names.end())
+	std::map<std::string, std::string>::const_iterator it = _IdList.find(name);
+	if (it != _IdList.end())
 		return it->second;
-	
-	// Fallback to first available root if server name not found
-	if (!_names.empty())
-		return _names.begin()->second;
-		
-	// Default fallback
-	return "www";
+	return (_uid);
 }
 
 static std::string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
@@ -215,7 +197,7 @@ int	Server::setClient()
 	socklen_t serveraddr_len = sizeof(serveraddr);
 	getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
 	std::string connexion = get_connection_info(peeraddr, serveraddr);
-	std::string logInfo = connexion + " [Server: " + _uid + ", Root: " + getCurrentServerRoot() + "]";
+	std::string logInfo = connexion + " [Server: " + _uid + ", Root: " + _config->getServerValue(_uid, "root") + "]";
 	Logger::access(this->_uid, logInfo);
 	std::cout << logInfo << std::endl;
 
@@ -235,7 +217,6 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 	{
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-			std::string serverRoot = getCurrentServerRoot();
 			if (_handler->handleRequest(_clientFds[i], *this, config, _uid) == -1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
@@ -251,10 +232,12 @@ Server::Server(const Server &other)
 {
 	if (this != &other)
 	{
-		this->_names = other._names;
+		this->_IdList = other._IdList;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;
 		this->_uid = other._uid;  // Lost 2 hours of my life because of this
+		this->_config = other._config;
+		this->_handler = new RequestHandler();
 	}
 }
 
@@ -267,10 +250,14 @@ Server &Server::operator=(const Server &other)
 {
 	if (this != &other)
 	{
-		this->_names = other._names;
+		this->_IdList = other._IdList;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;
 		this->_uid = other._uid;
+		this->_config = other._config;
+		if (this->_handler)
+			delete this->_handler;
+		this->_handler = new RequestHandler();
 	}
 	return *this;
 }
