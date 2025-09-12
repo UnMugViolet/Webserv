@@ -20,23 +20,23 @@ class Server;
 
 class RequestHandler
 {
-private:
-	int _maxBodySize;
-public:
-	RequestHandler();
-	RequestHandler(RequestHandler& src);
-	RequestHandler&	operator=(RequestHandler& src);
-	~RequestHandler();
+	private:
+		int _maxBodySize;
+	public:
+		RequestHandler();
+		RequestHandler(RequestHandler& src);
+		RequestHandler&	operator=(RequestHandler& src);
+		~RequestHandler();
 
-	/*member functions*/
-	int									printRequest(int fd) const;
-	static std::string					_getExtension(const std::string &path);
-	static int							_checkAccess(const std::string &path);
-	std::string							getIndex(const std::string &indexes, const std::string &root) const;
-	int									handleRequest(int fd, Server const &server, ConfigParser *config, std::string const &serverUid);
-	void								setMaxBodySize(std::string size);
-	std::string							trim(const std::string &str) const;
-	std::map<std::string, std::string>	parseHeader(std::string header) const;
+		/*member functions*/
+		int									printRequest(int fd) const;
+		static std::string					getExtension(const std::string &path);
+		static int							_checkAccess(const std::string &path);
+		std::string							getIndex(const std::string &indexes, const std::string &root) const;
+		int									handleRequest(int fd, Server const &server, ConfigParser *config, std::string const &serverUid);
+		void								setMaxBodySize(std::string size);
+		std::string							trim(const std::string &str) const;
+		std::map<std::string, std::string>	parseHeader(std::string header) const;
 
 };
 

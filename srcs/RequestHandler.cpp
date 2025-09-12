@@ -29,7 +29,7 @@ int RequestHandler::_checkAccess(const std::string &path)
 {
 	if (access(path.c_str(), F_OK) == -1)
 		return (-1);
-	if (_getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
+	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
 		return (0);
 	if (access(path.c_str(), R_OK) == -1)
 		return (0);
@@ -37,7 +37,7 @@ int RequestHandler::_checkAccess(const std::string &path)
 	
 }
 
-std::string	RequestHandler::_getExtension(const std::string &path)
+std::string	RequestHandler::getExtension(const std::string &path)
 {
 	size_t pos = path.rfind('.');
 	if (pos == std::string::npos)
