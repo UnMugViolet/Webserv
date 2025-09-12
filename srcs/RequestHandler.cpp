@@ -226,7 +226,7 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				
 				// Check if it's a CGI script (ends with .php, .py, etc.)
 				std::string contentType = requestObject.getContentType(fullPath);
-				if (contentType == "application/x-httpd-php" || fullPath.find(".php") != std::string::npos) {
+				if (contentType == "text/html" || fullPath.find(".php") != std::string::npos) {
 					// Handle as CGI
 					if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 						std::cerr << "Failed to send CGI response" << std::endl;
