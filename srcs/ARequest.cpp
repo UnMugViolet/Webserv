@@ -176,7 +176,7 @@ std::string ARequest::getContentType(const std::string &filePath) const
 	
 	std::string ext = filePath.substr(pos + 1);
 	
-	if (ext == "html" || ext == "htm" || ext == "php")
+	if (ext == "html" || ext == "htm" || ext == "php" || ext == "py")
 		return "text/html";
 	else if (ext == "css")
 		return "text/css";
