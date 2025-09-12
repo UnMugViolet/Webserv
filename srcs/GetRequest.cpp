@@ -6,8 +6,9 @@ GetRequest::GetRequest(std::map<std::string, std::string> header)
 	_method = GET;
 	_keep_alive = true;
 
-	if (header["Connection"] == "close")
-		_keep_alive = false;
+	if (header.find("Connection") != header.end())
+		if (header["Connection"] == "close")
+			_keep_alive = false;
 	_client = header["User-agent"];
 	_host = header["Host"];
 	return ;

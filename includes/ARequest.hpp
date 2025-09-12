@@ -30,6 +30,7 @@ public:
 	~ARequest();
 
 	/*member functions*/
+	int			isKeepalive() const;
 	int			sendCGIResponse(int clientFd, const std::string &scriptPath, ConfigParser *config, const std::string &serverId);
 	int			sendHTTPResponse(int clientFd, int statusCode, const std::string &body, const std::string &contentType = "text/html");
 	int			sendStaticFileResponse(int clientFd, const std::string &filePath);

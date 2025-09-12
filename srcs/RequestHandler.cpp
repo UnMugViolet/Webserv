@@ -198,19 +198,21 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				body.append(buff, received);
 			}
 		}
-		
+
+		// get the index full path
+		if (serverRoot[serverRoot.length() - 1] == '/')
+		serverRoot = serverRoot.substr(0, serverRoot.length() -1);
+		std::string fullPath = serverRoot + headermap["path"];
+		std::string indexFile = getIndex(config->getServerValue(serverUid, "index"), serverRoot);
+
+		if (headermap["path"] == "/")
+			fullPath = serverRoot + indexFile;
+
 		if (headermap["method"] == "GET")
 		{
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
-			if (serverRoot[serverRoot.length() - 1] == '/')
-				serverRoot = serverRoot.substr(0, serverRoot.length() -1);
-			std::string fullPath = serverRoot + headermap["path"];
-			std::string indexFile = getIndex(config->getServerValue(serverUid, "index"), serverRoot);
-
-			std::cout << "Index file: " << indexFile << std::endl; // TODO - Implement the index searching logic
-			if (headermap["path"] == "/")
-				fullPath = serverRoot + indexFile;
+			
 			
 			// Check if file exists
 			std::ifstream file(fullPath.c_str());
@@ -237,25 +239,34 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 					}
 				}
 			}
+			if (!requestObject.isKeepalive())
+				return (-1);
 		}
 		else if (headermap["method"] == "POST")
 		{
 			PostRequest requestObject(headermap);
 			// Process the POST request
-			std::string fullPath = serverRoot + headermap["path"];
-			if (headermap["path"] == "/")
-				fullPath = serverRoot + "/index.php";
 				
 			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 				std::cerr << "Failed to send POST response" << std::endl;
+			if (!requestObject.isKeepalive())
+				return (-1);
 		}
 		else if (headermap["method"] == "DELETE")
 		{
 			DeleteRequest requestObject(headermap);
 			// Process the DELETE request
-			std::string response = "<html><body><h1>DELETE Method</h1><p>Resource deletion not implemented</p></body></html>";
-			if (requestObject.sendHTTPResponse(fd, 200, response) == -1)
-				std::cerr << "Failed to send DELETE response" << std::endl;
+
+			if (access(fullPath.c_str(), F_OK))
+				requestObject.delete_file(fd, fullPath.c_str());
+			else
+			{
+				std::string errorPage = requestObject.loadErrorPage(404, config, serverUid);
+				if (requestObject.sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 404 response" << std::endl;
+			}
+			if (!requestObject.isKeepalive())
+				return (-1);
 		}
 		else
 		{

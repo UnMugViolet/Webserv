@@ -22,6 +22,11 @@ ARequest::~ARequest()
 	return ;
 }
 
+int	ARequest::isKeepalive() const
+{
+	return (_keep_alive);
+}
+
 ARequest&	ARequest::operator=(ARequest &src)
 {
 	if (this != &src)
