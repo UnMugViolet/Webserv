@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/11 10:59:57 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/12 09:48:51 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ void Webserv::serverLoop()
 	fd_set readFd;
 	FD_ZERO(&readFd);
 	FD_ZERO(&fullReadFd);
+
+	std::cout << GREEN BOLD << _servers.size() << " SERVER INSTANCE RUNNING" << NEUTRAL << std::endl;
 	
 	//mettre les fd d'ecoute de chaque serveur dans readFd
 	for (size_t i = 0; i < _servers.size(); i++)

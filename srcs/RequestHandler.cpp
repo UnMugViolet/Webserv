@@ -59,16 +59,11 @@ std::string RequestHandler::getIndex(const std::string &indexes, const std::stri
 			break ;
 		space2 = indexes.find(' ', space1);
 		goodIndex = indexes.substr(space1, space2);
-		std::cout << goodIndex << std::endl;
 		if (goodIndex[0] != '/')
 			goodIndex = "/" + goodIndex;
 		fullPath = root + goodIndex;
-		std::cout << fullPath << std::endl;
 		if (_checkAccess(fullPath) == 1)
-		{
-			std::cout << goodIndex << std::endl;
 			return (goodIndex);
-		}
 	}
 	return ("");
 }
@@ -173,11 +168,9 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			return -1;
 		}
 		std::string host = headermap["Host"];
-		std::cout << "host is: " << host << std::endl;
 		std::string serverId = server.getId(host);
 		setMaxBodySize(config->getServerValue(serverId, "client_max_body_size"));
 		serverRoot = config->getServerValue(serverId, "root");
-		std::cout << "server root: " << serverRoot << std::endl;
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
 		{

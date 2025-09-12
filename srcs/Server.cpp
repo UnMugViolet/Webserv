@@ -138,11 +138,14 @@ int	Server::addVirtualHost(ConfigParser &config, std::string serverId)
 		}
 		if (gotit == 0)
 			throw servException(serverId + " invalid host");
-		if (inet_ntoa(serveraddr.sin_addr) == inet_ntoa(sockaddr.sin_addr))
+		std::string ip = inet_ntoa(sockaddr.sin_addr);
+		std::cout << RED << inet_ntoa(serveraddr.sin_addr) << "; " << inet_ntoa(sockaddr.sin_addr) << std::endl;
+		if (ip.compare(inet_ntoa(serveraddr.sin_addr)) == 0)
 		{
 			_IdList[_name] = serverId;
 			return 1;
 		}
+	
 		return 0;
 	}
 	else

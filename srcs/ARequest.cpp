@@ -196,7 +196,7 @@ std::string ARequest::getContentType(const std::string &filePath) const
 	else if (ext == "txt")
 		return "text/plain";
 	else if (ext == "php")
-		return "application/x-httpd-php";
+		return "application/x-httpd-php"; //probleme ici?
 	else if (ext == "pdf")
 		return "application/pdf";
 	else
