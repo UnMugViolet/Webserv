@@ -226,20 +226,10 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				
 				// Check if it's a CGI script (ends with .php, .py, etc.)
 				std::string contentType = requestObject.getContentType(fullPath);
-				if (contentType == "text/html" || fullPath.find(".php") != std::string::npos) {
-					std::cout << "file requested: " << fullPath << std::endl;
-					// Handle as CGI
-					if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
-						std::cerr << "Failed to send CGI response" << std::endl;
-				} else {
-					// Handle as static file
-					std::cout << "Static file requested: " << fullPath << std::endl;
-					if (requestObject.sendStaticFileResponse(fd, fullPath) == -1) {
-						std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
-						if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-							std::cerr << "Failed to send 500 response" << std::endl;
-					}
-				}
+				std::cout << "file requested: " << fullPath << std::endl;
+				// Handle as CGI
+				if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
+					std::cerr << "Failed to send CGI response" << std::endl;
 			}
 			if (!requestObject.isKeepalive())
 				return (-1);

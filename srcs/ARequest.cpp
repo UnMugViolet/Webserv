@@ -118,51 +118,6 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, Confi
 	}
 }
 
-int ARequest::sendStaticFileResponse(int clientFd, const std::string &filePath)
-{
-	std::ifstream file(filePath.c_str(), std::ios::binary);
-	if (!file.is_open()) {
-		return -1; // File not found
-	}
-
-	// Get file size
-	file.seekg(0, std::ios::end);
-	size_t fileSize = file.tellg();
-	file.seekg(0, std::ios::beg);
-
-	// Read file content
-	std::vector<char> buffer(fileSize);
-	file.read(buffer.data(), fileSize);
-	file.close();
-
-	// Get content type
-	std::string contentType = getContentType(filePath);
-
-	// Send HTTP headers
-	std::ostringstream response;
-	response << "HTTP/1.1 200 OK\r\n";
-	response << "Content-Type: " << contentType << "\r\n";
-	response << "Content-Length: " << fileSize << "\r\n";
-	if (!_keep_alive)
-		response << "Connection: close\r\n";
-	response << "\r\n";
-
-	// Send headers first
-	std::string headers = response.str();
-	if (send(clientFd, headers.c_str(), headers.length(), 0) == -1) {
-		std::cerr << "Failed to send HTTP headers" << std::endl;
-		return -1;
-	}
-
-	// Send file content
-	if (send(clientFd, buffer.data(), buffer.size(), 0) == -1) {
-		std::cerr << "Failed to send file content" << std::endl;
-		return -1;
-	}
-
-	return 0;
-}
-
 std::string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverUid) const
 {
 	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, statusCode);

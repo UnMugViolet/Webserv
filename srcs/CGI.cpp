@@ -80,7 +80,7 @@ int	CGI::interpret(const std::string &path, std::string const serverUid)
 	if (type == UNKNOWN)
 		throw CGIException("Webserver does not interpret file: " + path, false, 415, serverUid);
 
-	if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF || type == ICO || type == JS)
+	if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF || type == ICO || type == JS || type == MP3) // TODO - Parse config file instead to know which files are interpreted
 	{
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)
