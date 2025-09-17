@@ -223,7 +223,7 @@ bool ConfigParser::hasServerKey(const std::string &serverName, const std::string
 	return false;
 }
 
-std::vector<std::string> ConfigParser::getServerIds() const
+std::vector<std::string> ConfigParser::getServerUids() const
 {
 	std::vector<std::string> names;
 	for (std::map<std::string, std::map<std::string, std::string> >::const_iterator it = _serverBlocks.begin();
@@ -276,21 +276,21 @@ std::string ConfigParser::_intToString(int num) const
 	return oss.str();
 }
 
-std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::string &serverId, unsigned int error_code) const
+std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::string &serverUid, unsigned int error_code) const
 {
 	std::ifstream file;
 	std::ostringstream oss;
 	oss << error_code;
 	std::string error_code_str = oss.str();
-	std::string context_path = parser.getServerValue(serverId, "root");
+	std::string context_path = parser.getServerValue(serverUid, "root");
 
 	if (context_path.empty() || context_path[context_path.length() - 1] != '/')
 		context_path += '/';
 
 	// Priority 1: Check specific server error page first
-	if (parser.hasServerKey(serverId, "error_page " + error_code_str))
+	if (parser.hasServerKey(serverUid, "error_page " + error_code_str))
 	{
-		std::string serverErrorPage = parser.getServerValue(serverId, "error_page " + error_code_str);
+		std::string serverErrorPage = parser.getServerValue(serverUid, "error_page " + error_code_str);
 		if (serverErrorPage[0] == '/')
 			serverErrorPage = serverErrorPage.substr(1);
 		std::string relative_path = context_path + serverErrorPage;

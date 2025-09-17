@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pjaguin <pjaguin@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:43:52 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/11 12:31:31 by pjaguin          ###   ########.fr       */
+/*   Updated: 2025/09/17 13:11:14 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,6 @@ class Logger {
 		~Logger();
 		
 		static void init();
-		static void access(const std::string &serverId, const std::string &msg);
-		static void error(const std::string &serverId, const std::string &msg);
+		static void access(const std::string &serverUid, const std::string &msg);
+		static void error(const std::string &serverUid, const std::string &msg);
 } ;

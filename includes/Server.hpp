@@ -36,7 +36,7 @@ public:
 	~Server();
 
 	/*member functions*/
-	int			addVirtualHost(ConfigParser &config, std::string serverId);
+	int			addVirtualHost(ConfigParser &config, std::string serverUid);
 	int			getSocket() const;
 	std::string	getUid() const;
 	std::string getId(const std::string &name) const;

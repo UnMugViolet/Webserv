@@ -168,9 +168,9 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			return -1;
 		}
 		std::string host = headermap["Host"];
-		std::string serverId = server.getId(host);
-		setMaxBodySize(config->getServerValue(serverId, "client_max_body_size"));
-		serverRoot = config->getServerValue(serverId, "root");
+		std::string serverUid = server.getId(host);
+		setMaxBodySize(config->getServerValue(serverUid, "client_max_body_size"));
+		serverRoot = config->getServerValue(serverUid, "root");
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
 		{

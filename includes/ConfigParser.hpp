@@ -34,12 +34,12 @@ class ConfigParser {
 		~ConfigParser();
 
 		void parseFile(const std::string &filePath);
-		std::string getErrorPageContent(ConfigParser &parser, const std::string &serverId, unsigned int error_code) const;
+		std::string getErrorPageContent(ConfigParser &parser, const std::string &serverUid, unsigned int error_code) const;
 		std::string getValue(const std::string &key) const;
 		std::string getServerValue(const std::string &serverName, const std::string &key) const;
 		bool hasKey(const std::string &key) const;
 		bool hasServerKey(const std::string &serverName, const std::string &key) const;
-		std::vector<std::string> getServerIds() const;
+		std::vector<std::string> getServerUids() const;
 		void printConfig() const;
 		
 		class ErrorException : public std::exception
