@@ -201,7 +201,11 @@ std::string Server::getId(const std::string &name) const
 static std::string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
     std::ostringstream oss;
 
-    oss << "Connection: client "
+    oss << YELLOW 
+		<< BOLD
+		<< "Connection:"
+		<< NEUTRAL
+		<< " client "
         << inet_ntoa(client.sin_addr) << ":"
         << ntohs(client.sin_port)
         << " -> server "

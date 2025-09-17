@@ -226,7 +226,7 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				
 				// Check if it's a CGI script (ends with .php, .py, etc.)
 				std::string contentType = requestObject.getContentType(fullPath);
-				std::cout << "file requested: " << fullPath << std::endl;
+				std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << fullPath << NEUTRAL << std::endl;
 				// Handle as CGI
 				if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 					std::cerr << "Failed to send CGI response" << std::endl;
@@ -270,8 +270,6 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		std::cerr << "Error parsing request: " << e.what() << std::endl;
 		return (-1);
 	}
-	
-	std::cout << std::string(GREEN) << "Request handled succesfully" << std::string(NEUTRAL) << std::endl;
 	return (0);
 }
 
