@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/17 13:15:03 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/17 15:58:18 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "Server.hpp"
 #include "CGI.hpp"
 #include "dict.hpp"
+#include <signal.h>
 
 int main(int ac, char **av)
 {
@@ -28,9 +29,13 @@ int main(int ac, char **av)
 	}
 
 	try {
+		// Set up signal handlers for graceful shutdown
+		signal(SIGINT, Webserv::signalHandler);
+		signal(SIGTERM, Webserv::signalHandler);
+		signal(SIGQUIT, Webserv::signalHandler);
+
 		std::cout << "Using config file: " << BOLD << av[1] << NEUTRAL << std::endl << std::endl;
 
-		// Test the ConfigParser
 		ConfigParser config(av[1]);
 		config.printConfig();
 
