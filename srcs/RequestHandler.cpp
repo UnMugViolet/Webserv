@@ -227,11 +227,13 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				// Check if it's a CGI script (ends with .php, .py, etc.)
 				std::string contentType = requestObject.getContentType(fullPath);
 				if (contentType == "text/html" || fullPath.find(".php") != std::string::npos) {
+					std::cout << "file requested: " << fullPath << std::endl;
 					// Handle as CGI
 					if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 						std::cerr << "Failed to send CGI response" << std::endl;
 				} else {
 					// Handle as static file
+					std::cout << "Static file requested: " << fullPath << std::endl;
 					if (requestObject.sendStaticFileResponse(fd, fullPath) == -1) {
 						std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
 						if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
@@ -280,28 +282,6 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 	}
 	
 	std::cout << std::string(GREEN) << "Request handled succesfully" << std::string(NEUTRAL) << std::endl;
-	return (0);
-}
-
-int	RequestHandler::printRequest(int fd) const
-{
-	char buff[4096];
-	std::string request;
-	int			received;
-
-	received = recv(fd, buff, 4096, 0);
-	if (received <= 0)
-	{
-		return (-1);
-	}
-	request = buff;
-	std::cout << "http request : " << request << std::endl;
-	char buf[78] = "HTTP/1.1 200 OK\r\nContent-Length: 6\r\nContent-Type: text/plain\r\n\r\ncoucou";
-	if (send(fd, buf, strlen(buf), 0) == -1)
-	{
-		std::cerr << "send error : pouet" << std::endl;
-		return 1;
-	}
 	return (0);
 }
 

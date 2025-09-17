@@ -29,7 +29,6 @@ class RequestHandler
 		~RequestHandler();
 
 		/*member functions*/
-		int									printRequest(int fd) const;
 		static std::string					getExtension(const std::string &path);
 		static int							_checkAccess(const std::string &path);
 		std::string							getIndex(const std::string &indexes, const std::string &root) const;

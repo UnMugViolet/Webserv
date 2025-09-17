@@ -15,7 +15,7 @@
 
 	echo "<h1>Welcome to $project_name</h1>";
 	echo "
-		<img src=\"img/webserv.png\" alt=\"image de badge 42\"/>
+		<img src=\"img/webserv.html\" alt=\"image de badge 42\"/>
 	</section>
 	";
 
