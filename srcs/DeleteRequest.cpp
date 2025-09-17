@@ -36,7 +36,7 @@ void	DeleteRequest::delete_file(int fd, const char *path) const
 		}
 	}
 	else
-		; //why?
+		response << "HTTP/1.1 404 Not Found\r\n\r\n";
 }
 
 DeleteRequest::~DeleteRequest()
