@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:43:52 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/17 13:11:14 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/17 16:10:52 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <fstream>
 #include <ctime>
 #include <string>
+#include <vector>
 #include "dict.hpp"
 #include "ConfigParser.hpp"
 
@@ -27,6 +28,10 @@ class Logger {
 		static std::ofstream _errorLogStream;
 		static std::string	 _accessFile;
 		static std::string	 _errorFile;
+		static const int MAX_LOG_LINES = 2000;
+		
+		static int countLines(const std::string &filename);
+		static void rotateLogFile(const std::string &filename, std::ofstream &stream);
 	public:
 		Logger(ConfigParser &config);
 		~Logger();
