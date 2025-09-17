@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/17 16:02:47 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/17 16:21:43 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,9 +166,7 @@ void Webserv::serverLoop()
 	
 	// If we exit the loop due to shutdown signal, clean up gracefully
 	if (_shutdown)
-	{
 		stopServer();
-	}
 }
 
 // Static signal handler
