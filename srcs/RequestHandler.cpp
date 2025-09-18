@@ -169,7 +169,10 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		}
 		std::string host = headermap["Host"];
 		std::string serverUid = server.getId(host);
-		setMaxBodySize(config->getServerValue(serverUid, "client_max_body_size"));
+		std::string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
+		if (max_body_size.empty())
+			max_body_size = config->getValue("client_max_body_size");
+		setMaxBodySize(max_body_size);
 		serverRoot = config->getServerValue(serverUid, "root");
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
@@ -277,9 +280,11 @@ void	RequestHandler::setMaxBodySize(std::string size)
 {
 	std::istringstream iss(size);
 	int value;
-	if (iss >> value && value >= 0)
+	if (iss >> value && value >= 0) {
 		_maxBodySize = value;
+		// std::cout << "Body size = " << value << std::endl; TODO - Convert the figure in MB and set the value to the attribute
+	}
 	else
-		_maxBodySize = 1048576; // Default 1MB if invalid 
+		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
 }
 

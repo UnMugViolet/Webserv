@@ -64,4 +64,7 @@
 #define JS 13
 #define MP3 14
 
+// Consts 
+#define MAX_BODY_SIZE 1048576
+
 #endif
