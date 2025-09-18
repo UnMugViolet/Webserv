@@ -22,24 +22,30 @@ class ConfigParser {
 	private:
 		std::map<std::string, std::string> _configMap;
 		std::map<std::string, std::map<std::string, std::string> > _serverBlocks;
-		
+		std::map<std::string, std::map<std::string, std::map<std::string, std::string> > > _locationBlocks;
+
 		std::string _trim(const std::string &str) const;
 		std::string _intToString(int num) const;
-		void _parseServerBlock(std::ifstream &file, const std::string &serverName);
-		void _parseLocationBlock(std::ifstream &file, const std::string &serverName, const std::string &location);
+		void _parseServerBlock(std::ifstream &file, std::string const &serverName);
+		void _parseLocationBlock(std::ifstream &file, std::string const &serverName, std::string const &location);
 
 	public:
 		ConfigParser();
 		ConfigParser(const std::string &filePath);
+		ConfigParser(const ConfigParser &other);
+		ConfigParser &operator=(const ConfigParser &other);
 		~ConfigParser();
 
 		void parseFile(const std::string &filePath);
 		std::string getErrorPageContent(ConfigParser &parser, const std::string &serverUid, unsigned int error_code) const;
 		std::string getValue(const std::string &key) const;
 		std::string getServerValue(const std::string &serverName, const std::string &key) const;
+		std::string getLocationValue(const std::string &serverName, const std::string &location, const std::string &key) const;
 		bool hasKey(const std::string &key) const;
 		bool hasServerKey(const std::string &serverName, const std::string &key) const;
+		bool hasLocationKey(const std::string &serverName, const std::string &location, const std::string &key) const;
 		std::vector<std::string> getServerUids() const;
+		std::vector<std::string> getLocationPaths(const std::string &serverName) const;
 		void printConfig() const;
 		
 		class ErrorException : public std::exception
