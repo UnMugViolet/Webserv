@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/17 16:21:43 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/18 10:46:52 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ void Webserv::serverLoop()
 		}
 	}
 
-	//ecoute sur la liste de fd, puis boucle sur chaque fd de chaque serveur pour verifier lesquels sont actifs
+	// ecoute sur la liste de fd, puis boucle sur chaque fd de chaque serveur pour verifier lesquels sont actifs
 	while (!_shutdown)
 	{
 		readFd = fullReadFd;
@@ -158,7 +158,7 @@ void Webserv::serverLoop()
 							maxFd = fd;
 					}
 				}
-				_servers[i].getRequests(readFd, fullReadFd, _config);  // Pass the config
+				_servers[i].getRequests(readFd, fullReadFd, _config);
 			}
 		}
 		// If selectResult == 0, it's a timeout, loop continues to check shutdown flag

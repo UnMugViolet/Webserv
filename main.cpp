@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/17 15:58:18 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/18 10:41:37 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ int main(int ac, char **av)
 	try {
 		// Set up signal handlers for graceful shutdown
 		signal(SIGINT, Webserv::signalHandler);
-		signal(SIGTERM, Webserv::signalHandler);
+		signal(SIGTERM, Webserv::signalHandler); 
 		signal(SIGQUIT, Webserv::signalHandler);
 
 		std::cout << "Using config file: " << BOLD << av[1] << NEUTRAL << std::endl << std::endl;
@@ -43,7 +43,7 @@ int main(int ac, char **av)
 		Logger logger(config);
 		logger.init();
 
-		try {			
+		try {	
 			Webserv webserv(config);
 			webserv.serverLoop();
 		} catch (const Webserv::WebservException &e) {
