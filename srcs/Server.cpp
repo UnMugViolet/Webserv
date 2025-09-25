@@ -5,7 +5,7 @@ Server::Server()
 {
 }
 
-Server::Server(ConfigParser &config, std::string serverId)
+Server::Server(ConfigParser &config, std::string serverUid)
 {
 	sockaddr_in sockaddr;
 	int			gotit = 0;
@@ -13,93 +13,121 @@ Server::Server(ConfigParser &config, std::string serverId)
 	const char *	c_name;
 
 	this->_config = &config;
-	this->_handler = new RequestHandler;
-	this->_uid = serverId;
-	//define ipv4
-	sockaddr.sin_family = AF_INET;
+	this->_handler = NULL;
+	this->_socketfd = -1;
+	this->_uid = serverUid;
+	std::ostringstream oss;
 
-	// get server name + root
-	if (config.hasServerKey(serverId, "host"))
+	try 
 	{
-		_name = config.getServerValue(serverId, "host");
-		_IdList[_name] = _uid;
-	}
-	else
-		throw servException(serverId + ": no host");
+		this->_handler = new RequestHandler;
+		
+		//define ipv4
+		sockaddr.sin_family = AF_INET;
 
-	// check if host is a valid ip
-	c_name = _name.c_str();
-	if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr)))
-		gotit = 1;
-	
-	// try getting ip address with host as alias
-	struct addrinfo hints;
-	struct addrinfo *res;
-	struct addrinfo *r;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	int status = getaddrinfo(c_name, 0, &hints, &res);
-	if (status == 0)
-	{
-		r = res;
-		while (r != NULL)
+		// get server name + root
+		if (config.hasServerKey(serverUid, "host"))
 		{
-			if (r->ai_family == AF_INET)
+			_name = config.getServerValue(serverUid, "host");
+			_IdList[_name] = _uid;
+		}
+		else
+			throw servException(serverUid + ": no host");
+
+		// check if host is a valid ip
+		c_name = _name.c_str();
+		if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr))) // TODO - Not allowed function
+			gotit = 1;
+	
+		// try getting ip address with host as alias
+		struct addrinfo hints;
+		struct addrinfo *res;
+		struct addrinfo *r;
+		int				portnbr;
+
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+
+		memset(&hints, 0, sizeof(hints)); // TODO - Not allowed function
+		int status = getaddrinfo(c_name, 0, &hints, &res);
+		
+		if (status == 0)
+		{
+			r = res;
+			while (r != NULL)
 			{
-				gotit = 1;
-				struct sockaddr_in *ipv4 = (struct sockaddr_in *)r->ai_addr;
-				sockaddr.sin_addr = ipv4->sin_addr;
+				if (r->ai_family == AF_INET)
+				{
+					gotit = 1;
+					struct sockaddr_in *ipv4 = (struct sockaddr_in *)r->ai_addr;
+					sockaddr.sin_addr = ipv4->sin_addr;
+				}
+				r = r->ai_next;
 			}
-			r = r->ai_next;
+			freeaddrinfo(res);
+		}
+		if (gotit == 0)
+			throw servException(serverUid + "invalid host");
+
+		if (config.hasServerKey(serverUid,  "listen"))
+			portnbr = atoi(config.getServerValue(serverUid, "listen").c_str()); // TODO - Add out own atoi this one is not part of the authorized functions
+		else
+			throw servException("no port number");
+		if (portnbr <= 0 || portnbr > 65535)
+			throw servException("invalid port number");
+
+		//create listening socket with port number
+		sockaddr.sin_port = htons(portnbr);
+		_socketfd = socket(AF_INET, SOCK_STREAM, 0);
+		int opt = 1;
+		if (_socketfd == -1)
+			throw servException("socket failed");
+		if (setsockopt(_socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+		{
+			close(_socketfd);
+			throw servException("setsockopt failed");
+		}
+		if (bind(_socketfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == -1)
+		{
+			close(_socketfd);
+			oss << portnbr;
+			throw servException("bind failed for server: " + _uid + " on port " + oss.str());
+		}
+		if (listen(_socketfd, 10) == -1)
+		{
+			close(_socketfd);
+			oss.str(""); // Clear the stringstream
+			oss << portnbr;
+			throw servException("listen failed for server: " + _uid + " on port " + oss.str());
 		}
 
-	}
-	if (gotit == 0)
-		throw servException(serverId + "invalid host");
-
-	//get port number
-	int			portnbr;
-
-	if (config.hasServerKey(serverId,  "listen"))
-		portnbr = atoi(config.getServerValue(serverId, "listen").c_str());
-	else
-		throw servException("no port number");
-	if (portnbr <= 0 || portnbr > 65535)
-		throw servException("invalid port number");
-
-
-	//create listening socket with port number
-	sockaddr.sin_port = htons(portnbr);
-	_socketfd = socket(AF_INET, SOCK_STREAM, 0);
-	int opt = 1;
-	if (_socketfd == -1)
-		throw servException("socket failed");
-	if (setsockopt(_socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-		throw servException("setsockopt failed");
-	if (bind(_socketfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == -1)
+		//put max body size in handler
+		if (config.hasServerKey(serverUid, "client_max_body_size"))
+			_handler->setMaxBodySize(config.getServerValue(serverUid, "client_max_body_size"));
+			
+	} 
+	catch (const servException &e) 
 	{
-		close(_socketfd);
-		throw servException("bind failed");
+		// Clean up allocated resources before re-throwing
+		if (_handler) {
+			delete _handler;
+			_handler = NULL;
+		}
+		if (_socketfd != -1) {
+			close(_socketfd);
+			_socketfd = -1;
+		}
+		throw; // Re-throw the original exception to parent Webserv
 	}
-	if (listen(_socketfd, 10) == -1)
-	{
-		close(_socketfd);
-		throw servException("listen failed");
-	}
-
-	//put max body size in handler
-	if (config.hasServerKey(serverId, "client_max_body_size"))
-		_handler->setMaxBodySize(config.getServerValue(serverId, "client_max_body_size"));
 }
 
-int	Server::addVirtualHost(ConfigParser &config, std::string serverId)
+int	Server::addVirtualHost(ConfigParser &config, std::string serverUid)
 {
 	std::string _name;
 	sockaddr_in sockaddr;
 
 	sockaddr.sin_family = AF_INET;
-	if (config.hasServerKey(serverId, "host") && config.hasServerKey(serverId, "root"))
+	if (config.hasServerKey(serverUid, "host") && config.hasServerKey(serverUid, "root"))
 	{
 		int gotit = 0;
 
@@ -107,18 +135,18 @@ int	Server::addVirtualHost(ConfigParser &config, std::string serverId)
 		socklen_t serveraddr_len = sizeof(serveraddr);
 		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
 
-		_name = config.getServerValue(serverId, "host");
+		_name = config.getServerValue(serverUid, "host");
 
 		// check if host is a valid ip
 		const char *c_name = _name.c_str();
-		if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr)))
+		if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr))) // TODO - Not allowed function
 			gotit = 1;
 
 		// try getting ip address with host as alias
 		struct addrinfo hints;
 		struct addrinfo *res;
 		struct addrinfo *r;
-		memset(&hints, 0, sizeof(hints));
+		memset(&hints, 0, sizeof(hints)); // TODO - Not allowed function
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 		int status = getaddrinfo(c_name, 0, &hints, &res);
@@ -135,13 +163,14 @@ int	Server::addVirtualHost(ConfigParser &config, std::string serverId)
 				}
 				r = r->ai_next;
 			}
+			freeaddrinfo(res);
 		}
 		if (gotit == 0)
-			throw servException(serverId + " invalid host");
-		std::string ip = inet_ntoa(sockaddr.sin_addr);
-		if (ip.compare(inet_ntoa(serveraddr.sin_addr)) == 0)
+			throw servException(serverUid + " invalid host");
+		std::string ip = inet_ntoa(sockaddr.sin_addr);  // TODO - Not allowed function
+		if (ip.compare(inet_ntoa(serveraddr.sin_addr)) == 0)  // TODO - Not allowed function
 		{
-			_IdList[_name] = serverId;
+			_IdList[_name] = serverUid;
 			return 1;
 		}
 	
@@ -149,7 +178,7 @@ int	Server::addVirtualHost(ConfigParser &config, std::string serverId)
 	}
 	else
 	{
-		std::cerr << "invalid conf for: " << serverId << std::endl;
+		std::cerr << "invalid conf for: " << serverUid << std::endl;
 		return (1);
 	}
 }
@@ -175,11 +204,15 @@ std::string Server::getId(const std::string &name) const
 static std::string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
     std::ostringstream oss;
 
-    oss << "Connection: client "
-        << inet_ntoa(client.sin_addr) << ":"
+    oss << YELLOW 
+		<< BOLD
+		<< "Connection:"
+		<< NEUTRAL
+		<< " client "
+        << inet_ntoa(client.sin_addr) << ":"  // TODO - Not allowed function
         << ntohs(client.sin_port)
         << " -> server "
-        << inet_ntoa(server.sin_addr) << ":"
+        << inet_ntoa(server.sin_addr) << ":"  // TODO - Not allowed function
         << ntohs(server.sin_port);
 
     return oss.str();
@@ -215,8 +248,16 @@ void	Server::unsetClient(int position)
 
 void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* config)
 {
-	for (size_t i = 0; i < _clientFds.size(); i++)
+	for (size_t i = 0; i < _clientFds.size();)
 	{
+		// Check if the file descriptor is valid
+		if (_clientFds[i] < 0)
+		{
+			// Invalid file descriptor, remove it
+			unsetClient(i);
+			continue;
+		}
+		
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
 			if (_handler->handleRequest(_clientFds[i], *this, config, _uid) == -1)
@@ -225,8 +266,10 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 				close(_clientFds[i]);
 				unsetClient(i);
 				std::cout << "Client disconnected" << std::endl;
+				continue;
 			}
 		}
+		i++;
 	}
 }
 
@@ -240,18 +283,33 @@ Server::Server(const Server &other)
 		this->_uid = other._uid;  // Lost 2 hours of my life because of this
 		this->_config = other._config;
 		this->_handler = new RequestHandler();
+		
+		// Transfer ownership of the socket to avoid double-close
+		const_cast<Server&>(other)._socketfd = -1;
 	}
 }
 
 Server::~Server()
 {
-	delete _handler;
+	if (_handler) {
+		delete _handler;
+		_handler = NULL;
+	}
+	if (_socketfd != -1) {
+		close(_socketfd);
+		_socketfd = -1;
+	}
 }
 
 Server &Server::operator=(const Server &other)
 {
 	if (this != &other)
 	{
+		// Close current socket if we have one
+		if (_socketfd != -1) {
+			close(_socketfd);
+		}
+		
 		this->_IdList = other._IdList;
 		this->_socketfd = other._socketfd;
 		this->_clientFds = other._clientFds;
@@ -260,6 +318,9 @@ Server &Server::operator=(const Server &other)
 		if (this->_handler)
 			delete this->_handler;
 		this->_handler = new RequestHandler();
+		
+		// Transfer ownership of the socket to avoid double-close
+		const_cast<Server&>(other)._socketfd = -1;
 	}
 	return *this;
 }

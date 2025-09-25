@@ -22,7 +22,6 @@ DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 void	DeleteRequest::delete_file(int fd, const char *path) const
 {
 	std::ostringstream response;
-
 	
 	response << "\r\n";
 	if (std::remove(path) == 0)
@@ -36,7 +35,7 @@ void	DeleteRequest::delete_file(int fd, const char *path) const
 		}
 	}
 	else
-		; //why?
+		response << "HTTP/1.1 403 Forbidden\r\n\r\n";
 }
 
 DeleteRequest::~DeleteRequest()

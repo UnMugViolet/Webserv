@@ -29,7 +29,7 @@ int RequestHandler::_checkAccess(const std::string &path)
 {
 	if (access(path.c_str(), F_OK) == -1)
 		return (-1);
-	if (_getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
+	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
 		return (0);
 	if (access(path.c_str(), R_OK) == -1)
 		return (0);
@@ -37,7 +37,7 @@ int RequestHandler::_checkAccess(const std::string &path)
 	
 }
 
-std::string	RequestHandler::_getExtension(const std::string &path)
+std::string	RequestHandler::getExtension(const std::string &path)
 {
 	size_t pos = path.rfind('.');
 	if (pos == std::string::npos)
@@ -168,9 +168,12 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			return -1;
 		}
 		std::string host = headermap["Host"];
-		std::string serverId = server.getId(host);
-		setMaxBodySize(config->getServerValue(serverId, "client_max_body_size"));
-		serverRoot = config->getServerValue(serverId, "root");
+		std::string serverUid = server.getId(host);
+		std::string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
+		if (max_body_size.empty())
+			max_body_size = config->getValue("client_max_body_size");
+		setMaxBodySize(max_body_size);
+		serverRoot = config->getServerValue(serverUid, "root");
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
 		{
@@ -226,18 +229,10 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				
 				// Check if it's a CGI script (ends with .php, .py, etc.)
 				std::string contentType = requestObject.getContentType(fullPath);
-				if (contentType == "text/html" || fullPath.find(".php") != std::string::npos) {
-					// Handle as CGI
-					if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
-						std::cerr << "Failed to send CGI response" << std::endl;
-				} else {
-					// Handle as static file
-					if (requestObject.sendStaticFileResponse(fd, fullPath) == -1) {
-						std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
-						if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-							std::cerr << "Failed to send 500 response" << std::endl;
-					}
-				}
+				std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << fullPath << NEUTRAL << std::endl;
+				// Handle as CGI
+				if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
+					std::cerr << "Failed to send CGI response" << std::endl;
 			}
 			if (!requestObject.isKeepalive())
 				return (-1);
@@ -278,30 +273,6 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		std::cerr << "Error parsing request: " << e.what() << std::endl;
 		return (-1);
 	}
-	
-	std::cout << std::string(GREEN) << "Request handled succesfully" << std::string(NEUTRAL) << std::endl;
-	return (0);
-}
-
-int	RequestHandler::printRequest(int fd) const
-{
-	char buff[4096];
-	std::string request;
-	int			received;
-
-	received = recv(fd, buff, 4096, 0);
-	if (received <= 0)
-	{
-		return (-1);
-	}
-	request = buff;
-	std::cout << "http request : " << request << std::endl;
-	char buf[78] = "HTTP/1.1 200 OK\r\nContent-Length: 6\r\nContent-Type: text/plain\r\n\r\ncoucou";
-	if (send(fd, buf, strlen(buf), 0) == -1)
-	{
-		std::cerr << "send error : pouet" << std::endl;
-		return 1;
-	}
 	return (0);
 }
 
@@ -309,9 +280,11 @@ void	RequestHandler::setMaxBodySize(std::string size)
 {
 	std::istringstream iss(size);
 	int value;
-	if (iss >> value && value >= 0)
+	if (iss >> value && value >= 0) {
 		_maxBodySize = value;
+		// std::cout << "Body size = " << value << std::endl; TODO - Convert the figure in MB and set the value to the attribute
+	}
 	else
-		_maxBodySize = 1048576; // Default 1MB if invalid 
+		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
 }
 
