@@ -36,7 +36,7 @@ Server::Server(ConfigParser &config, std::string serverUid)
 
 		// check if host is a valid ip
 		c_name = _name.c_str();
-		if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr))) // TODO - Not allowed function
+		if (ft_inet_pton4(_name, &(sockaddr.sin_addr))) // TODO - Not allowed function
 			gotit = 1;
 	
 		// try getting ip address with host as alias
@@ -48,7 +48,7 @@ Server::Server(ConfigParser &config, std::string serverUid)
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 
-		memset(&hints, 0, sizeof(hints)); // TODO - Not allowed function
+		ft_memset(&hints, 0, sizeof(hints));
 		int status = getaddrinfo(c_name, 0, &hints, &res);
 		
 		if (status == 0)
@@ -70,7 +70,7 @@ Server::Server(ConfigParser &config, std::string serverUid)
 			throw servException(serverUid + "invalid host");
 
 		if (config.hasServerKey(serverUid,  "listen"))
-			portnbr = atoi(config.getServerValue(serverUid, "listen").c_str()); // TODO - Add out own atoi this one is not part of the authorized functions
+			portnbr = ft_atoi(config.getServerValue(serverUid, "listen").c_str()); // TODO - Add out own atoi this one is not part of the authorized functions
 		else
 			throw servException("no port number");
 		if (portnbr <= 0 || portnbr > 65535)
@@ -146,7 +146,7 @@ int	Server::addVirtualHost(ConfigParser &config, std::string serverUid)
 		struct addrinfo hints;
 		struct addrinfo *res;
 		struct addrinfo *r;
-		memset(&hints, 0, sizeof(hints)); // TODO - Not allowed function
+		ft_memset(&hints, 0, sizeof(hints));
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 		int status = getaddrinfo(c_name, 0, &hints, &res);
