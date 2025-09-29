@@ -42,8 +42,8 @@ p {
 }
 
 .dual-image-container-left :hover {
-	transition: all 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
-	transform: scale(1.5) rotate(920deg);
+	transition: all 5s cubic-bezier(0.075, 0.82, 0.165, 1);
+	transform: scale(3) rotate(15000deg);
 	height: auto;
 	margin: 0 20px;
 }

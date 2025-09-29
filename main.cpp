@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/18 10:41:37 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/29 10:48:36 by yguinio          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ int main(int ac, char **av)
 		signal(SIGINT, Webserv::signalHandler);
 		signal(SIGTERM, Webserv::signalHandler); 
 		signal(SIGQUIT, Webserv::signalHandler);
+		signal(SIGPIPE, Webserv::signalHandler);
 
 		std::cout << "Using config file: " << BOLD << av[1] << NEUTRAL << std::endl << std::endl;
 

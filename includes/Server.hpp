@@ -15,6 +15,10 @@
 #include <stdlib.h>
 #include "Logger.hpp"
 
+void	*ft_memset(void *s, int c, unsigned long int n);
+int 	ft_atoi(const std::string &str);
+int 	ft_inet_pton4(std::string &src, struct in_addr *dst);
+
 class RequestHandler;
 
 class Server
