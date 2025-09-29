@@ -52,6 +52,7 @@ ConfigParser::~ConfigParser()
 
 void ConfigParser::parseFile(const std::string &filePath)
 {
+	_checkSemicolons(filePath);
 	std::ifstream file(filePath.c_str());
 	if (!file.is_open())
 	{
@@ -146,7 +147,7 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 			continue;
 		}
 
-		// Checks if line is ended by a semicolon, if it does, removes it, if it doesn't, ignores the line
+		// Checks if line is ended by a semicolon, if it does, format the line, if it doesn't, ignores the line
 		if (line[line.length() - 1] != ';')
 			continue;
 		line = _formatLine(line);
@@ -441,4 +442,27 @@ std::string ConfigParser::_formatLine(const std::string &str) const
 		while (i < line.length() - 1 && line[i] == ' ' && line[i + 1] == ' ')
 			line = line.erase(i, 1);
 	return (line);
+}
+
+void	ConfigParser::_checkSemicolons(const std::string &filePath) const
+{
+	std::ifstream file(filePath.c_str());
+	if (!file.is_open())
+	{
+		throw ErrorException("Cannot open config file: " + filePath);
+	}
+	std::string line;
+	int i = 0;
+	while (std::getline(file, line)) {
+		for (size_t j = 0; line[j]; j++) {
+			if (line[j] == '{')
+				i++;
+			if (line[j] == '}')
+				i--;
+		}
+	}
+	if (i != 0)
+	{
+		throw ErrorException("Block error in config file: " + filePath);
+	}
 }
