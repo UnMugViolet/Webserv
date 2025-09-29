@@ -37,7 +37,7 @@
 	<?php echo "<p>$small_desc</p>"; ?>
 
 	<h2>Join the Gang</h2>
-	<div class="dual-image-container-left">
+	<div class="c">
 		<img src="./assets/img/hannah_montana.jpg" alt="Hannah Montana" class="hannah-image">
 		<div>
 			<?php echo "<p>$big_desc</p>"; ?>
@@ -50,7 +50,7 @@
 			<?php
 				foreach ($available_features as $feature) {
 					$page_url = strtolower(str_replace(" ", "-", $feature));
-					echo "<a href=\"pages/$page_url.php\" class=\"feature-card\">$feature</a>";
+					echo "<a href=\"pages/$page_url.php\" class=\"feature-card\">$feature</a>"; // TODO - must be reachable without the .php as well
 				}
 			?>
 		</div>
