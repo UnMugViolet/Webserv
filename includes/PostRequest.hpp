@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include "ARequest.hpp"
+#include <sstream>
 
 class PostRequest: public ARequest
 {
@@ -16,8 +17,8 @@ public:
 	~PostRequest();
 
 	/*member functions*/
-	void	UploadFile(std::string body, std::string path);
-	void	HandlePost(std::map<std::string, std::string> header, std::string body, std::string fullPath);
+	int	UploadFile(std::string body, std::string path);
+	void	HandlePost(std::string body, std::string fullPath);
 
 	/*operator overloads*/
 	PostRequest&	operator=(PostRequest& src);

@@ -241,9 +241,14 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		{
 			PostRequest requestObject(headermap);
 			// Process the POST request
-			std::string path = config->getServerValue(serverUid, "root");
-			path += "uploads";
-			requestObject.HandlePost(headermap, body, path);
+			std::string path = serverRoot;
+			if (headermap["path"] == "/pages/upload.php")
+				path += "uploads";
+			if (headermap["path"] == "/pages/post.php")
+				path += "posts";
+			if (access(path.c_str(), X_OK) == -1)
+				;//what?
+			requestObject.HandlePost(body, path);
 			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 				std::cerr << "Failed to send POST response" << std::endl;
 			if (!requestObject.isKeepalive())

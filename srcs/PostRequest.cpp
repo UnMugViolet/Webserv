@@ -23,32 +23,54 @@ PostRequest::PostRequest(PostRequest& src) : ARequest(src)
 	return ;
 }
 
-void	PostRequest::UploadFile(std::string body, std::string path)
+int	PostRequest::UploadFile(std::string body, std::string path)
 {
-	
-	if (access(path.c_str(), F_OK))
+	std::ofstream file(path.c_str());
+	if (file.is_open())
 	{
-		;//file already exists
+		file << body;
+		return (0);
 	}
 	else
 	{
-		std::ofstream file(path.c_str());
-		if (file.is_open())
-		{
-			;
-		}
+		;//couldn't create file
+		return (1);
 	}
-
 }
 
-void	PostRequest::HandlePost(std::map<std::string, std::string> header, std::string body, std::string path)
+void	PostRequest::HandlePost(std::string body, std::string path)
 {
+	std::string 						base;
+	std::string 						filename;
+
 
 	if (_Content_type.compare("text/plain") == 0)
 	{
-		UploadFile(body, path);
+		base = path + "/post_";
+		int i = 1;
+		while (true)
+		{
+			std::ostringstream oss;
+			oss << base << i << ".txt";
+			filename = oss.str();
+			if (access(filename.c_str(), F_OK) != 0)
+				break;
+		} 
+		if(UploadFile(body, filename) == 1)
+			;//error
+		else
+			;//send ok response
 	}
 	if (_Content_type.find("multipart/form-data") != std::string::npos)
+	{
+		std::map<std::string, std::string>	header;
+		std::string boundary = _Content_type.substr(_Content_type.find("boundary=") + 1);
+
+		size_t pos = body.find(boundary);
+		pos = body.find("\r\n", pos) + 2;
+		
+
+	}
 		;// manage multipart
 
 }
