@@ -7,9 +7,8 @@
 class PostRequest: public ARequest
 {
 private:
-	size_t		_Content_length;
-	int			_Content_type;
-	std::string	_body;
+	std::string		_Content_type;
+	std::string		_body;
 public:
 	/*constructors and destructor*/
 	PostRequest(std::map<std::string, std::string> header);
@@ -17,6 +16,8 @@ public:
 	~PostRequest();
 
 	/*member functions*/
+	void	UploadFile(std::string body, std::string path);
+	void	HandlePost(std::map<std::string, std::string> header, std::string body, std::string fullPath);
 
 	/*operator overloads*/
 	PostRequest&	operator=(PostRequest& src);

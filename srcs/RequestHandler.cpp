@@ -241,7 +241,9 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		{
 			PostRequest requestObject(headermap);
 			// Process the POST request
-				
+			std::string path = config->getServerValue(serverUid, "root");
+			path += "uploads";
+			requestObject.HandlePost(headermap, body, path);
 			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 				std::cerr << "Failed to send POST response" << std::endl;
 			if (!requestObject.isKeepalive())
