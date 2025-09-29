@@ -12,16 +12,47 @@
 	<link href="https://fonts.googleapis.com/css2?family=Damion&family=Mr+Dafoe&display=swap" rel="stylesheet">
 
 </head>
+
+<?php
+	$project_name = "Hannah Montana Hardcore Gang";
+	$small_desc = "Welcome to the Hannah Montana Hardcore Gang!";
+	$big_desc = "This is a fun and interactive page dedicated to all things Hannah Montana. Explore, enjoy, and don't forget to sing along!";
+
+	$available_features = [
+		"Get",
+		"Post",
+		"Delete",
+		"Upload",
+		"Download",
+		"FileTransfer",
+		"List directory",
+		"Redirect",
+		"Errors",
+		"Aliases",
+	]
+?>
+
 <body>
-	<h1>Hannah Montana Hardcore Gang</h1>
-	<p>Welcome to the Hannah Montana Hardcore Gang!</p>
+	<?php echo "<h1>$project_name</h1>"; ?>
+	<?php echo "<p>$small_desc</p>"; ?>
 
 	<h2>Join the Gang</h2>
 	<div class="dual-image-container-left">
 		<img src="./assets/img/hannah_montana.jpg" alt="Hannah Montana" class="hannah-image">
 		<div>
-			<p>This is a fun and interactive page dedicated to all things Hannah Montana. Explore, enjoy, and don't forget to sing along!</p>
+			<?php echo "<p>$big_desc</p>"; ?>
 			<button class="play-button" onclick="playAudio('./assets/music/theme_song.mp3')">Play Song ►</button>
+		</div>
+	</div>
+	<div>
+		<h2 class="mt-5">Available Features</h2>
+		<div class="feature-image-container">
+			<?php
+				foreach ($available_features as $feature) {
+					$page_url = strtolower(str_replace(" ", "-", $feature));
+					echo "<a href=\"pages/$page_url.php\" class=\"feature-card\">$feature</a>";
+				}
+			?>
 		</div>
 	</div>
 </body>
