@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/18 10:46:52 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/29 10:49:46 by yguinio          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,6 +184,10 @@ void Webserv::signalHandler(int signal)
 			break;
 		case SIGQUIT:
 			std::cout << std::endl << YELLOW BOLD << "SIGQUIT (Ctrl+\\) received. Preparing to shut down..." << NEUTRAL << std::endl;
+			_shutdown = true;
+			break;
+		case SIGPIPE:
+			std::cout << std::endl << YELLOW BOLD << "SIGPIPE received. Preparing to shut down..." << NEUTRAL << std::endl;
 			_shutdown = true;
 			break;
 		default:
