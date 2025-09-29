@@ -12,18 +12,7 @@
 #include "Logger.hpp"
 #include <sys/socket.h>
 
-#define PYTHON 0
-#define PERL 1
-#define PHP 2
-#define SHELL 3
-#define BINARY 4
-#define UNKNOWN 5
-#define HTML 6
-#define CSS 7
-#define PNG 8
-#define JPG 9
-#define JPEG 10
-#define GIF 11
+
 
 class CGI
 {
@@ -40,7 +29,7 @@ public:
 
 	/*member functions*/
 	
-	static int	interpret(const std::string &path);
+	static int	interpret(const std::string &path, std::string const serverUid);
 
 	/*operator overloads*/
 
@@ -50,11 +39,12 @@ public:
 			std::string 	_message;
 			int				_exit;
 			unsigned int	_http_status;
+			std::string		_serverUid;
 		public:
-			CGIException(std::string message, bool must_exit_prog, unsigned int http_status) throw()
+			CGIException(std::string message, bool must_exit_prog, unsigned int http_status, std::string const serverUid) throw()
 			{
 				_message = "CGIException error: " + message;
-				Logger::error("", _message);
+				Logger::error(serverUid, _message);
 				_message = std::string(RED) + _message + std::string(NEUTRAL);
 				if (must_exit_prog)
 					_exit = must_exit_prog;

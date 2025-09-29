@@ -19,18 +19,18 @@
 #include <iostream>
 #include <limits>
 
-#define CYAN "\033[0;36m"
 #define GREEN "\033[0;92m"
-#define NEUTRAL "\033[0m"
+#define ORANGE "\033[0;33m"
 #define RED "\033[0;31m"
 #define YELLOW "\033[0;33m"
+#define CYAN "\033[0;36m"
+#define BLUE "\033[0;34m"
+#define MAGENTA "\033[0;35m"
+#define NEUTRAL "\033[0m"
 
 #define BOLD "\033[1m"
 #define UNDERLINE "\033[4m"
 #define ITALIC "\033[3m"
-
-#define ACC_LOG "logs/access.log"
-#define ERR_LOG "logs/error.log"
 
 #define MAX_INT std::numeric_limits<int>::max()
 #define MIN_INT std::numeric_limits<int>::min()
@@ -42,5 +42,29 @@
 #define MIN_DOUBLE -std::numeric_limits<double>::max()
 
 #define DEFAULT_ERROR_PAGES_PATH "error_pages/default/"
+#define LOG_FOLDER_PATH "logs/"
+
+#define DEFAULT_ERROR_LOG_FILE "error.log"
+#define DEFAULT_ACCESS_LOG_FILE "access.log"
+
+// Languages
+#define PYTHON 0
+#define PERL 1
+#define PHP 2
+#define SHELL 3
+#define BINARY 4
+#define UNKNOWN 5
+#define HTML 6
+#define CSS 7
+#define PNG 8
+#define JPG 9
+#define JPEG 10
+#define GIF 11
+#define ICO 12
+#define JS 13
+#define MP3 14
+
+// Consts 
+#define MAX_BODY_SIZE 1048576
 
 #endif

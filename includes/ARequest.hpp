@@ -30,9 +30,10 @@ public:
 	~ARequest();
 
 	/*member functions*/
-	int			sendCGIResponse(int clientFd, const std::string &scriptPath, ConfigParser *config, const std::string &serverId);
+	int			isKeepalive() const;
+	int			sendCGIResponse(int clientFd, const std::string &scriptPath, ConfigParser *config, const std::string &serverUid);
 	int			sendHTTPResponse(int clientFd, int statusCode, const std::string &body, const std::string &contentType = "text/html");
-	std::string loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverId) const;
+	std::string loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverUid) const;
 	std::string getContentType(const std::string &filePath) const;
 
 	/*operator overloads*/

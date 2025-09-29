@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:31 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/08 12:03:21 by andrean          ###   ########.fr       */
+/*   Updated: 2025/09/17 16:01:44 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,35 +21,39 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <csignal>
+#include <errno.h>
+#include <sys/time.h>
 #include "Server.hpp"
 
 class Webserv
 {
 	private:
 		std::vector<Server> _servers;
-		ConfigParser* _config;  // Store pointer to config
+		ConfigParser 		*_config;
+		static bool			_shutdown;
 	public:
 		Webserv();
 		Webserv(ConfigParser &config);
 		~Webserv();
 
-		void serverLoop();
+		void 		serverLoop();
+		void 		stopServer();
+		static void signalHandler(int signal);
 		
 		class WebservException : public std::exception
 		{
 			private:
 				std::string _message;
 			public:
-				WebservException(std::string message) throw()
-				{
+				WebservException(std::string message) throw() {
 					_message = "Webserv error: " + message;
 				}
-				virtual const char* what() const throw()
-				{
+				virtual const char* what() const throw() {
 					return (_message.c_str());
 				}
 				virtual ~WebservException() throw() {}
-		};
-		// void	initWebserv(ConfigParser &config);
-		
+		};		
 };

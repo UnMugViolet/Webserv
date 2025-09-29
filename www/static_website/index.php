@@ -1,7 +1,7 @@
 <?php
-include "../pages/MyTeubClass.php";
+include "../pages/MyNonExistingClass.php";
 
-new Teub("200cm ouais");
+new MyNonExistingClass("ouais");
 
 
 echo "

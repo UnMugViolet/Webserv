@@ -1,0 +1,71 @@
+body {
+	background-color: #ff5aac;
+	font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+h1 {
+	font-family: "Mr Dafoe", cursive;
+	text-align: center;
+	font-size: 3em;
+	margin-top: 20px;
+	color: #EBDC7D;
+}
+
+h2 {
+	font-family: "Mr Dafoe", cursive;
+	text-align: center;
+	font-size: 2em;
+	margin-top: 10px;
+	color: #EBDC7D;
+}
+
+p {
+	font-family: "Damion", cursive;
+	text-align: center;
+	font-size: 1.2em;
+	margin: 20px auto;
+	width: 80%;
+	color: #7807ff;
+}
+
+.dual-image-container-left {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	margin-top: 20px;
+}
+
+.dual-image-container-left img {
+	width: 45%;
+	height: auto;
+	margin: 0 20px;
+}
+
+.dual-image-container-left :hover {
+	transition: all 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
+	transform: scale(1.5) rotate(920deg);
+	height: auto;
+	margin: 0 20px;
+}
+
+.dual-image-container-left div {
+	width: 45%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: auto;
+	margin: 0 20px;
+	flex-direction: column;
+}
+
+button.play-button {
+	background-color: #EBDC7D;
+	color: #7807ff;
+	font-family: "Damion", cursive;
+	font-size: 1.2em;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-top: 20px;
+}

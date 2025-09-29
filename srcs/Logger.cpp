@@ -3,74 +3,133 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:49:10 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/09 14:58:46 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/09/17 16:11:31 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Logger.hpp"
 
-std::ofstream Logger::accessLog(ACC_LOG, std::ios::app);
-std::ofstream Logger::errorLog(ERR_LOG, std::ios::app);
+std::ofstream Logger::_accessLogStream;
+std::ofstream Logger::_errorLogStream;
+std::string Logger::_accessFile;
+std::string Logger::_errorFile;
 
-Logger::Logger()
+Logger::Logger(ConfigParser &config)
 {
-	accessLog.open(ACC_LOG, std::ios::app);
-	errorLog.open(ERR_LOG, std::ios::app);
+	_accessFile = config.getValue("access_log");
+	_errorFile = config.getValue("error_log");
+
+	// Creating Access file if nothing provided fallback to default
+	if (_accessFile.empty())
+		_accessFile = DEFAULT_ACCESS_LOG_FILE;
+	
+	// Creating Error file same way as Access
+	if (_errorFile.empty())
+		_errorFile = DEFAULT_ERROR_LOG_FILE;
+	
+	_accessFile = LOG_FOLDER_PATH + _accessFile;
+	_errorFile = LOG_FOLDER_PATH + _errorFile;
+
+	_accessLogStream.open(_accessFile.c_str(), std::ios::app);
+	_errorLogStream.open(_errorFile.c_str(), std::ios::app);
 }
 
 Logger::~Logger()
 {
-	if (accessLog.is_open())
-		accessLog.close();
-	if (errorLog.is_open())
-		errorLog.close();
-}
-
-std::string Logger::timeStamp()
-{
-	time_t now = time(0);
-	char buf[80];
-	strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
-	return std::string(buf);
+	if (_accessLogStream.is_open())
+		_accessLogStream.close();
+	if (_errorLogStream.is_open())
+		_errorLogStream.close();
 }
 
 void	Logger::init()
 {
-	std::ofstream a(ACC_LOG, std::ios::trunc);
-	std::ofstream e(ERR_LOG, std::ios::trunc);
+	std::ofstream a(_accessFile.c_str(), std::ios::trunc);
+	std::ofstream e(_errorFile.c_str(), std::ios::trunc);
 	
-	if (accessLog.is_open())
-        accessLog.close();
-    accessLog.open(ACC_LOG, std::ios::app);
+	if (_accessLogStream.is_open())
+        _accessLogStream.close();
+    _accessLogStream.open(_accessFile.c_str(), std::ios::app);
 
-    if (errorLog.is_open())
-        errorLog.close();
-    errorLog.open(ERR_LOG, std::ios::app);
+    if (_errorLogStream.is_open())
+        _errorLogStream.close();
+    _errorLogStream.open(_errorFile.c_str(), std::ios::app);
 }
 
-void	Logger::access(const std::string &serverId, const std::string &msg)
+void	Logger::access(const std::string &serverUid, const std::string &msg)
 {
-	if (!accessLog.is_open())
-        std::cerr << "Logger: accessLog not open!" << std::endl;
+	if (!_accessLogStream.is_open())
+        std::cerr << "Logger: _accessLogStream not open!" << std::endl;
 	else {
-		if (serverId.empty())
-			accessLog << "[" << timeStamp() << "] " << serverId << msg << std::endl;
-		else
-			accessLog << "[" << timeStamp() << "] SERVER: " << serverId + " | " + msg << std::endl;
+		// Check if rotation is needed before writing
+		if (countLines(_accessFile) >= MAX_LOG_LINES) {
+			rotateLogFile(_accessFile, _accessLogStream);
+		}
+		_accessLogStream << "[" << serverUid << "]\n" << msg << std::endl << std::endl;
+		_accessLogStream.flush();
 	}
 }
 
-void	Logger::error(const std::string &serverId, const std::string &msg)
+void	Logger::error(const std::string &serverUid, const std::string &msg)
 {
-	if (!errorLog.is_open())
-        std::cerr << "Logger: errorLog not open!" << std::endl;
+	if (!_errorLogStream.is_open())
+        std::cerr << "Logger: _errorLogStream not open!" << std::endl << std::endl;
 	else {
-		if (serverId.empty())
-			errorLog << "[" << timeStamp() << "] " << serverId << msg << std::endl;
-		else
-			errorLog << "[" << timeStamp() << "] SERVER: " << serverId + " | " + msg << std::endl;
+		// Check if rotation is needed before writing
+		if (countLines(_errorFile) >= MAX_LOG_LINES) {
+			rotateLogFile(_errorFile, _errorLogStream);
+		}
+		_errorLogStream << "[" << serverUid << "]\n" << msg << std::endl << std::endl;
+		_errorLogStream.flush();
+	}
+}
+
+// Count the number of lines in a file
+int Logger::countLines(const std::string &filename)
+{
+	std::ifstream file(filename.c_str());
+	if (!file.is_open())
+		return 0;
+		
+	int lineCount = 0;
+	std::string line;
+	while (std::getline(file, line))
+		lineCount++;
+		
+	file.close();
+	return lineCount;
+}
+
+// Rotate log file by keeping only the most recent lines
+void Logger::rotateLogFile(const std::string &filename, std::ofstream &stream)
+{
+	const int linesToKeep = MAX_LOG_LINES / 2; // Keep half the max amount of lines
+	
+	// Read all lines
+	std::ifstream file(filename.c_str());
+	if (!file.is_open())
+		return;
+		
+	std::vector<std::string> lines;
+	std::string line;
+	while (std::getline(file, line))
+		lines.push_back(line);
+	file.close();
+	
+	// Close the current stream
+	if (stream.is_open())
+		stream.close();
+		
+	// Rewrite file with only the most recent lines
+	stream.open(filename.c_str(), std::ios::trunc);
+	if (stream.is_open()) {
+		int startIndex = (lines.size() > linesToKeep) ? lines.size() - linesToKeep : 0;
+		for (int i = startIndex; i < (int)lines.size(); i++) {
+			stream << lines[i] << std::endl;
+		}
+		stream.flush();
 	}
 }
