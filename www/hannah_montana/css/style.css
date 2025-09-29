@@ -69,3 +69,33 @@ button.play-button {
 	cursor: pointer;
 	margin-top: 20px;
 }
+
+.feature-image-container {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin-top: 20px;
+}
+
+.feature-card {
+	background-color: #EBDC7D;
+	color: #7807ff;
+	font-family: "Damion", cursive;
+	font-size: 1.2em;
+	padding: 20px;
+	margin: 10px;
+	border-radius: 10px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	width: 200px;
+	text-align: center;
+}
+
+.feature-card:hover {
+	transform: scale(1.8) rotate(360deg);
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+	transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.mt-5 {
+	margin-top: 3rem;
+}
