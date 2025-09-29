@@ -67,7 +67,7 @@ Server::Server(ConfigParser &config, std::string serverUid)
 			freeaddrinfo(res);
 		}
 		if (gotit == 0)
-			throw servException(serverUid + "invalid host");
+			throw servException(serverUid + " invalid host");
 
 		if (config.hasServerKey(serverUid,  "listen"))
 			portnbr = ft_atoi(config.getServerValue(serverUid, "listen").c_str()); // TODO - Add out own atoi this one is not part of the authorized functions

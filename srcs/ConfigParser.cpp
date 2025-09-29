@@ -145,6 +145,11 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 			}
 			continue;
 		}
+
+		// Checks if line is ended by a semicolon, if it does, removes it, if it doesn't, ignores the line
+		if (line[line.length() - 1] != ';')
+			continue;
+		line = _formatLine(line);
 		
 		// Parse server directive
 		size_t pos = line.find(' ');
@@ -165,10 +170,6 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 					value = _trim(value.substr(secondSpace + 1));
 				}
 			}
-			
-			// Remove semicolon if present
-			if (!value.empty() && value[value.length() - 1] == ';')
-				value = value.substr(0, value.length() - 1);
 			
 			serverConfig[key] = value;
 		}
@@ -194,16 +195,17 @@ void ConfigParser::_parseLocationBlock(std::ifstream &file, const std::string &s
 		if (line == "}")
 			break;
 		
+		// Checks if line is ended by a semicolon, if it does, format the line, if it doesn't, ignores the line
+		if (line[line.length() - 1] != ';')
+			continue;
+		line = _formatLine(line);
+
 		// Parse location directive
 		size_t pos = line.find(' ');
 		if (pos != std::string::npos && pos + 1 < line.length())
 		{
 			std::string key = _trim(line.substr(0, pos));
 			std::string value = _trim(line.substr(pos + 1));
-			
-			// Remove semicolon if present
-			if (!value.empty() && value[value.length() - 1] == ';')
-				value = value.substr(0, value.length() - 1);
 			
 			// Store location-specific config
 			_locationBlocks[serverName][location][key] = value;
@@ -421,4 +423,22 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	// Final fallback: return basic HTML error message
 	std::cout << std::string(RED) << "No error page found, using fallback HTML for the code: " << error_code_str << std::string(NEUTRAL) << std::endl;
 	return "<html><body><h1>Error " + error_code_str + "</h1><p>An undefined error occurred.</p></body></html>";
+}
+
+/* Format the line suppressing all unnecessaries whitespaces and the last semicolon if found
+*  @param std::string
+*  @return std::string
+*/
+std::string ConfigParser::_formatLine(const std::string &str) const
+{
+	std::string line = str;
+	if (line[line.length() - 1] == ';')
+		line = line.substr(0, line.length() - 1);
+	for (size_t i = 0; i < line.length() ; i++)
+		if (line[i] == '\t')
+			line[i] = ' ';
+	for (size_t i = 0; i < line.length(); i++)
+		while (i < line.length() - 1 && line[i] == ' ' && line[i + 1] == ' ')
+			line = line.erase(i, 1);
+	return (line);
 }

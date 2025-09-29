@@ -25,6 +25,7 @@ class ConfigParser {
 		std::map<std::string, std::map<std::string, std::map<std::string, std::string> > > _locationBlocks;
 
 		std::string _trim(const std::string &str) const;
+		std::string _formatLine(const std::string &str) const;
 		std::string _intToString(int num) const;
 		void _parseServerBlock(std::ifstream &file, std::string const &serverName);
 		void _parseLocationBlock(std::ifstream &file, std::string const &serverName, std::string const &location);
