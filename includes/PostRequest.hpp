@@ -2,8 +2,10 @@
 
 #include <string>
 #include <iostream>
-#include "ARequest.hpp"
 #include <sstream>
+
+#include "ARequest.hpp"
+#include "Logger.hpp"
 
 class PostRequest: public ARequest
 {
@@ -17,7 +19,7 @@ public:
 	~PostRequest();
 
 	/*member functions*/
-	int	UploadFile(std::string body, std::string path);
+	bool	UploadFileSuccessfully(std::string body, std::string path);
 	void	HandlePost(std::string body, std::string fullPath);
 
 	/*operator overloads*/
