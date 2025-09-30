@@ -5,6 +5,58 @@ Server::Server()
 {
 }
 
+Server::Server(const Server &other)
+{
+	if (this != &other)
+	{
+		this->_IdList = other._IdList;
+		this->_socketfd = other._socketfd;
+		this->_clientFds = other._clientFds;
+		this->_uid = other._uid;  // Lost 2 hours of my life because of this
+		this->_config = other._config;
+		this->_handler = new RequestHandler();
+		
+		// Transfer ownership of the socket to avoid double-close
+		const_cast<Server&>(other)._socketfd = -1;
+	}
+}
+
+Server::~Server()
+{
+	if (_handler) {
+		delete _handler;
+		_handler = NULL;
+	}
+	if (_socketfd != -1) {
+		close(_socketfd);
+		_socketfd = -1;
+	}
+}
+
+Server &Server::operator=(const Server &other)
+{
+	if (this != &other)
+	{
+		// Close current socket if we have one
+		if (_socketfd != -1) {
+			close(_socketfd);
+		}
+		
+		this->_IdList = other._IdList;
+		this->_socketfd = other._socketfd;
+		this->_clientFds = other._clientFds;
+		this->_uid = other._uid;
+		this->_config = other._config;
+		if (this->_handler)
+			delete this->_handler;
+		this->_handler = new RequestHandler();
+		
+		// Transfer ownership of the socket to avoid double-close
+		const_cast<Server&>(other)._socketfd = -1;
+	}
+	return *this;
+}
+
 Server::Server(ConfigParser &config, std::string serverUid)
 {
 	sockaddr_in sockaddr;
@@ -115,6 +167,10 @@ Server::Server(ConfigParser &config, std::string serverUid)
 		//put max body size in handler
 		if (config.hasServerKey(serverUid, "client_max_body_size"))
 			_handler->setMaxBodySize(config.getServerValue(serverUid, "client_max_body_size"));
+
+		// Setup env
+		initEnv(environ);
+		printEnv();
 			
 	} 
 	catch (const ServException &e) 
@@ -273,7 +329,7 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 		
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-			if (_handler->handleRequest(_clientFds[i], *this, config, _uid) == -1)
+			if (_handler->handleRequest(_clientFds[i], *this, config) == -1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
 				close(_clientFds[i]);
@@ -286,54 +342,69 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 	}
 }
 
-Server::Server(const Server &other)
+/* 
+ * ENV handling for each instance of Server 
+*/
+void	Server::initEnv(char **env)
 {
-	if (this != &other)
+	if (!env[0])
 	{
-		this->_IdList = other._IdList;
-		this->_socketfd = other._socketfd;
-		this->_clientFds = other._clientFds;
-		this->_uid = other._uid;  // Lost 2 hours of my life because of this
-		this->_config = other._config;
-		this->_handler = new RequestHandler();
-		
-		// Transfer ownership of the socket to avoid double-close
-		const_cast<Server&>(other)._socketfd = -1;
+		Logger::error(_uid, "No environment variables found shutting down server");
+		throw ServException("No environment variables found");
+		return ;
 	}
-}
-
-Server::~Server()
-{
-	if (_handler) {
-		delete _handler;
-		_handler = NULL;
-	}
-	if (_socketfd != -1) {
-		close(_socketfd);
-		_socketfd = -1;
-	}
-}
-
-Server &Server::operator=(const Server &other)
-{
-	if (this != &other)
+	for (int i = 0; env[i]; i++)
 	{
-		// Close current socket if we have one
-		if (_socketfd != -1) {
-			close(_socketfd);
+		std::string var(env[i]);
+		size_t pos = var.find('=');
+		if (pos != std::string::npos)
+		{
+			std::string key = var.substr(0, pos);
+			std::string value = var.substr(pos + 1);
+			_env[key] = value;
 		}
-		
-		this->_IdList = other._IdList;
-		this->_socketfd = other._socketfd;
-		this->_clientFds = other._clientFds;
-		this->_uid = other._uid;
-		this->_config = other._config;
-		if (this->_handler)
-			delete this->_handler;
-		this->_handler = new RequestHandler();
-		
-		// Transfer ownership of the socket to avoid double-close
-		const_cast<Server&>(other)._socketfd = -1;
 	}
-	return *this;
+}
+
+std::string	Server::getEnvValue(std::string const &key)
+{
+	std::map<std::string, std::string>::const_iterator it = _env.find(key);
+	if (it != _env.end())
+		return it->second;
+	else
+		return "";
+}
+
+void Server::setEnvValue(std::string const &key, std::string const &value)
+{
+	std::map<std::string, std::string>::iterator it = _env.find(key);
+	if (it != _env.end()) 
+		it->second = value;
+	else if (!key.empty())
+		_env[key] = value;
+}
+
+char	**Server::getEnvAsArray() const {
+	char	**env = new char*[_env.size() + 1];
+	int	j = 0;
+	for (std::map<std::string, std::string>::const_iterator i = _env.begin(); i != _env.end(); i++) {
+		std::string	element = i->first + "=" + i->second;
+		env[j] = new char[element.size() + 1];
+		env[j] = strcpy(env[j], (const char*)element.c_str());
+		j++;
+	}
+	env[j] = NULL;
+	return env;
+}
+
+void	Server::printEnv() const
+{
+	std::cout << YELLOW 
+	<< BOLD << YELLOW
+	<< "=== Environment Variables ==="
+	<< NEUTRAL << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = _env.begin(); it != _env.end(); ++it)
+	{
+		std::cout << it->first << "=" << it->second << std::endl;
+	}
 }

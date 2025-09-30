@@ -26,6 +26,7 @@ class Server
 private:
 	/*attributes here*/
 	std::string							_uid;
+	std::map<std::string, std::string>	_env;
 	std::map<std::string, std::string>	_IdList;
 	int 								_socketfd;
 	std::vector<int>					_clientFds;
@@ -50,6 +51,13 @@ public:
 	void		unsetClient(int position);
 	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config);
 
+	// Env handling methods
+	void		initEnv(char **env);
+	void		printEnv() const;
+	std::string	getEnvValue(const std::string &key);
+	void		setEnvValue(const std::string &key, const std::string &value);
+	char		**getEnvAsArray() const;
+
 	/*operator overloads*/
 	Server&	operator=(const Server &other);
 	class ServException : public std::exception
@@ -58,7 +66,7 @@ public:
 				std::string _message;
 			public:
 				ServException(std::string message) throw() {
-					_message = "[ERROR] Server: " + message;
+					_message = std::string(RED) + std::string(BOLD) + "[ERROR] " + std::string(NEUTRAL) + std::string(RED) + "Server: " + message;
 				}
 				virtual const char *what() const throw() {
 					return (_message.c_str());

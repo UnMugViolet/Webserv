@@ -75,3 +75,14 @@ int ft_inet_pton4(std::string &src, struct in_addr *dst) {
 
     return 1;
 }
+
+void    ft_free_array(char **array)
+{
+    if (!array)
+        return ;
+    for (int i = 0; array[i]; i++)
+        delete[] array[i];
+    delete[] array;
+    array = NULL;
+    return ;
+}

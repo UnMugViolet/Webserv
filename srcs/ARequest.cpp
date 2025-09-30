@@ -40,7 +40,7 @@ ARequest&	ARequest::operator=(ARequest &src)
 	return (*this);
 }
 
-int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string& body, const std::string& contentType)
+int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &body, const std::string& contentType)
 {
 	std::ostringstream response;
 	std::string statusText;

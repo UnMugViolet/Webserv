@@ -111,7 +111,7 @@ std::map<std::string, std::string>	RequestHandler::parseHeader(std::string heade
 	return (headers);
 }
 
-int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *config, const std::string &serverUid)
+int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *config)
 {
 	std::string serverRoot;
 	const size_t BUFFER_SIZE = 4096;
@@ -122,7 +122,10 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 	std::string body;
 	int			received;
 	std::map<std::string, std::string> headermap;
+	std::string serverUid = server.getUid();
 
+	std::cout << YELLOW << "UID " << serverUid << NEUTRAL << std::endl;
+	return 486;
 	// Read initial chunk
 	received = recv(fd, buff, BUFFER_SIZE, 0);
 	if (received <= 0)
@@ -168,7 +171,6 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			return -1;
 		}
 		std::string server_name = headermap["server_name"];
-		std::string serverUid = server.getId(server_name);
 		std::string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");

@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:31 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/30 12:17:19 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/30 14:59:00 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@ class Webserv
 	private:
 		std::vector<Server>					_servers;
 		ConfigParser 						*_config;
-		std::map<std::string, std::string>	_env;
 		static bool							_shutdown;
 	public:
 		Webserv();
@@ -41,10 +40,8 @@ class Webserv
 		~Webserv();
 
 		void 		serverLoop();
-		void 		stopServer();
-		void		initEnv(char **env);
+		void 		stopServer();	
 		static void signalHandler(int signal);
-		
 		
 		class WebservException : public std::exception
 		{
@@ -52,7 +49,7 @@ class Webserv
 				std::string _message;
 			public:
 				WebservException(std::string message) throw() {
-					_message = "[ERROR] Webserv: " + message;
+					_message = std::string(RED) + std::string(BOLD) + "[ERROR] " + std::string(NEUTRAL) + std::string(RED) + "Webserv: " + message;
 				}
 				virtual const char* what() const throw() {
 					return (_message.c_str());

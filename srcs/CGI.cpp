@@ -121,7 +121,7 @@ int	CGI::interpret(const std::string &path, std::string const serverUid)
 			case BINARY :
 				std::string tmp = "./" + path;
 				char *arg[2] = {(char *)tmp.c_str(), NULL};
-				execve(tmp.c_str(), arg, environ);
+				execve(tmp.c_str(), arg, environ); // TODO - Replace environ with the actual environment variables
 				throw CGIException("Internal error: execve failed", true, 500, serverUid);
 			
 		}
