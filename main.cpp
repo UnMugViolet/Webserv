@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/29 10:48:36 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/09/30 11:31:17 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include "dict.hpp"
 #include <signal.h>
 
-int main(int ac, char **av)
+int main(int ac, char **av, char **env)
 {
 	if (ac != 2)
 	{
@@ -47,10 +47,11 @@ int main(int ac, char **av)
 		try {	
 			Webserv webserv(config);
 			webserv.serverLoop();
+			webserv.initEnv(env);
 		} catch (const Webserv::WebservException &e) {
 			std::cerr << RED BOLD << "Webserv Error: " << e.what() << NEUTRAL << std::endl;
 			return 1;
-		} catch (const Server::servException &e) {
+		} catch (const Server::ServException &e) {
 			std::cerr << RED BOLD << "Server Error: " << e.what() << NEUTRAL << std::endl;
 			return 1;
 		} catch (const std::exception &e) {
