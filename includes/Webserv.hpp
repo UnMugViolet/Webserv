@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:31 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/27 16:52:48 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/09/30 12:17:19 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,9 +31,10 @@
 class Webserv
 {
 	private:
-		std::vector<Server> _servers;
-		ConfigParser 		*_config;
-		static bool			_shutdown;
+		std::vector<Server>					_servers;
+		ConfigParser 						*_config;
+		std::map<std::string, std::string>	_env;
+		static bool							_shutdown;
 	public:
 		Webserv();
 		Webserv(ConfigParser &config);
@@ -41,7 +42,9 @@ class Webserv
 
 		void 		serverLoop();
 		void 		stopServer();
+		void		initEnv(char **env);
 		static void signalHandler(int signal);
+		
 		
 		class WebservException : public std::exception
 		{
@@ -49,7 +52,7 @@ class Webserv
 				std::string _message;
 			public:
 				WebservException(std::string message) throw() {
-					_message = "Webserv error: " + message;
+					_message = "[ERROR] Webserv: " + message;
 				}
 				virtual const char* what() const throw() {
 					return (_message.c_str());

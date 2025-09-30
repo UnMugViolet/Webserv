@@ -162,13 +162,13 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		headermap = parseHeader(header);
 		
 		// get virtual server root
-		if (headermap.find("Host") == headermap.end())
+		if (headermap.find("server_name") == headermap.end())
 		{
-			std::cerr << "No host, bad request" << std::endl;
+			std::cerr << "No server_name, bad request" << std::endl;
 			return -1;
 		}
-		std::string host = headermap["Host"];
-		std::string serverUid = server.getId(host);
+		std::string server_name = headermap["server_name"];
+		std::string serverUid = server.getId(server_name);
 		std::string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");
@@ -247,7 +247,8 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			if (headermap["path"] == "/pages/post.php")
 				path += "posts";
 			if (access(path.c_str(), X_OK) == -1)
-				;//what?
+				path = "/tmp";
+			std::cout << "Upload path: " << path << std::endl;
 			requestObject.HandlePost(body, path);
 			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 				std::cerr << "Failed to send POST response" << std::endl;

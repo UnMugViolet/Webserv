@@ -2,23 +2,24 @@
 
 #include <string>
 #include <iostream>
-#include "ARequest.hpp"
 #include <sstream>
+
+#include "ARequest.hpp"
 
 class DeleteRequest: public ARequest
 {
-private:
-	/*attributes here*/
-public:
-	/*constructors and destructor*/
-	DeleteRequest(std::map<std::string, std::string> header);
-	DeleteRequest(DeleteRequest& src);
-	~DeleteRequest();
+	private:
+		/*attributes here*/
+	public:
+		/*constructors and destructor*/
+		DeleteRequest(std::map<std::string, std::string> header);
+		DeleteRequest(DeleteRequest &src);
+		~DeleteRequest();
 
-	/*member functions*/
-	void	delete_file(int fd, const char *path) const;
+		/*member functions*/
+		void	delete_file(int fd, const char *path) const;
 
-	/*operator overloads*/
-	DeleteRequest&	operator=(DeleteRequest& src);
+		/*operator overloads*/
+		DeleteRequest &operator=(DeleteRequest &src);
 };
 

@@ -23,18 +23,18 @@ PostRequest::PostRequest(PostRequest& src) : ARequest(src)
 	return ;
 }
 
-int	PostRequest::UploadFile(std::string body, std::string path)
+bool	PostRequest::UploadFileSuccessfully(std::string body, std::string path)
 {
 	std::ofstream file(path.c_str());
 	if (file.is_open())
 	{
 		file << body;
-		return (0);
+		return true;
 	}
 	else
 	{
-		;//couldn't create file
-		return (1);
+		throw std::runtime_error("Failed to open file for writing: " + path);
+		return false;
 	}
 }
 
@@ -56,10 +56,10 @@ void	PostRequest::HandlePost(std::string body, std::string path)
 			if (access(filename.c_str(), F_OK) != 0)
 				break;
 		} 
-		if(UploadFile(body, filename) == 1)
-			;//error
+		if(UploadFileSuccessfully(body, filename) == false)
+			; // Handle error 
 		else
-			;//send ok response
+			Logger::info("File uploaded successfully to " + filename);
 	}
 	if (_Content_type.find("multipart/form-data") != std::string::npos)
 	{
@@ -68,10 +68,8 @@ void	PostRequest::HandlePost(std::string body, std::string path)
 
 		size_t pos = body.find(boundary);
 		pos = body.find("\r\n", pos) + 2;
-		
-
 	}
-		;// manage multipart
+	// manage multipart
 
 }
 

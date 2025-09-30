@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:49:10 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/17 16:11:31 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/30 11:46:43 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,13 @@ void	Logger::init()
     _errorLogStream.open(_errorFile.c_str(), std::ios::app);
 }
 
+void	Logger::info(const std::string &msg)
+{
+	if (msg.empty())
+		return ;
+	std::cout << BOLD << "[INFO] " << NEUTRAL << msg  << std::endl;
+}
+
 void	Logger::access(const std::string &serverUid, const std::string &msg)
 {
 	if (!_accessLogStream.is_open())
@@ -82,7 +89,7 @@ void	Logger::error(const std::string &serverUid, const std::string &msg)
 		if (countLines(_errorFile) >= MAX_LOG_LINES) {
 			rotateLogFile(_errorFile, _errorLogStream);
 		}
-		_errorLogStream << "[" << serverUid << "]\n" << msg << std::endl << std::endl;
+		_errorLogStream << "[" << serverUid << "]\n" << "ERROR: " << msg << std::endl;
 		_errorLogStream.flush();
 	}
 }

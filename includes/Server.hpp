@@ -52,20 +52,18 @@ public:
 
 	/*operator overloads*/
 	Server&	operator=(const Server &other);
-	class servException : public std::exception
+	class ServException : public std::exception
 		{
 			private:
 				std::string _message;
 			public:
-				servException(std::string message) throw()
-				{
-					_message = "serv error: " + message;
+				ServException(std::string message) throw() {
+					_message = "[ERROR] Server: " + message;
 				}
-				virtual const char* what() const throw()
-				{
+				virtual const char *what() const throw() {
 					return (_message.c_str());
 				}
-				virtual ~servException() throw() {}
+				virtual ~ServException() throw() {}
 		};
 };
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/29 10:49:46 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/09/30 11:31:17 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,30 @@ Webserv::Webserv(ConfigParser &config)
 	}
 }
 
+Webserv::~Webserv()
+{
+}
+
+void	Webserv::initEnv(char **env)
+{
+	if (!env)
+	{
+		throw WebservException("No environment variables found");
+		Logger::error("WEBSERV", "No environment variables found");
+		return ;
+	}
+	for (int i = 0; env[i]; i++)
+	{
+		std::string var(env[i]);
+		size_t pos = var.find('=');
+		if (pos != std::string::npos)
+		{
+			std::string key = var.substr(0, pos);
+			std::string value = var.substr(pos + 1);
+			_env[key] = value;
+		}
+	}
+}
 
 void Webserv::serverLoop()
 {
@@ -224,8 +248,4 @@ void Webserv::stopServer()
 	}
 	
 	std::cout << GREEN BOLD << "Server stopped successfully." << NEUTRAL << std::endl;
-}
-
-Webserv::~Webserv()
-{
 }
