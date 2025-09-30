@@ -59,7 +59,7 @@ public:
 	char		**getEnvAsArray() const;
 
 	/*operator overloads*/
-	Server&	operator=(const Server &other);
+	Server		&operator=(const Server &other);
 	class ServException : public std::exception
 		{
 			private:

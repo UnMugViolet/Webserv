@@ -170,8 +170,6 @@ Server::Server(ConfigParser &config, std::string serverUid)
 
 		// Setup env
 		initEnv(environ);
-		printEnv();
-			
 	} 
 	catch (const ServException &e) 
 	{
@@ -364,6 +362,15 @@ void	Server::initEnv(char **env)
 			_env[key] = value;
 		}
 	}
+	// Set global CGI variables for server instance
+	setEnvValue("SERVER_SOFTWARE", "Webserv/1.0");
+	setEnvValue("REDIRECT_STATUS", "200");
+	setEnvValue("SERVER_PORT", _config->getServerValue(_uid, "listen"));
+	setEnvValue("SERVER_ROOT", _config->getServerValue(_uid, "root"));
+	setEnvValue("SERVER_PROTOCOL", "HTTP/1.1");
+	setEnvValue("GATEWAY_INTERFACE", "CGI/1.1");
+
+	setEnvValue("SERVER_NAME", _config->getServerValue(_uid, "server_name"));
 }
 
 std::string	Server::getEnvValue(std::string const &key)
