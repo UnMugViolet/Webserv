@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/29 10:48:36 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/09/30 15:05:53 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ int main(int ac, char **av)
 		std::cout << "Using config file: " << BOLD << av[1] << NEUTRAL << std::endl << std::endl;
 
 		ConfigParser config(av[1]);
-		config.printConfig();
+		// config.printConfig();
 
 		// Init Logger and passing conf in order to create the log files
 		Logger logger(config);
@@ -48,9 +48,9 @@ int main(int ac, char **av)
 			Webserv webserv(config);
 			webserv.serverLoop();
 		} catch (const Webserv::WebservException &e) {
-			std::cerr << RED BOLD << "Webserv Error: " << e.what() << NEUTRAL << std::endl;
+			std::cerr << e.what() << NEUTRAL << std::endl;
 			return 1;
-		} catch (const Server::servException &e) {
+		} catch (const Server::ServException &e) {
 			std::cerr << RED BOLD << "Server Error: " << e.what() << NEUTRAL << std::endl;
 			return 1;
 		} catch (const std::exception &e) {

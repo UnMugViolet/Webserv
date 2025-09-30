@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/09/29 10:49:46 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/09/30 15:04:01 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,9 @@ Webserv::Webserv(ConfigParser &config)
 	}
 }
 
+Webserv::~Webserv()
+{
+}
 
 void Webserv::serverLoop()
 {
@@ -224,8 +227,4 @@ void Webserv::stopServer()
 	}
 	
 	std::cout << GREEN BOLD << "Server stopped successfully." << NEUTRAL << std::endl;
-}
-
-Webserv::~Webserv()
-{
 }

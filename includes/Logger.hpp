@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:43:52 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/17 16:10:52 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/09/30 11:00:05 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,4 +39,5 @@ class Logger {
 		static void init();
 		static void access(const std::string &serverUid, const std::string &msg);
 		static void error(const std::string &serverUid, const std::string &msg);
+		static void info(const std::string &msg);
 } ;

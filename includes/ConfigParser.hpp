@@ -55,12 +55,10 @@ class ConfigParser {
 			private:
 				std::string _message;
 			public:
-				ErrorException(std::string message) throw()
-				{
+				ErrorException(std::string message) throw() {
 					_message = "ConfigParser error: " + message;
 				}
-				virtual const char* what() const throw()
-				{
+				virtual const char *what() const throw() {
 					return (_message.c_str());
 				}
 				virtual ~ErrorException() throw() {}

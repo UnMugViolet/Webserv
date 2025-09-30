@@ -32,7 +32,7 @@ class RequestHandler
 		static std::string					getExtension(const std::string &path);
 		static int							_checkAccess(const std::string &path);
 		std::string							getIndex(const std::string &indexes, const std::string &root) const;
-		int									handleRequest(int fd, Server const &server, ConfigParser *config, std::string const &serverUid);
+		int									handleRequest(int fd, Server const &server, ConfigParser *config);
 		void								setMaxBodySize(std::string size);
 		std::string							trim(const std::string &str) const;
 		std::map<std::string, std::string>	parseHeader(std::string header) const;

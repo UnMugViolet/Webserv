@@ -2,8 +2,10 @@
 
 #include <string>
 #include <iostream>
-#include "ARequest.hpp"
 #include <sstream>
+
+#include "ARequest.hpp"
+#include "Logger.hpp"
 
 class PostRequest: public ARequest
 {
