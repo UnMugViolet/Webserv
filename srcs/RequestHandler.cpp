@@ -248,7 +248,13 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				path += "posts";
 			if (access(path.c_str(), X_OK) == -1)
 				;//what?
-			requestObject.HandlePost(body, path);
+			int res = requestObject.HandlePost(body, path);
+			if (res = -2)
+			{
+				std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
+				if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 500 response" << std::endl;
+			}
 			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 				std::cerr << "Failed to send POST response" << std::endl;
 			if (!requestObject.isKeepalive())

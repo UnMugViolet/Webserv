@@ -23,56 +23,147 @@ PostRequest::PostRequest(PostRequest& src) : ARequest(src)
 	return ;
 }
 
-int	PostRequest::UploadFile(std::string body, std::string path)
+int	PostRequest::UploadContent(std::map<std::string, std::string> content, std::string path)
 {
-	std::ofstream file(path.c_str());
+	std::string filename;
+
+	int i;
+	while (true)
+	{
+		std::ostringstream oss;
+		if (i > 0)
+			oss << path << "(" << i << ")" << ".txt";
+		else
+			oss << path << ".txt";
+		filename = oss.str();
+		if (access(filename.c_str(), F_OK) != 0)
+			break;
+		i++;
+	}
+	std::ofstream file(filename.c_str());
 	if (file.is_open())
 	{
-		file << body;
-		return (0);
+		for (std::map<std::string, std::string>::iterator it = content.begin(); it != content.end(); it++)
+		{
+			file << it->first << "=" << it->second << std::endl;
+		}
+		return (i);
 	}
 	else
 	{
 		;//couldn't create file
-		return (1);
+		return (-1);
 	}
 }
 
-void	PostRequest::HandlePost(std::string body, std::string path)
+int	PostRequest::UploadFile(std::string body, std::string path)
 {
-	std::string 						base;
+	std::string base = path;
+	std::string filename;
+	std::string extension = path.substr(path.rfind('.'));
+
+	base.erase(base.rfind('.'), std::string::npos);
+	int i = 0;
+	while (true)
+	{
+		std::ostringstream oss;
+		if (i > 0)
+			oss << base << "(" << i << ")" << extension;
+		else
+			oss << base << extension;
+		filename = oss.str();
+		if (access(filename.c_str(), F_OK) != 0)
+			break;
+		i++;
+	} 
+	std::ofstream file(filename.c_str());
+	if (file.is_open())
+	{
+		file << body;
+		return (i);
+	}
+	else
+	{
+		;//couldn't create file
+		return (-1);
+	}
+}
+
+int	PostRequest::HandlePost(std::string body, std::string path)
+{
 	std::string 						filename;
 
 
 	if (_Content_type.compare("text/plain") == 0)
 	{
-		base = path + "/post_";
-		int i = 1;
-		while (true)
-		{
-			std::ostringstream oss;
-			oss << base << i << ".txt";
-			filename = oss.str();
-			if (access(filename.c_str(), F_OK) != 0)
-				break;
-		} 
-		if(UploadFile(body, filename) == 1)
-			;//error
+		filename = path + "/post.txt";
+		
+		if(UploadFile(body, filename) == -1)
+			return (-2);
 		else
-			;//send ok response
+			return (1);
 	}
 	if (_Content_type.find("multipart/form-data") != std::string::npos)
 	{
-		std::map<std::string, std::string>	header;
+		std::string bodypart;
+		std::map<std::string, std::string>	content;
 		std::string boundary = _Content_type.substr(_Content_type.find("boundary=") + 1);
 
 		size_t pos = body.find(boundary);
-		pos = body.find("\r\n", pos) + 2;
-		
-
+		pos += boundary.size();
+		size_t end = body.find(boundary, pos) - 2;
+		while (true)
+		{
+			if (body[pos] == '-')
+				break;
+			pos = body.find("name=", pos) + 6;
+			std::string fieldname = body.substr(pos, body.find("\"", pos) - pos);
+			if (body.find("filename=", pos) < end)
+			{
+				pos = body.find("filename=", pos) + 10;
+				filename = body.substr(pos, body.find("\"", pos) - pos);
+				filename = path + "/" + filename;
+				pos = body.find("\r\n\r\n", pos) + 4;
+				bodypart = bodypart + body.substr(pos, end - pos);
+				int res = UploadFile(bodypart, filename);
+				if(res == -1)
+					;//error
+				if (res > 0)
+				{
+					std::string extension = filename.substr(filename.rfind('.'));
+					filename.erase(filename.rfind('.'), std::string::npos);
+					filename += "(";
+					filename += res;
+					filename += ")";
+					filename += extension;
+				}
+				content[fieldname] = filename;
+			}
+			else
+			{
+				pos = body.find("\r\n\r\n", pos) + 4;
+				bodypart = body.substr(pos, body.find("\r\n") - pos);
+				content[fieldname] = bodypart;
+			}
+			size_t pos = body.find(boundary);
+			pos += boundary.size();
+			size_t end = body.find(boundary, pos) - 2;
+		}
+		if (!content.empty())
+		{
+			filename = path + "/data";
+			if (UploadContent(content, filename) == -1)
+				return (-2);
+			else
+				return (2);
+		}
+		else
+		{
+			return (-1);
+		}
 	}
-		;// manage multipart
-
+	std::cerr << RED BOLD << "[ERROR]" << NEUTRAL RED << "unknown content type: " << _Content_type << NEUTRAL << std::endl;
+	return (0);
 }
 
 PostRequest::~PostRequest()

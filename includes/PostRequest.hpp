@@ -18,7 +18,8 @@ public:
 
 	/*member functions*/
 	int	UploadFile(std::string body, std::string path);
-	void	HandlePost(std::string body, std::string fullPath);
+	int	UploadContent(std::map<std::string, std::string> content, std::string path);
+	int	HandlePost(std::string body, std::string fullPath);
 
 	/*operator overloads*/
 	PostRequest&	operator=(PostRequest& src);
