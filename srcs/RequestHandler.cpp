@@ -124,8 +124,8 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 	std::map<std::string, std::string> headermap;
 	std::string serverUid = server.getUid();
 
-	std::cout << YELLOW << "UID " << serverUid << NEUTRAL << std::endl;
-	return 486;
+	// std::cout << YELLOW << "UID " << serverUid << NEUTRAL << std::endl;
+	// return 486;
 	// Read initial chunk
 	received = recv(fd, buff, BUFFER_SIZE, 0);
 	if (received <= 0)
@@ -165,12 +165,12 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		headermap = parseHeader(header);
 		
 		// get virtual server root
-		if (headermap.find("server_name") == headermap.end())
+		if (headermap.find("Host") == headermap.end())
 		{
 			std::cerr << "No server_name, bad request" << std::endl;
 			return -1;
 		}
-		std::string server_name = headermap["server_name"];
+		std::string server_name = headermap["Host"];
 		std::string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");
@@ -244,18 +244,30 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			PostRequest requestObject(headermap);
 			// Process the POST request
 			std::string path = serverRoot;
+
+			// define target directory
 			if (headermap["path"] == "/pages/upload.php")
-				path += "uploads";
+				path += "/uploads";
 			if (headermap["path"] == "/pages/post.php")
-				path += "posts";
+				path += "/posts";
 			if (access(path.c_str(), X_OK) == -1)
-				;//what?
-			int res = requestObject.HandlePost(body, path);
-			if (res = -2)
 			{
+				std::cerr << "no upload directory : " << path << std::endl;//what? no appropriate directory or no permission
 				std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
 				if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
 					std::cerr << "Failed to send 500 response" << std::endl;
+			}
+			else
+			{
+				std::cout << "here\n";
+				int res = requestObject.HandlePost(body, path);
+				std::cout << "there\n";
+				if (res == -1)
+				{
+					std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
+					if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
+						std::cerr << "Failed to send 500 response" << std::endl;
+				}
 			}
 			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
 				std::cerr << "Failed to send POST response" << std::endl;
@@ -295,8 +307,23 @@ void	RequestHandler::setMaxBodySize(std::string size)
 {
 	std::istringstream iss(size);
 	int value;
+	std::string unit;
+
 	if (iss >> value && value >= 0) {
 		_maxBodySize = value;
+		iss >> unit;
+		if (!unit.empty())
+		{
+			if (unit == "K" || unit == "k" || unit == "KB" || unit == "kb")
+				_maxBodySize *= 1024;
+			else if (unit == "M" || unit == "m" || unit == "MB" || unit == "mb")
+				_maxBodySize *= 1024 * 1024;
+			else
+			{
+				std::cerr << "unsupported unit" << std::endl;
+				_maxBodySize = 0;
+			}
+		}
 		// std::cout << "Body size = " << value << std::endl; TODO - Convert the figure in MB and set the value to the attribute
 	}
 	else
