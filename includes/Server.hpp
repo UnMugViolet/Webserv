@@ -27,8 +27,8 @@ private:
 	/*attributes here*/
 	std::string							_uid;
 	std::map<std::string, std::string>	_env;
-	std::map<std::string, std::string>	_IdList;
-	int 								_socketfd;
+	std::vector<std::string>			_server_names;
+	std::vector<int>					_socketfds;
 	std::vector<int>					_clientFds;
 	RequestHandler						*_handler;
 	ConfigParser						*_config;
@@ -41,13 +41,16 @@ public:
 	~Server();
 
 	/*member functions*/
-	int			addVirtualHost(ConfigParser &config, std::string serverUid);
-	int			getSocket() const;
+	std::vector<sockaddr_in>	setServerNames(const ConfigParser &config, const std::string &serverUid);
+	std::vector<int>			checkPorts(const ConfigParser &config, const std::string &serverUid);
+	void						CreateSockets(const ConfigParser &config, const std::string &serverUid, std::vector<int> &ports, std::vector<sockaddr_in> &sockaddrs);
+	// int			addVirtualHost(ConfigParser &config, std::string serverUid);
+	std::vector<int>	getSocket() const;
 	std::string	getUid() const;
 	std::string getId(const std::string &name) const;
 	std::string getServerRoot(const std::string &serverName = "") const;
 	std::string getCurrentServerRoot() const;
-	int			setClient();
+	int			setClient(int _socketfd);
 	void		unsetClient(int position);
 	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config);
 

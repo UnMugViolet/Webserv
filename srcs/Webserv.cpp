@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/02 15:05:45 by andrean          ###   ########.fr       */
+/*   Updated: 2025/10/02 17:20:06 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ void Webserv::serverLoop()
 	int validServers = 0;
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		if (_servers[i].getSocket() != -1)
+		if (!_servers[i].getSocket().empty())
 			validServers++;
 	}
 	
@@ -90,11 +90,14 @@ void Webserv::serverLoop()
 	//mettre les fd d'ecoute de chaque serveur dans readFd
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		fd = _servers[i].getSocket();
-		if (fd != -1) {  // Only add valid file descriptors
-			if (fd > maxFd)
-				maxFd = fd;
-			FD_SET(fd, &fullReadFd);
+		for (std::vector<int>::iterator it = _servers[i].getSocket().begin(); it != _servers[i].getSocket().end(); it++)
+		{
+			fd = *it;
+			if (fd != -1) {  // Only add valid file descriptors
+				if (fd > maxFd)
+					maxFd = fd;
+				FD_SET(fd, &fullReadFd);
+			}
 		}
 	}
 
@@ -151,14 +154,18 @@ void Webserv::serverLoop()
 		{
 			for (size_t i = 0; i < _servers.size(); i++)
 			{
-				int serverFd = _servers[i].getSocket();
-				if (serverFd != -1 && FD_ISSET(serverFd, &readFd))
+				std::vector<int> serverFds = _servers[i].getSocket();
+				for (std::vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
 				{
-					fd = _servers[i].setClient();
-					if (fd != -1) {  // Only add valid client file descriptors
-						FD_SET(fd, &fullReadFd);
-						if (fd > maxFd)
-							maxFd = fd;
+					if (*it != -1 && FD_ISSET(*it, &readFd))
+					{
+						fd = _servers[i].setClient(*it);
+						if (fd != -1) // Only add valid client file descriptors
+						{
+							FD_SET(fd, &fullReadFd);
+							if (fd > maxFd)
+								maxFd = fd;
+						}
 					}
 				}
 				_servers[i].getRequests(readFd, fullReadFd, _config);

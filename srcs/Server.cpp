@@ -9,15 +9,21 @@ Server::Server(const Server &other)
 {
 	if (this != &other)
 	{
-		this->_IdList = other._IdList;
-		this->_socketfd = other._socketfd;
+		this->_socketfds = other._socketfds;
 		this->_clientFds = other._clientFds;
 		this->_uid = other._uid;  // Lost 2 hours of my life because of this
 		this->_config = other._config;
 		this->_handler = new RequestHandler();
 		
 		// Transfer ownership of the socket to avoid double-close
-		const_cast<Server&>(other)._socketfd = -1;
+
+		for (std::vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
+		{
+			if (*it > -1)
+			{
+				*it = -1;
+			}
+		}
 	}
 }
 
@@ -27,9 +33,16 @@ Server::~Server()
 		delete _handler;
 		_handler = NULL;
 	}
-	if (_socketfd != -1) {
-		close(_socketfd);
-		_socketfd = -1;
+	if (_socketfds.empty()) 
+	{
+		for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
+		{
+			if (*it > -1)
+			{
+				close(*it);
+				*it = -1;
+			}
+		}
 	}
 }
 
@@ -38,12 +51,18 @@ Server &Server::operator=(const Server &other)
 	if (this != &other)
 	{
 		// Close current socket if we have one
-		if (_socketfd != -1) {
-			close(_socketfd);
+		if (_socketfds.empty()) {
+		for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
+		{
+			if (*it > -1)
+			{
+				close(*it);
+				*it = -1;
+			}
+		}
 		}
 		
-		this->_IdList = other._IdList;
-		this->_socketfd = other._socketfd;
+		this->_socketfds = other._socketfds;
 		this->_clientFds = other._clientFds;
 		this->_uid = other._uid;
 		this->_config = other._config;
@@ -52,52 +71,139 @@ Server &Server::operator=(const Server &other)
 		this->_handler = new RequestHandler();
 		
 		// Transfer ownership of the socket to avoid double-close
-		const_cast<Server&>(other)._socketfd = -1;
+		for (std::vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
+		{
+			if (*it > -1)
+			{
+				*it = -1;
+			}
+		}
 	}
 	return *this;
 }
 
 Server::Server(ConfigParser &config, std::string serverUid)
 {
-	sockaddr_in sockaddr;
-	int			gotit = 0;
-	std::string	_name;
-	const char *	c_name;
+	std::vector<sockaddr_in>	sockvector;
+	std::vector<int>			portvector; 
 
 	this->_config = &config;
 	this->_handler = NULL;
-	this->_socketfd = -1;
+	// this->_socketfd = -1;
 	this->_uid = serverUid;
-	std::ostringstream oss;
+	
 
 	try 
 	{
 		this->_handler = new RequestHandler;
-		
-		//define ipv4
-		sockaddr.sin_family = AF_INET;
 
-		// get server name + root
-		if (config.hasServerKey(serverUid, "server_name"))
+		// check if servername is present;
+		if (!config.hasServerKey(serverUid, "server_name"))
 		{
-			_name = config.getServerValue(serverUid, "server_name");
-			_IdList[_name] = _uid;
-		}
-		else {
 			Logger::error(serverUid, "No server_name found in the config file for this server not starting up the services");
 			throw ServException(serverUid + " no server name found");
 		}
 
+		// fill server_names vector based on config and return vector with all sockaddr
+		sockvector = setServerNames(config, serverUid);
+
+		// get a vector containing all port numbers if valid
+		portvector = checkPorts(config, serverUid);
+
+		//put max body size in handler
+		if (config.hasServerKey(serverUid, "client_max_body_size"))
+			_handler->setMaxBodySize(config.getServerValue(serverUid, "client_max_body_size"));
+
+		// Setup env
+		initEnv(environ);
+	}
+	catch (const ServException &e) 
+	{
+		// Clean up allocated resources before re-throwing
+		if (_handler) {
+			delete _handler;
+			_handler = NULL;
+		}
+		if (_socketfds.empty()) {
+			for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
+			{
+				if (*it > -1)
+				{
+					close(*it);
+					*it = -1;
+				}
+			}
+		}
+		throw; // Re-throw the original exception to parent Webserv
+	}
+}
+
+void	Server::CreateSockets(const ConfigParser &config, const std::string &serverUid, std::vector<int> &ports, std::vector<sockaddr_in> &sockaddrs)
+{
+	std::ostringstream oss;
+
+	for (std::vector<sockaddr_in>::iterator it = sockaddrs.begin(); it != sockaddrs.end(); it++)
+	{
+		sockaddr_in sockaddr = *it;
+
+		for (std::vector<int>::iterator port_it = ports.begin(); port_it != ports.end(); port_it++)
+		{
+			int portnbr = *port_it;
+
+			//create listening socket with port number
+			sockaddr.sin_port = htons(portnbr);
+			int _socketfd = socket(AF_INET, SOCK_STREAM, 0);
+			int opt = 1;
+			if (_socketfd == -1)
+				throw ServException("socket failed");
+			if (setsockopt(_socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+			{
+				close(_socketfd);
+				Logger::error(serverUid, "Unexpected error setsockopt failed");
+				throw ServException("setsockopt failed");
+			}
+			if (bind(_socketfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == -1)
+			{
+				close(_socketfd);
+				oss.str("");
+				oss << portnbr;
+				Logger::error(serverUid, "Bind failed on port " + oss.str() + ", possibly already in use check with 'ss -tuln | grep " + oss.str() + "'");
+				throw ServException("bind failed for server: " + _uid + " on port " + oss.str());
+			}
+			if (listen(_socketfd, 10) == -1)
+			{
+				close(_socketfd);
+				oss.str(""); // Clear the stringstream
+				oss << portnbr;
+				Logger::error(serverUid, "Listen failed on port " + oss.str());
+				throw ServException("listen failed for server: " + _uid + " on port " + oss.str());
+			}
+			_socketfds.push_back(_socketfd);
+		}
+	}
+}
+
+std::vector<sockaddr_in>	Server::setServerNames(const ConfigParser &config, const std::string &serverUid)
+{
+	std::vector<sockaddr_in>	sockvector;
+	std::string _names = config.getServerValue(serverUid, "server_name");
+
+	while (true)
+	{
+		sockaddr_in sockaddr;
+		sockaddr.sin_family = AF_INET;
+		int	gotit = 0;
+		std::string _one_name = _names.substr(0, _names.find(' '));
+
 		// check if server_name is a valid ip
-		c_name = _name.c_str();
-		if (ft_inet_pton4(_name, &(sockaddr.sin_addr)))
+		const char *c_name = _one_name.c_str();
+		if (ft_inet_pton4(_one_name, &(sockaddr.sin_addr)))
 			gotit = 1;
 	
 		// try getting ip address with server_name as alias
 		struct addrinfo hints;
 		struct addrinfo *res;
 		struct addrinfo *r;
-		int				portnbr;
 
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
@@ -124,148 +230,124 @@ Server::Server(ConfigParser &config, std::string serverUid)
 			Logger::error(serverUid, "Invalid server_name in the config file");
 			throw ServException(serverUid + " has an invalid server_name");
 		}
+		sockvector.push_back(sockaddr);
+		_server_names.push_back(_one_name);
+		if (_names.find(' ') == std::string::npos)
+			break;
+		_names = _names.substr(_names.find(' ') + 1);
+	}
+	return (sockvector);
+}
 
-		if (config.hasServerKey(serverUid,  "listen"))
-			portnbr = ft_atoi(config.getServerValue(serverUid, "listen").c_str());
-		else {
-			Logger::error(serverUid, "No port number found in the config file for this server not starting up the services");
-			throw ServException(serverUid + " has no port number");
+std::vector<int>	Server::checkPorts(const ConfigParser &config, const std::string &serverUid)
+{
+	if (!config.hasServerKey(serverUid,  "listen"))
+	{
+		Logger::error(serverUid, "No port number found in the config file for this server not starting up the services");
+		throw ServException(serverUid + " has no port number");
+	}
+	std::string ports = config.getServerValue(serverUid, "listen");
+	std::string _one_port;
+	int portnbr;
+	std::vector<int>	portvector;
+
+	while (true)
+	{
+		_one_port = ports.substr(0, ports.find(' '));
+
+		for (std::string::iterator pos = _one_port.begin(); pos != _one_port.end(); pos++)
+		{
+			if (*pos > '9' || *pos < '0')
+			{
+				Logger::error(serverUid, "The port value is invalid");
+				throw ServException(serverUid + " has invalid port number");
+			}
 		}
+		portnbr = ft_atoi(_one_port.c_str());
 		if (portnbr <= 0 || portnbr > 65535) {
 			Logger::error(serverUid, "The port is out of range in config file (1-65535)");
 			throw ServException(serverUid + " has invalid port number");
 		}
-
-		//create listening socket with port number
-		sockaddr.sin_port = htons(portnbr);
-		_socketfd = socket(AF_INET, SOCK_STREAM, 0);
-		int opt = 1;
-		if (_socketfd == -1)
-			throw ServException("socket failed");
-		if (setsockopt(_socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-		{
-			close(_socketfd);
-			Logger::error(serverUid, "Unexpected error setsockopt failed");
-			throw ServException("setsockopt failed");
-		}
-		if (bind(_socketfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == -1)
-		{
-			close(_socketfd);
-			oss << portnbr;
-			Logger::error(serverUid, "Bind failed on port " + oss.str() + ", possibly already in use check with 'ss -tuln | grep " + oss.str() + "'");
-			throw ServException("bind failed for server: " + _uid + " on port " + oss.str());
-		}
-		if (listen(_socketfd, 10) == -1)
-		{
-			close(_socketfd);
-			oss.str(""); // Clear the stringstream
-			oss << portnbr;
-			Logger::error(serverUid, "Listen failed on port " + oss.str());
-			throw ServException("listen failed for server: " + _uid + " on port " + oss.str());
-		}
-
-		//put max body size in handler
-		if (config.hasServerKey(serverUid, "client_max_body_size"))
-			_handler->setMaxBodySize(config.getServerValue(serverUid, "client_max_body_size"));
-
-		// Setup env
-		initEnv(environ);
-	} 
-	catch (const ServException &e) 
-	{
-		// Clean up allocated resources before re-throwing
-		if (_handler) {
-			delete _handler;
-			_handler = NULL;
-		}
-		if (_socketfd != -1) {
-			close(_socketfd);
-			_socketfd = -1;
-		}
-		throw; // Re-throw the original exception to parent Webserv
+		portvector.push_back(portnbr);
+		if (ports.find(' ') == std::string::npos)
+			break;
+		ports = ports.substr(ports.find(' ') + 1);
 	}
+	return (portvector);
 }
 
-int	Server::addVirtualHost(ConfigParser &config, std::string serverUid)
-{
-	std::string _name;
-	sockaddr_in sockaddr;
+// int	Server::addVirtualHost(ConfigParser &config, std::string serverUid)
+// {
+// 	std::string _name;
+// 	sockaddr_in sockaddr;
 
-	sockaddr.sin_family = AF_INET;
-	if (config.hasServerKey(serverUid, "server_name") && config.hasServerKey(serverUid, "root"))
-	{
-		int gotit = 0;
+// 	sockaddr.sin_family = AF_INET;
+// 	if (config.hasServerKey(serverUid, "server_name") && config.hasServerKey(serverUid, "root"))
+// 	{
+// 		int gotit = 0;
 
-		sockaddr_in serveraddr;
-		socklen_t serveraddr_len = sizeof(serveraddr);
-		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
+// 		sockaddr_in serveraddr;
+// 		socklen_t serveraddr_len = sizeof(serveraddr);
+// 		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
 
-		_name = config.getServerValue(serverUid, "server_name");
+// 		_name = config.getServerValue(serverUid, "server_name");
 
-		// check if server_name is a valid ip
-		const char *c_name = _name.c_str();
-		if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr))) // TODO - Not allowed function
-			gotit = 1;
+// 		// check if server_name is a valid ip
+// 		const char *c_name = _name.c_str();
+// 		if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr))) // TODO - Not allowed function
+// 			gotit = 1;
 
-		// try getting ip address with server_name as alias
-		struct addrinfo hints;
-		struct addrinfo *res;
-		struct addrinfo *r;
-		ft_memset(&hints, 0, sizeof(hints));
-		hints.ai_family = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
-		int status = getaddrinfo(c_name, 0, &hints, &res);
-		if (status == 0)
-		{
-			r = res;
-			while (r != NULL)
-			{
-				if (r->ai_family == AF_INET)
-				{
-					gotit = 1;
-					struct sockaddr_in *ipv4 = (struct sockaddr_in *)r->ai_addr;
-					sockaddr.sin_addr = ipv4->sin_addr;
-				}
-				r = r->ai_next;
-			}
-			freeaddrinfo(res);
-		}
-		if (gotit == 0) {
-			Logger::error(serverUid, "Invalid server_name in the config file for this virtual host not adding it");
-			throw ServException(serverUid + " invalid server_name");
-		}
-		std::string ip = inet_ntoa(sockaddr.sin_addr);
-		if (ip.compare(inet_ntoa(serveraddr.sin_addr)) == 0)
-		{
-			_IdList[_name] = serverUid;
-			return 1;
-		}
+// 		// try getting ip address with server_name as alias
+// 		struct addrinfo hints;
+// 		struct addrinfo *res;
+// 		struct addrinfo *r;
+// 		ft_memset(&hints, 0, sizeof(hints));
+// 		hints.ai_family = AF_INET;
+// 		hints.ai_socktype = SOCK_STREAM;
+// 		int status = getaddrinfo(c_name, 0, &hints, &res);
+// 		if (status == 0)
+// 		{
+// 			r = res;
+// 			while (r != NULL)
+// 			{
+// 				if (r->ai_family == AF_INET)
+// 				{
+// 					gotit = 1;
+// 					struct sockaddr_in *ipv4 = (struct sockaddr_in *)r->ai_addr;
+// 					sockaddr.sin_addr = ipv4->sin_addr;
+// 				}
+// 				r = r->ai_next;
+// 			}
+// 			freeaddrinfo(res);
+// 		}
+// 		if (gotit == 0) {
+// 			Logger::error(serverUid, "Invalid server_name in the config file for this virtual host not adding it");
+// 			throw ServException(serverUid + " invalid server_name");
+// 		}
+// 		std::string ip = inet_ntoa(sockaddr.sin_addr);
+// 		if (ip.compare(inet_ntoa(serveraddr.sin_addr)) == 0)
+// 		{
+// 			_IdList[_name] = serverUid;
+// 			return 1;
+// 		}
 	
-		return 0;
-	}
-	else
-	{
-		std::cerr << "invalid conf for: " << serverUid << std::endl;
-		return (1);
-	}
-}
+// 		return 0;
+// 	}
+// 	else
+// 	{
+// 		std::cerr << "invalid conf for: " << serverUid << std::endl;
+// 		return (1);
+// 	}
+// }
 
-int	Server::getSocket() const
+std::vector<int>	Server::getSocket() const
 {
-	return (_socketfd);
+	return (_socketfds);
 }
 
 std::string Server::getUid() const
 {
 	return _uid;
-}
-
-std::string Server::getId(const std::string &name) const
-{
-	std::map<std::string, std::string>::const_iterator it = _IdList.find(name);
-	if (it != _IdList.end())
-		return it->second;
-	return (_uid);
 }
 
 static std::string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
@@ -285,7 +367,7 @@ static std::string get_connection_info(const sockaddr_in& client, const sockaddr
     return oss.str();
 }
 
-int	Server::setClient()
+int	Server::setClient(int _socketfd)
 {
 	sockaddr_in	peeraddr;
 	socklen_t	peer_addr_size = sizeof(peeraddr);
