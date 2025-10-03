@@ -58,7 +58,7 @@
 		echo "<h3> $name </h3>";
 		echo "<h4> $message </h4>";
 
-		if ($file){
+		if ($file){ //TODO - make it work
 			$filename = basename($file);
 
 			$filepath = '../uploads/' . $filename;
