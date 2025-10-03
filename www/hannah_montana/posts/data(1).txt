@@ -1,0 +1,2 @@
+name=pjaguin
+message=Je suis une poupee de cire, une poupee de son

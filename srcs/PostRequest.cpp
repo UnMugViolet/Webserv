@@ -118,6 +118,9 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 		size_t end = body.find(boundary, pos) - 2;
 		while (true)
 		{
+			bodypart = "";
+
+			std::cout << body << std::endl;
 			if (body[pos] != '\r')
 			{
 				break;
@@ -126,12 +129,21 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 			std::string fieldname = body.substr(pos, body.find("\"", pos) - pos);
 			if (body.find("filename=", pos) < end && body.find("filename=", pos) != std::string::npos)
 			{
+				int res;
+				
 				pos = body.find("filename=", pos) + 10;
 				filename = body.substr(pos, body.find("\"", pos) - pos);
+				if (filename == "")
+				{
+					pos = body.find(boundary, pos);
+					pos += boundary.size();
+					end = body.find(boundary, pos) - 2;
+					continue;
+				}
 				filename = path + "/uploads" + "/" + filename;
 				pos = body.find("\r\n\r\n", pos) + 4;
-				bodypart = bodypart + body.substr(pos, end - pos);
-				int res = UploadFile(bodypart, filename);
+				bodypart = body.substr(pos, end - pos);
+				res = UploadFile(bodypart, filename);
 				if(res == -1)
 					return (-1);
 				if (res > 0)
@@ -148,7 +160,7 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 			else
 			{
 				pos = body.find("\r\n\r\n", pos) + 4;
-				bodypart = body.substr(pos, body.find("\r\n", pos) - pos);
+				bodypart = body.substr(pos, end - pos);
 				content[fieldname] = bodypart;
 			}
 			pos = body.find(boundary, pos);

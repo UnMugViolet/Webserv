@@ -32,7 +32,7 @@ $form = [];
 
 			<label for="file">File upload:</label>
 			<input type="file" name="file"><br><br>
-			
+
 			<input class="" type="submit" value="Envoyer">
 		</form>
 	</div>

@@ -29,6 +29,7 @@
 		"Redirect",
 		"Errors",
 		"Aliases",
+		"Display Posts"
 	]
 ?>
 

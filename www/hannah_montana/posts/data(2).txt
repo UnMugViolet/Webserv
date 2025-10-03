@@ -1,0 +1,2 @@
+name=bisous
+message=So I'm working on a program for school and we need to make use of a bool function.

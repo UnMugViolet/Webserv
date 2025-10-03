@@ -1,0 +1,16 @@
+name=grrrr
+
+message=So I'm working on a program for school and we need to make use of a bool function.
+
+The function must: prompt the player for input, variables to input the numbers that the player has put in (floats for 'angle' and 'speed'), a string for an error (like if the player puts in an invalid number).
+
+This function must do all of this and be a boolean function.
+
+I'm looking for examples of how I can use a bool function to do all of this and return all of this info into the main function.
+
+This boolean function has to return whether the player put in a zero at anytime (this will cause the game to end) or not (the game continues on).
+
+I'm not looking for someone to just give me the answers, as I'd like to figure it out so that I understand it. But an example or two would be helpful as I'm just a little stuck here.
+
+It's all a modification of a previous project that gets the player to input an angle and the speed of a projectile. Then it calculates whether the player hit the target or not. And continues until the player hits the target. 
+
