@@ -10,6 +10,7 @@ private:
 	/*attributes here*/
 public:
 	/*constructors and destructor*/
+	GetRequest();
 	GetRequest(std::map<std::string, std::string> header);
 	GetRequest(GetRequest& src);
 	~GetRequest();

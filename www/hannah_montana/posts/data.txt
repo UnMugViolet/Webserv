@@ -1,0 +1,3 @@
+name=miou
+message=Miaou
+file=www/hannah_montana/uploads/player.xpm

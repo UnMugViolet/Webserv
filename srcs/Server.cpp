@@ -66,7 +66,6 @@ Server::Server(ConfigParser &config, std::string serverUid)
 
 		// Setup env
 		initEnv(environ);
-		printEnv();
 	}
 	catch (const ServException &e) 
 	{

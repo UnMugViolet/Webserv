@@ -14,6 +14,7 @@ private:
 	std::string		_body;
 public:
 	/*constructors and destructor*/
+	PostRequest();
 	PostRequest(std::map<std::string, std::string> header);
 	PostRequest(PostRequest& src);
 	~PostRequest();

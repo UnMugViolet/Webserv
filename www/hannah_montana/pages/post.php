@@ -30,6 +30,9 @@ $form = [];
 			<label for="message">Message:</label><br>
 			<textarea id="message" name="message" rows="4" cols="50" required></textarea><br><br>
 
+			<label for="file">File upload:</label>
+			<input type="file" name="file"><br><br>
+			
 			<input class="" type="submit" value="Envoyer">
 		</form>
 	</div>

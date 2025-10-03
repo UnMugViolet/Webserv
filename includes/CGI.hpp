@@ -11,6 +11,7 @@
 #include "dict.hpp"
 #include "Logger.hpp"
 #include <sys/socket.h>
+#include "Server.hpp"
 
 
 
@@ -29,7 +30,7 @@ public:
 
 	/*member functions*/
 	
-	static int	interpret(const std::string &path, std::string const serverUid);
+	static int	interpret(const std::string &path, const Server &Server);
 
 	/*operator overloads*/
 

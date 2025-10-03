@@ -12,6 +12,7 @@ class DeleteRequest: public ARequest
 		/*attributes here*/
 	public:
 		/*constructors and destructor*/
+		DeleteRequest();
 		DeleteRequest(std::map<std::string, std::string> header);
 		DeleteRequest(DeleteRequest &src);
 		~DeleteRequest();

@@ -1,5 +1,9 @@
 #include "DeleteRequest.hpp"
 
+DeleteRequest::DeleteRequest()
+{
+}
+
 DeleteRequest::DeleteRequest(std::map<std::string, std::string> header)
 {
 	_path = header["path"];

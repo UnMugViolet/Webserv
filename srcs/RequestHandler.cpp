@@ -124,8 +124,6 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 	std::map<std::string, std::string> headermap;
 	std::string serverUid = server.getUid();
 
-	// std::cout << YELLOW << "UID " << serverUid << NEUTRAL << std::endl;
-	// return 486;
 	// Read initial chunk
 	received = recv(fd, buff, BUFFER_SIZE, 0);
 	if (received <= 0)
@@ -167,10 +165,14 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		// get virtual server root
 		if (headermap.find("Host") == headermap.end())
 		{
+			GetRequest requestObject;
+
 			std::cerr << "No server_name, bad request" << std::endl;
+			std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+			if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+				std::cerr << "Failed to send 400 response" << std::endl;
 			return -1;
 		}
-		std::string server_name = headermap["Host"];
 		std::string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");
@@ -183,14 +185,24 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			size_t contentLength;
 			if (!(iss >> contentLength))
 			{
+				GetRequest requestObject;
+
 				std::cerr << "Invalid Content-Length header" << std::endl;
+				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 400 response" << std::endl;
 				return -1;
 			}
 			
 			// Check against max body size
 			if (_maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
 			{
+				GetRequest requestObject;
+
 				std::cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << std::endl;
+				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 400 response" << std::endl;
 				return -1;
 			}
 			
@@ -233,7 +245,7 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				std::string contentType = requestObject.getContentType(fullPath);
 				std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << fullPath << NEUTRAL << std::endl;
 				// Handle as CGI
-				if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
+				if (requestObject.sendCGIResponse(fd, fullPath, config, server) == -1)
 					std::cerr << "Failed to send CGI response" << std::endl;
 			}
 			if (!requestObject.isKeepalive())
@@ -246,22 +258,27 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			std::string path = serverRoot;
 
 			// define target directory
-			if (headermap["path"] == "/pages/upload.php")
-				path += "/uploads";
-			if (headermap["path"] == "/pages/post.php")
-				path += "/posts";
+			path += "/uploads";
 			if (access(path.c_str(), X_OK) == -1)
 			{
-				std::cerr << "no upload directory : " << path << std::endl;//what? no appropriate directory or no permission
+				std::cerr << "no uploads directory" << std::endl;//what? no appropriate directory or no permission
 				std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
 				if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
 					std::cerr << "Failed to send 500 response" << std::endl;
+				return (-1);
+			}
+			path = serverRoot + "/posts";
+			if (access(path.c_str(), X_OK) == -1)
+			{
+				std::cerr << "no posts directory" << std::endl;//what? no appropriate directory or no permission
+				std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
+				if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 500 response" << std::endl;
+				return (-1);
 			}
 			else
 			{
-				std::cout << "here\n";
-				int res = requestObject.HandlePost(body, path);
-				std::cout << "there\n";
+				int res = requestObject.HandlePost(body, serverRoot);
 				if (res == -1)
 				{
 					std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
@@ -269,7 +286,7 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 						std::cerr << "Failed to send 500 response" << std::endl;
 				}
 			}
-			if (requestObject.sendCGIResponse(fd, fullPath, config, serverUid) == -1)
+			if (requestObject.sendCGIResponse(fd, fullPath, config, server) == -1)
 				std::cerr << "Failed to send POST response" << std::endl;
 			if (!requestObject.isKeepalive())
 				return (-1);

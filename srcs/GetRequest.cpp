@@ -1,5 +1,10 @@
 #include "GetRequest.hpp"
 
+GetRequest::GetRequest()
+{
+	return ;
+}
+
 GetRequest::GetRequest(std::map<std::string, std::string> header)
 {
 	_path = header["path"];

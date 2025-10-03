@@ -1,5 +1,9 @@
 #include "PostRequest.hpp"
 
+PostRequest::PostRequest()
+{
+}
+
 PostRequest::PostRequest(std::map<std::string, std::string> header)
 {
 	_path = header["path"];
@@ -11,7 +15,6 @@ PostRequest::PostRequest(std::map<std::string, std::string> header)
 			_keep_alive = false;
 	_client = header["User-Agent"];
 	_Content_type = header["Content-Type"];
-	std::cout << "path : " << _path << std::endl;
 	_host = header["Host"];
 
 	return ;
@@ -51,8 +54,7 @@ int	PostRequest::UploadContent(std::map<std::string, std::string> content, std::
 		return (i);
 	}
 	else
-	{
-		;//couldn't create file
+	{//couldn't create file
 		return (-1);
 	}
 }
@@ -97,6 +99,7 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 
 	if (_Content_type.compare("text/plain") == 0)
 	{
+		path += "/posts";
 		filename = path + "/post.txt";
 		
 		if(UploadFile(body, filename) == -1)
@@ -113,7 +116,6 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 		size_t pos = body.find(boundary);
 		pos += boundary.size();
 		size_t end = body.find(boundary, pos) - 2;
-		std::cout << "body : " << body << std::endl;
 		while (true)
 		{
 			if (body[pos] != '\r')
@@ -124,10 +126,9 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 			std::string fieldname = body.substr(pos, body.find("\"", pos) - pos);
 			if (body.find("filename=", pos) < end && body.find("filename=", pos) != std::string::npos)
 			{
-				std::cout << "mais\n";
 				pos = body.find("filename=", pos) + 10;
 				filename = body.substr(pos, body.find("\"", pos) - pos);
-				filename = path + "/" + filename;
+				filename = path + "/uploads" + "/" + filename;
 				pos = body.find("\r\n\r\n", pos) + 4;
 				bodypart = bodypart + body.substr(pos, end - pos);
 				int res = UploadFile(bodypart, filename);
@@ -148,7 +149,6 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 			{
 				pos = body.find("\r\n\r\n", pos) + 4;
 				bodypart = body.substr(pos, body.find("\r\n", pos) - pos);
-				std::cout << "fieldname: " << fieldname << ":" << bodypart << std::endl;
 				content[fieldname] = bodypart;
 			}
 			pos = body.find(boundary, pos);
@@ -157,7 +157,7 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 		}
 		if (!content.empty())
 		{
-			filename = path + "/data";
+			filename = path + "/posts/data";
 			if (UploadContent(content, filename) == -1)
 				return (-1);
 			else
@@ -165,7 +165,6 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 		}
 		else
 		{
-			std::cout << "prout\n";
 			return (-1);
 		}
 	}
