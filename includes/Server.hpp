@@ -43,7 +43,7 @@ public:
 	/*member functions*/
 	std::vector<sockaddr_in>	setServerNames(const ConfigParser &config, const std::string &serverUid);
 	std::vector<int>			checkPorts(const ConfigParser &config, const std::string &serverUid);
-	void						CreateSockets(const ConfigParser &config, const std::string &serverUid, std::vector<int> &ports, std::vector<sockaddr_in> &sockaddrs);
+	void						CreateSockets(const std::string &serverUid, std::vector<int> &ports, std::vector<sockaddr_in> &sockaddrs);
 	// int			addVirtualHost(ConfigParser &config, std::string serverUid);
 	std::vector<int>	getSocket() const;
 	std::string	getUid() const;

@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/02 17:20:06 by andrean          ###   ########.fr       */
+/*   Updated: 2025/10/03 12:29:10 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,24 +31,8 @@ Webserv::Webserv(ConfigParser &config)
 	serverUids = config.getServerUids();
 	for (size_t i = 0; i < serverUids.size(); i++)
 	{
-		int	gotServ = 0;
 		serverUid = serverUids[i];
 
-		std::string port;
-		if (config.hasServerKey(serverUid, "listen"))
-		{
-			port = config.getServerValue(serverUid, "listen");
-			for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
-			{
-				if (config.getServerValue(it->getUid(), "listen") == port)
-				{
-					gotServ = it->addVirtualHost(config, serverUid);;
-					break ;
-				}
-			}
-			if (gotServ)
-				continue;
-		}
 		try {
 			Server server(config, serverUid);
 			_servers.push_back(server);
@@ -77,7 +61,9 @@ void Webserv::serverLoop()
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
 		if (!_servers[i].getSocket().empty())
+		{
 			validServers++;
+		}
 	}
 	
 	if (validServers == 0) {
@@ -90,7 +76,8 @@ void Webserv::serverLoop()
 	//mettre les fd d'ecoute de chaque serveur dans readFd
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		for (std::vector<int>::iterator it = _servers[i].getSocket().begin(); it != _servers[i].getSocket().end(); it++)
+		std::vector<int> serverFds = _servers[i].getSocket();
+		for (std::vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
 		{
 			fd = *it;
 			if (fd != -1) {  // Only add valid file descriptors
@@ -224,13 +211,18 @@ void Webserv::stopServer()
 	// Close all server sockets
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		int serverSocket = _servers[i].getSocket();
+		std::vector<int> serverFds = _servers[i].getSocket();
 		std::string serverUid = _servers[i].getUid();
-		if (serverSocket != -1)
+		for (std::vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
 		{
-			close(serverSocket);
-			std::cout << BLUE << "Closed server " << serverUid << " using socket " << serverSocket << std::endl;
+			int serverSocket = *it;
+			if (serverSocket != -1)
+			{
+				close(serverSocket);
+				std::cout << BLUE << "Closed socket " << serverSocket << " on server " << serverUid << std::endl;
+			}
 		}
+		std::cout << BLUE BOLD << "Closed server " << serverUid << std::endl;
 	}
 	
 	std::cout << GREEN BOLD << "Server stopped successfully." << NEUTRAL << std::endl;

@@ -27,6 +27,68 @@ Server::Server(const Server &other)
 	}
 }
 
+
+
+Server::Server(ConfigParser &config, std::string serverUid)
+{
+	std::vector<sockaddr_in>	sockvector;
+	std::vector<int>			portvector; 
+
+	this->_config = &config;
+	this->_handler = NULL;
+	// this->_socketfd = -1;
+	this->_uid = serverUid;
+	
+
+	try 
+	{
+		this->_handler = new RequestHandler;
+
+		// check if servername is present;
+		if (!config.hasServerKey(serverUid, "server_name"))
+		{
+			Logger::error(serverUid, "No server_name found in the config file for this server not starting up the services");
+			throw ServException(serverUid + " no server name found");
+		}
+
+		// fill server_names vector based on config and return vector with all sockaddr
+		sockvector = setServerNames(config, serverUid);
+
+		// get a vector containing all port numbers if valid
+		portvector = checkPorts(config, serverUid);
+
+		// fill sockFds
+		CreateSockets(serverUid, portvector, sockvector);
+
+		//put max body size in handler
+		if (config.hasServerKey(serverUid, "client_max_body_size"))
+			_handler->setMaxBodySize(config.getServerValue(serverUid, "client_max_body_size"));
+
+		// Setup env
+		initEnv(environ);
+		printEnv();
+	}
+	catch (const ServException &e) 
+	{
+		// Clean up allocated resources before re-throwing
+		if (_handler) {
+			delete _handler;
+			_handler = NULL;
+		}
+		if (!_socketfds.empty()) {
+			for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
+			{
+				if (*it > -1)
+				{
+					close(*it);
+					*it = -1;
+				}
+			}
+		}
+		throw; // Re-throw the original exception to parent Webserv
+	}
+}
+
 Server::~Server()
 {
 	if (_handler) {
@@ -82,63 +144,7 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-Server::Server(ConfigParser &config, std::string serverUid)
-{
-	std::vector<sockaddr_in>	sockvector;
-	std::vector<int>			portvector; 
-
-	this->_config = &config;
-	this->_handler = NULL;
-	// this->_socketfd = -1;
-	this->_uid = serverUid;
-	
-
-	try 
-	{
-		this->_handler = new RequestHandler;
-
-		// check if servername is present;
-		if (!config.hasServerKey(serverUid, "server_name"))
-		{
-			Logger::error(serverUid, "No server_name found in the config file for this server not starting up the services");
-			throw ServException(serverUid + " no server name found");
-		}
-
-		// fill server_names vector based on config and return vector with all sockaddr
-		sockvector = setServerNames(config, serverUid);
-
-		// get a vector containing all port numbers if valid
-		portvector = checkPorts(config, serverUid);
-
-		//put max body size in handler
-		if (config.hasServerKey(serverUid, "client_max_body_size"))
-			_handler->setMaxBodySize(config.getServerValue(serverUid, "client_max_body_size"));
-
-		// Setup env
-		initEnv(environ);
-	}
-	catch (const ServException &e) 
-	{
-		// Clean up allocated resources before re-throwing
-		if (_handler) {
-			delete _handler;
-			_handler = NULL;
-		}
-		if (_socketfds.empty()) {
-			for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
-			{
-				if (*it > -1)
-				{
-					close(*it);
-					*it = -1;
-				}
-			}
-		}
-		throw; // Re-throw the original exception to parent Webserv
-	}
-}
-
-void	Server::CreateSockets(const ConfigParser &config, const std::string &serverUid, std::vector<int> &ports, std::vector<sockaddr_in> &sockaddrs)
+void	Server::CreateSockets(const std::string &serverUid, std::vector<int> &ports, std::vector<sockaddr_in> &sockaddrs)
 {
 	std::ostringstream oss;
 

@@ -6,7 +6,7 @@
 #    By: andrean <andrean@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/10/02 15:13:48 by andrean          ###   ########.fr        #
+#    Updated: 2025/10/03 12:23:31 by andrean          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -73,7 +73,7 @@ go: all
 	@rm -rf $(NAME)
 
 gov: all
-	@ valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) $(ARGS)
+	@ valgrind --leak-check=full --show-leak-kinds=all --track-fds=yes ./$(NAME) $(ARGS)
 	@rm -rf $(NAME)
 
 stress: all
