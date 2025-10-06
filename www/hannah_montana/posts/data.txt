@@ -1,4 +1,3 @@
 name=miou
-title=Bonjour
 message=Miaou
 file=www/hannah_montana/uploads/player.xpm

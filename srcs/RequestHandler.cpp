@@ -185,24 +185,24 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			size_t contentLength;
 			if (!(iss >> contentLength))
 			{
-//				GetRequest requestObject;
+				GetRequest requestObject;
 
 				std::cerr << "Invalid Content-Length header" << std::endl;
-				// std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
-				// if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
-				// 	std::cerr << "Failed to send 400 response" << std::endl;
+				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 400 response" << std::endl;
 				return -1;
 			}
 			
 			// Check against max body size
 			if (_maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
 			{
-//				GetRequest requestObject;
+				GetRequest requestObject;
 
 				std::cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << std::endl;
-				// std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
-				// if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
-				// 	std::cerr << "Failed to send 400 response" << std::endl;
+				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 400 response" << std::endl;
 				return -1;
 			}
 			

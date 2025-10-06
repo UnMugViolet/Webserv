@@ -117,7 +117,14 @@ button.play-button {
 	text-align: center;
 }
 
+img.image-file {
+	width: 80%;
+	height: auto;
+	max-width: 80%;
+}
+
 .post {
+	position: relative;
 	background-color: #EBDC7D;
 	color: #7807ff;
 	font-family: "Damion", cursive;
@@ -128,4 +135,22 @@ button.play-button {
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 	width: 50%;
 	text-align: center;
+}
+
+.cross {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	padding: 5px 10px;
+	font-size: 12px;
+	cursor: pointer;
+	background-color: #ff0000;
+	color: white;
+	border: none;
+	border-radius: 3px;
+}
+
+.cross:hover {
+	background-color: white;
+	color: #ff0000;
 }

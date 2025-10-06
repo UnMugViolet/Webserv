@@ -48,28 +48,31 @@
 			}
 		}
 
-		
 		$name = htmlspecialchars($data['name']);
 		$message = nl2br(htmlspecialchars($data['message']));
 		$file = $data['file'] ?? null;
 
 		echo "<div class='post'>";
 
+		echo "	<button class='cross'>X</button>"; //TODO - delete post + file by pressing the X
+
 		echo "<h3> $name </h3>";
 		echo "<h4> $message </h4>";
 
-		if ($file){ //TODO - make it work
+		if ($file){
 			$filename = basename($file);
 
 			$filepath = '../uploads/' . $filename;
-			if (file_exists($filepath)){
-				if (strpos(mime_content_type($filepath), 'image/') !== false){
-					echo "<img src='$filepath' alt='image' class='image-file'>";
+			if (file_exists(__DIR__ . '/' . $filepath)){
+				if (strpos(mime_content_type(__DIR__ . '/' . $filepath), 'image/') !== false){
+					echo "<img src='$filepath' class='image-file'>";
 				}
 				else{
 					echo "<a href='$filepath' class='download-file'>Download : $filename</a>";
 				}
 			}
+			else
+				echo "broken file: $filepath";
 		}
 		echo "</div>";
 	}

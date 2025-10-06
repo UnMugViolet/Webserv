@@ -28,6 +28,8 @@ void	DeleteRequest::delete_file(int fd, const char *path) const
 	std::ostringstream response;
 	
 	response << "\r\n";
+	std::cout << "delete : " << path << "?" << std::endl;
+	return ;
 	if (std::remove(path) == 0)
 	{
 		response << "HTTP/1.1 204 No Content\r\n\r\n";
