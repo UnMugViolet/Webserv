@@ -1,5 +1,0 @@
-name=oui
-
-message=bonjour
-
-file=www/hannah_montana/uploads/level7.json

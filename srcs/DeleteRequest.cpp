@@ -23,24 +23,22 @@ DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 	return ;
 }
 
-void	DeleteRequest::delete_file(int fd, const Server &serv) const
+void	DeleteRequest::delete_file(int fd, const Server &serv)
 {
 	std::ostringstream	response;
 	std::string			root = serv.getEnvValue("SERVER_ROOT");
-	std::string			query = serv.getEnvValue("QUERY_STRING");
-	std::string			fileName = query.substr(query.find("file=") + 5);
+	std::map<std::string, std::string>	queryMap = parseQuery(serv.getEnvValue("QUERY_STRING"));
+	std::string			fileName = queryMap["file"];
+	std::string			uploadPath = queryMap["upload"];
 	std::string			filePath = root + fileName;
 
-	std::cout << "delete : " << filePath << "? root : " << root << std::endl;
+	std::cout << "delete : " << filePath << "? upload : " << uploadPath << std::endl;
+	if (!uploadPath.empty())
+		if (std::remove(uploadPath.c_str()) != 0)
+			std::cout << "wtf\n";
 	if (std::remove(filePath.c_str()) == 0)
 	{
-		response << "HTTP/1.1 204 No Content\r\n\r\n";
-		std::string responseStr = response.str();
-		if (send(fd, responseStr.c_str(), responseStr.length(), 0) == -1)
-		{
-			std::cerr << "Failed to send HTTP response" << std::endl;
-			return;
-		}
+		sendPostDeleteResponse(fd, serv);
 	}
 	else
 		response << "HTTP/1.1 403 Forbidden\r\n\r\n";

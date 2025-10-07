@@ -1,0 +1,2 @@
+name=kakoukakou
+message=bisoubisou

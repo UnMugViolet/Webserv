@@ -55,7 +55,7 @@
 
 		echo "<div class='post'>";
 
-		echo "	<button onclick='sendDelete(\"$safePostFile\")' class='cross'>X</button>"; //TODO - delete post + file by pressing the X
+		echo "	<button onclick='sendDelete(\"$safePostFile\", \"$file\")' class='cross'>X</button>"; //TODO - delete post + file by pressing the X
 
 		echo "<h3> $name </h3>";
 		echo "<h4> $message </h4>";

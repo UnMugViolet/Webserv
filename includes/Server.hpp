@@ -47,9 +47,7 @@ public:
 	// int			addVirtualHost(ConfigParser &config, std::string serverUid);
 	std::vector<int>	getSocket() const;
 	std::string	getUid() const;
-	std::string getId(const std::string &name) const;
-	std::string getServerRoot(const std::string &serverName = "") const;
-	std::string getCurrentServerRoot() const;
+	const ConfigParser&	getConfig() const;
 	int			setClient(int _socketfd);
 	void		unsetClient(int position);
 	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config);

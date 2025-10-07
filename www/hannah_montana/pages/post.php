@@ -23,7 +23,7 @@ $form = [];
 
 	<h2>Post</h2>
 	<div class="form-container">
-		<form action="post.php" method="post" enctype="multipart/form-data">
+		<form action="post.php?response=display-posts.php" method="post" enctype="multipart/form-data">
 			<label for="name">Name:</label>
 			<input type="text" id="name" name="name" required><br><br>
 
@@ -45,8 +45,8 @@ $form = [];
 				return ;
 			}
 			if ($_SERVER["REQUEST_METHOD"] == "POST") {
-				$name = htmlspecialchars($_POST['name']);
-				$message = htmlspecialchars($_POST['message']);
+				// $name = htmlspecialchars($_POST['name']);
+				// $message = htmlspecialchars($_POST['message']);
 
 				if (!empty($name) && !empty($message)) {
 					echo "<h3>Thank you, $name!</h3>";

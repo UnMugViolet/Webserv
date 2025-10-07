@@ -290,7 +290,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			}
 			else
 			{
-				int res = requestObject.HandlePost(body, serverRoot);
+				int res = requestObject.HandlePost(fd, body, serverRoot, server);
 				if (res == -1)
 				{
 					std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
@@ -298,8 +298,6 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 						std::cerr << "Failed to send 500 response" << std::endl;
 				}
 			}
-			if (requestObject.sendCGIResponse(fd, fullPath, config, server) == -1)
-				std::cerr << "Failed to send POST response" << std::endl;
 			if (!requestObject.isKeepalive())
 				return (-1);
 		}
@@ -308,7 +306,6 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			DeleteRequest requestObject(headermap);
 			// Process the DELETE request
 
-			server.printEnv();
 			if (access(fullPath.c_str(), F_OK))
 				requestObject.delete_file(fd, server);
 			else
@@ -359,4 +356,3 @@ void	RequestHandler::setMaxBodySize(std::string size)
 	else
 		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
 }
-

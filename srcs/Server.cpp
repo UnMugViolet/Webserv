@@ -15,7 +15,7 @@ Server::Server(const Server &other)
 		this->_config = other._config;
 		this->_handler = new RequestHandler();
 		this->_env = other._env;
-		
+
 		// Transfer ownership of the socket to avoid double-close
 
 		for (std::vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
@@ -284,6 +284,10 @@ std::vector<int>	Server::checkPorts(const ConfigParser &config, const std::strin
 	return (portvector);
 }
 
+const ConfigParser&	Server::getConfig() const
+{
+	return (*_config);
+}
 // int	Server::addVirtualHost(ConfigParser &config, std::string serverUid)
 // {
 // 	std::string _name;

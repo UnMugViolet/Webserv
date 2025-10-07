@@ -33,12 +33,14 @@ public:
 
 	/*member functions*/
 	int			isKeepalive() const;
-	int			sendCGIResponse(int clientFd, const std::string &scriptPath, ConfigParser *config, const Server &Server);
+	int			sendCGIResponse(int clientFd, const std::string &scriptPath, const ConfigParser *config, const Server &Server);
 	int			sendHTTPResponse(int clientFd, int statusCode, const std::string &body, const std::string &contentType = "text/html");
 	std::string loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverUid) const;
 	std::string getContentType(const std::string &filePath) const;
+	int			sendPostDeleteResponse(int fd, const Server &server);
 
 	/*operator overloads*/
 	ARequest&	operator=(ARequest& src);
 };
 
+std::map<std::string, std::string> parseQuery(const std::string &query);

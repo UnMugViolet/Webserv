@@ -48,6 +48,7 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &
 	// Set status text based on code
 	switch (statusCode) {
 		case 200: statusText = "OK"; break;
+		case 204: statusText = "No content"; break;
 		case 404: statusText = "Not Found"; break;
 		case 500: statusText = "Internal Server Error"; break;
 		case 403: statusText = "Forbidden"; break;
@@ -57,8 +58,11 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &
 	
 	// Build HTTP response
 	response << "HTTP/1.1 " << statusCode << " " << statusText << "\r\n";
-	response << "Content-Type: " << contentType << "\r\n";
-	response << "Content-Length: " << body.length() << "\r\n";
+	if (statusCode != 204)
+	{
+		response << "Content-Type: " << contentType << "\r\n";
+		response << "Content-Length: " << body.length() << "\r\n";
+	}
 	if (!_keep_alive)
 		response << "Connection: close\r\n";
 	response << "\r\n";
@@ -72,7 +76,7 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &
 	return 0;
 }
 
-int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, ConfigParser *config, const Server &Server)
+int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, const ConfigParser *config, const Server &Server)
 {
 	int cgiOutputFd = -1;
 	try {
@@ -162,3 +166,43 @@ std::string ARequest::getContentType(const std::string &filePath) const
 		return "application/octet-stream";
 }
 
+std::map<std::string, std::string> parseQuery(const std::string &query)
+{
+	std::map<std::string, std::string> map;
+	std::string	key;
+	std::string	value;
+	size_t amperPos = query.find('&');
+	size_t equalPos = query.find('=');
+
+	key = query.substr(0, equalPos);
+	value = query.substr(equalPos + 1, amperPos - equalPos - 1);
+	while (true)
+	{
+		if (!key.empty())
+			map[key] = value;
+		equalPos = query.find('=', amperPos);
+		if (equalPos == std::string::npos)
+			break ;
+		key = query.substr(amperPos + 1, equalPos - amperPos - 1);
+		amperPos = query.find('&', equalPos);
+		value = query.substr(equalPos + 1, amperPos - equalPos - 1);
+	}
+	return (map);
+}
+
+
+int	ARequest::sendPostDeleteResponse(int fd, const Server &server)
+{
+	std::map<std::string, std::string> query = parseQuery(server.getEnvValue("QUERY_STRING"));
+	const ConfigParser *config = &server.getConfig();
+	if (query.empty())
+	{
+		std::cout << "miaou\n";
+		return (sendHTTPResponse(fd, 204, "", ""));
+	}
+	std::string responseFile = query["response"];
+
+
+	responseFile = server.getEnvValue("SERVER_ROOT") + "pages/" + responseFile;
+	return (sendCGIResponse(fd, responseFile, config, server));
+}

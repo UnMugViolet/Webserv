@@ -92,10 +92,10 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 	}
 }
 
-int	PostRequest::HandlePost(std::string body, std::string path)
+int	PostRequest::HandlePost(int fd, std::string body, std::string path, const Server &server)
 {
 	std::string	filename;
-
+	std::map<std::string, std::string>	content;
 
 	if (_Content_type.compare("text/plain") == 0)
 	{
@@ -105,12 +105,11 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 		if(UploadFile(body, filename) == -1)
 			return (-1);
 		else
-			return (1);
+			return (sendPostDeleteResponse(fd, server));
 	}
 	if (_Content_type.find("multipart/form-data") != std::string::npos)
 	{
 		std::string bodypart;
-		std::map<std::string, std::string>	content;
 		std::string boundary = _Content_type.substr(_Content_type.find("boundary=") + 9);
 
 		size_t pos = body.find(boundary);
@@ -120,7 +119,6 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 		{
 			bodypart = "";
 
-			std::cout << body << std::endl;
 			if (body[pos] != '\r')
 			{
 				break;
@@ -151,7 +149,7 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 					std::string extension = filename.substr(filename.rfind('.'));
 					filename.erase(filename.rfind('.'), std::string::npos);
 					filename += "(";
-					filename += res;
+					filename += res + 48;
 					filename += ")";
 					filename += extension;
 				}
@@ -160,7 +158,7 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 			else
 			{
 				pos = body.find("\r\n\r\n", pos) + 4;
-				bodypart = body.substr(pos, end - pos);
+				bodypart = body.substr(pos, end - pos - 2);
 				content[fieldname] = bodypart;
 			}
 			pos = body.find(boundary, pos);
@@ -173,7 +171,7 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 			if (UploadContent(content, filename) == -1)
 				return (-1);
 			else
-				return (2);
+				return (sendPostDeleteResponse(fd, server));
 		}
 		else
 		{
@@ -183,6 +181,7 @@ int	PostRequest::HandlePost(std::string body, std::string path)
 	std::cerr << RED BOLD << "[ERROR]" << NEUTRAL RED << "unknown content type: " << _Content_type << NEUTRAL << std::endl;
 	return (0);
 }
+
 
 PostRequest::~PostRequest()
 {
