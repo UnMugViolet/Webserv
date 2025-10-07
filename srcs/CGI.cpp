@@ -77,7 +77,7 @@ int	CGI::interpret(const std::string &path, const Server &Server)
 		case 1:
 			break;
 	}
-	if (type == UNKNOWN && path.find("/uploads/") != std::string::npos)
+	if (path.find("/uploads/") != std::string::npos)
 	{
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)

@@ -14,6 +14,7 @@ Server::Server(const Server &other)
 		this->_uid = other._uid;  // Lost 2 hours of my life because of this
 		this->_config = other._config;
 		this->_handler = new RequestHandler();
+		this->_env = other._env;
 		
 		// Transfer ownership of the socket to avoid double-close
 
@@ -25,6 +26,8 @@ Server::Server(const Server &other)
 			}
 		}
 	}
+
+	
 }
 
 
@@ -452,15 +455,16 @@ void	Server::initEnv(char **env)
 	// Set global CGI variables for server instance
 	setEnvValue("SERVER_SOFTWARE", "Webserv/1.0");
 	setEnvValue("REDIRECT_STATUS", "200");
-	setEnvValue("SERVER_PORT", _config->getServerValue(_uid, "listen"));
+	setEnvValue("SERVER_PORT", _config->getServerValue(_uid, "listen")); //re set after request
 	setEnvValue("SERVER_ROOT", _config->getServerValue(_uid, "root"));
+
 	setEnvValue("SERVER_PROTOCOL", "HTTP/1.1");
 	setEnvValue("GATEWAY_INTERFACE", "CGI/1.1");
 
-	setEnvValue("SERVER_NAME", _config->getServerValue(_uid, "server_name"));
+	setEnvValue("SERVER_NAME", _config->getServerValue(_uid, "server_name")); //re set after request
 }
 
-std::string	Server::getEnvValue(std::string const &key)
+std::string	Server::getEnvValue(std::string const &key) const
 {
 	std::map<std::string, std::string>::const_iterator it = _env.find(key);
 	if (it != _env.end())
@@ -489,6 +493,10 @@ char	**Server::getEnvAsArray() const {
 	}
 	env[j] = NULL;
 	return env;
+}
+
+const std::map<std::string, std::string> Server::getEnv() const {
+	return (_env);
 }
 
 void	Server::printEnv() const

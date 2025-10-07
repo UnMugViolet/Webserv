@@ -1,0 +1,5 @@
+name=test
+
+message=test
+
+file=www/hannah_montana/uploads/index.php

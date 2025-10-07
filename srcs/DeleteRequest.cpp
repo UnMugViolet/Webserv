@@ -23,14 +23,16 @@ DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 	return ;
 }
 
-void	DeleteRequest::delete_file(int fd, const char *path) const
+void	DeleteRequest::delete_file(int fd, const Server &serv) const
 {
-	std::ostringstream response;
-	
-	response << "\r\n";
-	std::cout << "delete : " << path << "?" << std::endl;
-	return ;
-	if (std::remove(path) == 0)
+	std::ostringstream	response;
+	std::string			root = serv.getEnvValue("SERVER_ROOT");
+	std::string			query = serv.getEnvValue("QUERY_STRING");
+	std::string			fileName = query.substr(query.find("file=") + 5);
+	std::string			filePath = root + fileName;
+
+	std::cout << "delete : " << filePath << "? root : " << root << std::endl;
+	if (std::remove(filePath.c_str()) == 0)
 	{
 		response << "HTTP/1.1 204 No Content\r\n\r\n";
 		std::string responseStr = response.str();

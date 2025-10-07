@@ -57,9 +57,10 @@ public:
 	// Env handling methods
 	void		initEnv(char **env);
 	void		printEnv() const;
-	std::string	getEnvValue(const std::string &key);
+	std::string	getEnvValue(const std::string &key) const;
 	void		setEnvValue(const std::string &key, const std::string &value);
 	char		**getEnvAsArray() const;
+	const std::map<std::string, std::string> getEnv() const;
 
 	/*operator overloads*/
 	Server		&operator=(const Server &other);

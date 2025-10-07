@@ -128,7 +128,8 @@ std::string ARequest::getContentType(const std::string &filePath) const
 	size_t pos = filePath.rfind('.');
 	if (pos == std::string::npos)
 		return "application/octet-stream";
-	
+	if (filePath.find("/uploads/") != std::string::npos)
+		return "application/octet-stream";
 	std::string ext = filePath.substr(pos + 1);
 	
 	if (ext == "html" || ext == "htm" || ext == "php" || ext == "py")

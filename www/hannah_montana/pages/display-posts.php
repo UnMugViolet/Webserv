@@ -14,7 +14,7 @@
 	<title>Hannah Montana Hardcore Gang</title>
 	<link rel="stylesheet" href="../css/style.css">
 	<link rel="icon" href="favicon.ico">
-	<script src="./js/script.js" defer></script>
+	<script src="./../js/script.js" defer></script>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Damion&family=Mr+Dafoe&display=swap" rel="stylesheet">
@@ -51,10 +51,11 @@
 		$name = htmlspecialchars($data['name']);
 		$message = nl2br(htmlspecialchars($data['message']));
 		$file = $data['file'] ?? null;
+		$safePostFile = htmlspecialchars(basename($postFile), ENT_QUOTES, 'UTF-8');
 
 		echo "<div class='post'>";
 
-		echo "	<button class='cross'>X</button>"; //TODO - delete post + file by pressing the X
+		echo "	<button onclick='sendDelete(\"$safePostFile\")' class='cross'>X</button>"; //TODO - delete post + file by pressing the X
 
 		echo "<h3> $name </h3>";
 		echo "<h4> $message </h4>";

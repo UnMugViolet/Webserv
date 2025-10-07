@@ -111,7 +111,7 @@ std::map<std::string, std::string>	RequestHandler::parseHeader(std::string heade
 	return (headers);
 }
 
-int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *config)
+int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 {
 	std::string serverRoot;
 	const size_t BUFFER_SIZE = 4096;
@@ -123,6 +123,7 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 	int			received;
 	std::map<std::string, std::string> headermap;
 	std::string serverUid = server.getUid();
+
 
 	// Read initial chunk
 	received = recv(fd, buff, BUFFER_SIZE, 0);
@@ -173,6 +174,11 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 				std::cerr << "Failed to send 400 response" << std::endl;
 			return -1;
 		}
+		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
+		if (headermap["Host"].find(':'))
+			server.setEnvValue("SERVER_PORT", headermap["Host"].substr(headermap["Host"].find(':') + 1));
+		else
+			server.setEnvValue("SERVER_PORT", "80");
 		std::string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");
@@ -225,6 +231,12 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 		if (headermap["path"] == "/")
 			fullPath = serverRoot + indexFile;
 
+		// server.setEnvValue("REQUEST_METHOD", headermap["method"]);
+		server.setEnvValue("REQUEST_URI", headermap["path"]);
+		if (headermap["path"].find('?') != std::string::npos)
+			server.setEnvValue("QUERY_STRING", headermap["path"].substr(headermap["path"].find('?') + 1));
+		else
+			server.setEnvValue("QUERY_STRING", "");
 		if (headermap["method"] == "GET")
 		{
 			GetRequest requestObject(headermap);
@@ -296,8 +308,9 @@ int	RequestHandler::handleRequest(int fd, Server const &server, ConfigParser *co
 			DeleteRequest requestObject(headermap);
 			// Process the DELETE request
 
+			server.printEnv();
 			if (access(fullPath.c_str(), F_OK))
-				requestObject.delete_file(fd, fullPath.c_str());
+				requestObject.delete_file(fd, server);
 			else
 			{
 				std::string errorPage = requestObject.loadErrorPage(404, config, serverUid);
