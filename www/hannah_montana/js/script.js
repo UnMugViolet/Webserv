@@ -35,3 +35,13 @@ function hideBox(boxId) {
 
 	div.style.display = "none";
 }
+
+function showSubmitMessage() {
+	const message = document.getElementById("submitMessage");
+	message.style.display = "flex";
+	
+	setTimeout(() => {message.style.display = "none" ; 
+	}, 3000);
+
+	setTimeout(() => {document.getElementById("form").reset()}, 10);
+}

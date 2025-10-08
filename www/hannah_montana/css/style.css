@@ -117,6 +117,21 @@ button.play-button {
 	text-align: center;
 }
 
+.submitMessage {
+	display: none;
+	position: fixed;
+	top: 20px;
+	left: 50%;
+	transform: translate(-50%);
+	background-color: grey;
+	border-radius: 20px;
+	color: white;
+	font-family: "Damion", cursive;
+	font-size: 1.2em;
+	padding: 10px;
+	border: none;
+}
+
 img.image-file {
 	width: 80%;
 	height: auto;
