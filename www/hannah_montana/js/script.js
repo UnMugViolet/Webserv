@@ -8,12 +8,12 @@ function playAudio(audioFile) {
 
 function sendDelete(file, uploadFile) {
 	const div = document.getElementById(file);
-	const mess = document.getElementById("messageBox");
+	const mess = document.getElementById("messageBox_" + file);
 
 	mess.style.display = "none";
 	if (uploadFile)
 		uploadFile = '&upload=' + uploadFile
-	fetch('/delete-post?file=/posts/' + file + uploadFile + '&response=display-post.php', {
+	fetch('/delete-post?file=/posts/' + file + uploadFile, {
 		method: 'DELETE'
 	})
 	
