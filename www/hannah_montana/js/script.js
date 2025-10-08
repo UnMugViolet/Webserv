@@ -24,6 +24,7 @@ function sendDelete(file, uploadFile) {
 }
 
 function showBox(boxId) {
+	console.log("show");
 	const div = document.getElementById(boxId);
 	
 	div.style.display = "flex";

@@ -231,7 +231,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		if (headermap["path"] == "/")
 			fullPath = serverRoot + indexFile;
 
-		// server.setEnvValue("REQUEST_METHOD", headermap["method"]);
+		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);
 		if (headermap["path"].find('?') != std::string::npos)
 			server.setEnvValue("QUERY_STRING", headermap["path"].substr(headermap["path"].find('?') + 1));

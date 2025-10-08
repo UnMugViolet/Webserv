@@ -135,6 +135,7 @@ img.image-file {
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 	width: 50%;
 	text-align: center;
+	z-index: 1;
 }
 
 .cross {
@@ -167,13 +168,7 @@ img.image-file {
 	padding: 15px 45px;
 	border-radius: 5px;
 	border-color: #ff0000;
-}
-
-.answerBox{
-	display: flex;
-	justify-content: space-between;
-	padding: 15px;
-	background-color: #EBDC7D;
+	z-index: 10;
 }
 
 .yesBox {

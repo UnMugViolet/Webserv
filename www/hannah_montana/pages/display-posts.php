@@ -55,10 +55,8 @@
 
 		echo	"<div id=\"messageBox\" class=\"deleteBox\">";
 		echo	"	<h3> Delete post? </h3>";
-		echo	"	<div class=\"answerBox\">";
-		echo	"		<button onclick='sendDelete(\"$safePostFile\", \"$file\")' class=\"yesBox\">YES</button>";
-		echo	"		<button onclick='hideBox(\"messageBox\")' class=\"noBox\">NO</button>";
-		echo	"	</div>";
+		echo	"	<button onclick='sendDelete(\"$safePostFile\", \"$file\")' class=\"yesBox\">YES</button>";
+		echo	"	<button onclick='hideBox(\"messageBox\")' class=\"noBox\">NO</button>";
 		echo	"</div>";
 		echo "<div class='post' id=\"$safePostFile\">";
 
