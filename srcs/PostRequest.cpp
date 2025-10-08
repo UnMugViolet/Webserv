@@ -92,7 +92,7 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 	}
 }
 
-int	PostRequest::HandlePost(int fd, std::string body, std::string path, const Server &server)
+int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 {
 	std::string	filename;
 	std::map<std::string, std::string>	content;
@@ -105,7 +105,7 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path, const Se
 		if(UploadFile(body, filename) == -1)
 			return (-1);
 		else
-			return (sendPostDeleteResponse(fd, server));
+			return (sendHTTPResponse(fd, 204, "", ""));
 	}
 	if (_Content_type.find("multipart/form-data") != std::string::npos)
 	{
@@ -171,7 +171,7 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path, const Se
 			if (UploadContent(content, filename) == -1)
 				return (-1);
 			else
-				return (sendPostDeleteResponse(fd, server));
+				return (sendHTTPResponse(fd, 204, "", ""));
 		}
 		else
 		{

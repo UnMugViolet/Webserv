@@ -189,20 +189,3 @@ std::map<std::string, std::string> parseQuery(const std::string &query)
 	}
 	return (map);
 }
-
-
-int	ARequest::sendPostDeleteResponse(int fd, const Server &server)
-{
-	std::map<std::string, std::string> query = parseQuery(server.getEnvValue("QUERY_STRING"));
-	const ConfigParser *config = &server.getConfig();
-	if (query.empty())
-	{
-		std::cout << "miaou\n";
-		return (sendHTTPResponse(fd, 204, "", ""));
-	}
-	std::string responseFile = query["response"];
-
-
-	responseFile = server.getEnvValue("SERVER_ROOT") + "pages/" + responseFile;
-	return (sendCGIResponse(fd, responseFile, config, server));
-}

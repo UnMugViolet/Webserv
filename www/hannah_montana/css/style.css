@@ -154,3 +154,58 @@ img.image-file {
 	background-color: white;
 	color: #ff0000;
 }
+
+.deleteBox {
+	display: none;
+	position: fixed;
+	height: 100px;
+	top: 35%;
+	left: 50%;
+	transform: translate(-50%);
+	background-color: #EBDC7D;
+	color: #7807ff;
+	padding: 15px 45px;
+	border-radius: 5px;
+	border-color: #ff0000;
+}
+
+.answerBox{
+	display: flex;
+	justify-content: space-between;
+	padding: 15px;
+	background-color: #EBDC7D;
+}
+
+.yesBox {
+	position: absolute;
+	bottom: 20%;
+	left: 10%;
+	background-color: greenyellow;
+	color: white;
+	cursor: pointer;
+	padding: 10px 15px;
+	border: none;
+	border-radius: 3px;
+}
+
+.yesBox:hover {
+	background-color: white;
+	color: greenyellow;
+}
+
+.noBox {
+	position: absolute;
+	bottom: 20%;
+	right: 10%;
+	background-color: red;
+	color: white;
+	cursor: pointer;
+	padding: 10px 15px;
+	border: none;
+	border-radius: 3px;
+}
+
+.noBox:hover {
+	background-color: white;
+	color: red;
+}

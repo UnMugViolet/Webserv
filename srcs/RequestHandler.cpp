@@ -290,7 +290,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			}
 			else
 			{
-				int res = requestObject.HandlePost(fd, body, serverRoot, server);
+				int res = requestObject.HandlePost(fd, body, serverRoot);
 				if (res == -1)
 				{
 					std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);

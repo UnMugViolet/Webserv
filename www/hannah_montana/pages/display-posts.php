@@ -53,9 +53,16 @@
 		$file = $data['file'] ?? null;
 		$safePostFile = htmlspecialchars(basename($postFile), ENT_QUOTES, 'UTF-8');
 
-		echo "<div class='post'>";
+		echo	"<div id=\"messageBox\" class=\"deleteBox\">";
+		echo	"	<h3> Delete post? </h3>";
+		echo	"	<div class=\"answerBox\">";
+		echo	"		<button onclick='sendDelete(\"$safePostFile\", \"$file\")' class=\"yesBox\">YES</button>";
+		echo	"		<button onclick='hideBox(\"messageBox\")' class=\"noBox\">NO</button>";
+		echo	"	</div>";
+		echo	"</div>";
+		echo "<div class='post' id=\"$safePostFile\">";
 
-		echo "	<button onclick='sendDelete(\"$safePostFile\", \"$file\")' class='cross'>X</button>"; //TODO - delete post + file by pressing the X
+		echo "	<button onclick='showBox(\"messageBox\")' class='cross'>X</button>"; //TODO - delete post + file by pressing the X
 
 		echo "<h3> $name </h3>";
 		echo "<h4> $message </h4>";

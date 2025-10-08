@@ -38,7 +38,7 @@ void	DeleteRequest::delete_file(int fd, const Server &serv)
 			std::cout << "wtf\n";
 	if (std::remove(filePath.c_str()) == 0)
 	{
-		sendPostDeleteResponse(fd, serv);
+		sendHTTPResponse(fd, 204, "", "");
 	}
 	else
 		response << "HTTP/1.1 403 Forbidden\r\n\r\n";

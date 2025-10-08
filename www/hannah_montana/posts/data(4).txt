@@ -1,5 +1,0 @@
-name=hannah
-
-message=montana
-
-file=www/hannah_montana/uploads/hannah_montana.jpg
