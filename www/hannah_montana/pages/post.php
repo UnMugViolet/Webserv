@@ -1,9 +1,3 @@
-<?php
-
-$form = [];
-
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,12 +14,7 @@ $form = [];
 </head>
 <html>
 <body>
-
-	<script>
-		// document.getElementById("name").value = "";
-		// document.getElementById("message").value = "";
-		// document.getElementById("file").value = null;
-	</script>
+	<a href="/" class="go-back-button">Go BAck</a>
 	<h2>Post</h2>
 	<div class="form-container" >
 		<form action="/pages/post.php" method="POST" enctype="multipart/form-data" id="form" onsubmit="showSubmitMessage()">

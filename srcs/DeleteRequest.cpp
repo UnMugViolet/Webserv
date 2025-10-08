@@ -30,9 +30,11 @@ void	DeleteRequest::delete_file(int fd, const Server &serv)
 	std::map<std::string, std::string>	queryMap = parseQuery(serv.getEnvValue("QUERY_STRING"));
 	std::string			fileName = queryMap["file"];
 	std::string			uploadPath = queryMap["upload"];
+
+	if (root.rfind('/') == root.size() - 1 && fileName[0] == '/')
+		fileName.erase(0, 1);
 	std::string			filePath = root + fileName;
 
-	std::cout << "delete : " << filePath << "? upload : " << uploadPath << std::endl;
 	if (!uploadPath.empty())
 		if (std::remove(uploadPath.c_str()) != 0)
 			std::cout << "wtf\n";

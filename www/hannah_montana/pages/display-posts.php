@@ -1,5 +1,5 @@
 <?php
-	$postsDir = __DIR__ ."/../posts/";
+	$postsDir = __DIR__ ."/../var/posts/";
 	$posts = glob($postsDir . '*.txt');
 	usort($posts, function($a, $b) {
 		return filemtime($b) - filemtime($a); // newest first
@@ -21,8 +21,9 @@
 
 </head>
 <body>
+	<a href="/" class="go-back-button">Go BAck</a>
 
-	<h2>Posts</h2>
+	<h2>Display Posts</h2>
 
 
 	<?php
@@ -68,7 +69,7 @@
 		if ($file){
 			$filename = basename($file);
 
-			$filepath = '../uploads/' . $filename;
+			$filepath = '../var/uploads/' . $filename;
 			if (file_exists(__DIR__ . '/' . $filepath)){
 				if (strpos(mime_content_type(__DIR__ . '/' . $filepath), 'image/') !== false){
 					echo "<img src='$filepath' class='image-file'>";

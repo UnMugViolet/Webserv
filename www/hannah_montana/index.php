@@ -38,7 +38,7 @@
 	<?php echo "<p>$small_desc</p>"; ?>
 
 	<h2>Join the Gang</h2>
-	<div class="c">
+	<div class="dual-image-container-left">
 		<img src="./assets/img/hannah_montana.jpg" alt="Hannah Montana" class="hannah-image">
 		<div>
 			<?php echo "<p>$big_desc</p>"; ?>

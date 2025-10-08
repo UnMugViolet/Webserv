@@ -233,47 +233,50 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);
-		std::cout << "URI requested: " << server.getEnvValue("REQUEST_URI") << std::endl;
 		if (headermap["path"].find('?') != std::string::npos)
 			server.setEnvValue("QUERY_STRING", headermap["path"].substr(headermap["path"].find('?') + 1));
 		else
 			server.setEnvValue("QUERY_STRING", "");
+		
+		// Checks if the path is allowed by the location for the requested method
+		std::string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
+		std::vector<std::string> temp = config->getLocationPaths(server.getUid());
+		int status = 0;
+		std::vector<std::string>::iterator it = temp.begin();
+		for (; it != temp.end(); it++) {
+			if (cleanPath.find((*it)) != std::string::npos) {
+				status = 1;
+				break;
+			}
+		}
+		if (status == 0) {
+			GetRequest requestObject;
+
+			std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
+			if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
+				std::cerr << "Failed to send 403 response" << std::endl;
+			if (!requestObject.isKeepalive())
+				return (-1);
+			return 0;
+		} else if (headermap["method"].find(config->getLocationValue(serverUid, *it, "allow_method")) != std::string::npos) {
+			std::cout << "test: " << *it << std::endl;
+			std::string tmp = config->getLocationValue(serverUid, *it, "allow_method");
+			std::vector<std::string> allowed_methods;
+			for(size_t i = tmp.find(' '); i != std::string::npos; i = tmp.find(' ', i))
+			{
+				std::cout << tmp << std::endl;
+				std::string subtmp = tmp.substr(0, i);
+				allowed_methods.push_back(subtmp);
+				tmp = tmp.substr(i + 1);
+			}
+			allowed_methods.push_back(tmp);
+			for (std::vector<std::string>::iterator it = allowed_methods.begin(); it != allowed_methods.end(); it++)
+				std::cout << "ECHTEUBEST: " << *it << std::endl;
+		}
 		if (headermap["method"] == "GET")
 		{
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
-			
-			// Checks if the request method is allowed in the location
-			if (!serverNames.empty()) {
-					std::vector<std::string> temp = config->getLocationPaths(server.getUid());
-					int status = 0;
-					std::cout << "header: " << headermap["path"] << std::endl;
-					for (std::vector<std::string>::iterator it = temp.begin(); it != temp.end(); it++) {
-						std::cout << *temp.begin() << std::endl;
-						if (headermap["path"].find((*it)) != std::string::npos) {
-							status = 1;
-							break;
-						}
-					}
-					if (status == 0) {
-						std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
-						if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-							std::cerr << "Failed to send 403 response" << std::endl;
-						if (!requestObject.isKeepalive())
-							return (-1);
-					}
-			}
-			
-
-				// if (config->getLocationPaths(server.getServerNames()[0])[i].find(headermap["path"]) != std::string::npos) {
-				// 	std::cout << config->getLocationPaths(server.getServerNames()[0])[i] << std::endl;
-				// 	if (!config->getLocationValue(server.getServerNames()[0], config->getLocationPaths(server.getServerNames()[0])[i], "GET").empty()) {
-				// 		break;
-				// 	} else if (i == config->getLocationPaths(server.getServerNames()[0]).size() - 1){
-						
-					
-			
-			
 
 			// Check if file exists
 			std::ifstream file(fullPath.c_str());
