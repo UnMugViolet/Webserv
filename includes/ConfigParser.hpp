@@ -47,7 +47,7 @@ class ConfigParser {
 		bool hasServerKey(const std::string &serverName, const std::string &key) const;
 		bool hasLocationKey(const std::string &serverName, const std::string &location, const std::string &key) const;
 		std::vector<std::string> getServerUids() const;
-		std::vector<std::string> getLocationPaths(const std::string &serverName) const;
+		std::vector<std::string> getLocationPaths(const std::string &serverUid) const;
 		void printConfig() const;
 		
 		class ErrorException : public std::exception

@@ -99,7 +99,7 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 
 	if (_Content_type.compare("text/plain") == 0)
 	{
-		path += "/posts";
+		path += "/var/posts";
 		filename = path + "/post.txt";
 		
 		if(UploadFile(body, filename) == -1)
@@ -138,7 +138,7 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 					end = body.find(boundary, pos) - 2;
 					continue;
 				}
-				filename = path + "/uploads" + "/" + filename;
+				filename = path + "/var/uploads/" + filename;
 				pos = body.find("\r\n\r\n", pos) + 4;
 				bodypart = body.substr(pos, end - pos);
 				res = UploadFile(bodypart, filename);
@@ -167,7 +167,7 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 		}
 		if (!content.empty())
 		{
-			filename = path + "/posts/data";
+			filename = path + "/var/posts/data";
 			if (UploadContent(content, filename) == -1)
 				return (-1);
 			else

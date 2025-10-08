@@ -23,7 +23,7 @@ $form = [];
 
 	<h2>Post</h2>
 	<div class="form-container">
-		<form action="post.php?response=display-posts.php" method="post" enctype="multipart/form-data">
+		<form action="/pages/post.php" method="POST" enctype="multipart/form-data">
 			<label for="name">Name:</label>
 			<input type="text" id="name" name="name" required><br><br>
 

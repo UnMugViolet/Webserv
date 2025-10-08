@@ -290,10 +290,10 @@ std::vector<std::string> ConfigParser::getServerUids() const
 	return names;
 }
 
-std::vector<std::string> ConfigParser::getLocationPaths(const std::string &serverName) const
+std::vector<std::string> ConfigParser::getLocationPaths(const std::string &serverUid) const
 {
 	std::vector<std::string> paths;
-	std::map<std::string, std::map<std::string, std::map<std::string, std::string> > >::const_iterator serverIt = _locationBlocks.find(serverName);
+	std::map<std::string, std::map<std::string, std::map<std::string, std::string> > >::const_iterator serverIt = _locationBlocks.find(serverUid);
 	if (serverIt != _locationBlocks.end())
 	{
 		for (std::map<std::string, std::map<std::string, std::string> >::const_iterator locationIt = serverIt->second.begin();

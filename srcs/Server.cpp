@@ -15,6 +15,7 @@ Server::Server(const Server &other)
 		this->_config = other._config;
 		this->_handler = new RequestHandler();
 		this->_env = other._env;
+		this->_server_names = other._server_names;
 
 		// Transfer ownership of the socket to avoid double-close
 
@@ -29,8 +30,6 @@ Server::Server(const Server &other)
 
 	
 }
-
-
 
 Server::Server(ConfigParser &config, std::string serverUid)
 {
@@ -513,4 +512,9 @@ void	Server::printEnv() const
 	{
 		std::cout << it->first << "=" << it->second << std::endl;
 	}
+}
+
+std::vector<std::string> Server::getServerNames() const
+{
+	return (_server_names);
 }
