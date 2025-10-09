@@ -3,8 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>DEFAULT 413 - Content Too Large client error | Webserv</title>
-	<styleContent Too Large client error
+	<title>DEFAULT 413 - Request Body Too Large | Webserv</title>
+	<style>
+		* {
 			margin: 0;
 			padding: 0;
 			box-sizing: border-box;
@@ -12,7 +13,7 @@
 		
 		body {
 			font-family: 'Arial', sans-serif;
-			background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+			background: linear-gradient(135deg, #0c1c29 0%, #08686d 100%);
 			min-height: 100vh;
 			display: flex;
 			align-items: center;
@@ -59,7 +60,7 @@
 		.home-button {
 			display: inline-block;
 			padding: 1rem 2rem;
-			background: linear-gradient(45deg, #4facfe, #00f2fe);
+			background: linear-gradient(45deg, #0c1c29, #08686d);
 			color: white;
 			text-decoration: none;
 			border-radius: 50px;
@@ -97,10 +98,10 @@
 <body>
 	<div class="container">
 		<div class="error-code">413</div>
-		<h1 class="error-title">Content Too Large client error</h1>
+		<h1 class="error-title">Unsupported Media Type Default | Webserv</h1>
 		<p class="error-message">
-			Content too large
-			<br>The request entity was larger than limits defined by server.
+			The server refuses to accept the request because the payload format is in an unsupported format.
+			<br>Please ensure that the Content-Type header is set correctly and that the server supports the media type of the request payload.
 		</p>
 		<a href="/" class="home-button">Return Home</a>
 		<div class="server-info">

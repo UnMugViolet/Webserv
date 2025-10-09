@@ -7,7 +7,11 @@
 
 ARequest::ARequest()
 {
-	return ;
+	_method = 0;
+	_path = "";
+	_host = "";
+	_keep_alive = false;
+	_client = "";
 }
 
 ARequest::ARequest(ARequest &src)
