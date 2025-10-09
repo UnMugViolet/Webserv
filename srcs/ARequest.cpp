@@ -49,10 +49,11 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &
 	switch (statusCode) {
 		case 200: statusText = "OK"; break;
 		case 204: statusText = "No content"; break;
-		case 404: statusText = "Not Found"; break;
-		case 500: statusText = "Internal Server Error"; break;
 		case 403: statusText = "Forbidden"; break;
+		case 404: statusText = "Not Found"; break;
+		case 413: statusText = "Body too large"; break;
 		case 415: statusText = "Unsupported Media Type"; break;
+		case 500: statusText = "Internal Server Error"; break;
 		default: statusText = "Unknown"; break;
 	}
 	
