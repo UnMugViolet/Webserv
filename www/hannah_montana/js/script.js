@@ -16,8 +16,16 @@ function sendDelete(file, uploadFile) {
 	fetch('/delete-post?file=/var/posts/' + file + uploadFile, {
 		method: 'DELETE'
 	})
-	
-	.then(response => response.text())
+	.then(async response => {
+	if (!response.ok)
+	{
+		const errorHtml = await response.text();
+
+		document.open();
+		document.write(errorHtml);
+		document.close();
+	}
+	})
 	.then(data => console.log('Deleted:', data))
 	.catch(err => console.error('Error:', err));
 	div.remove();

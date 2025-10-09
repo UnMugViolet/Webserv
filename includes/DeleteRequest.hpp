@@ -18,7 +18,7 @@ class DeleteRequest: public ARequest
 		~DeleteRequest();
 
 		/*member functions*/
-		void	delete_file(int fd, const Server &serv);
+		int	delete_file(int fd, const Server &serv);
 
 		/*operator overloads*/
 		DeleteRequest &operator=(DeleteRequest &src);

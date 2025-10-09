@@ -23,9 +23,8 @@ DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 	return ;
 }
 
-void	DeleteRequest::delete_file(int fd, const Server &serv)
+int	DeleteRequest::delete_file(int fd, const Server &serv)
 {
-	std::ostringstream	response;
 	std::string			root = serv.getEnvValue("SERVER_ROOT");
 	std::map<std::string, std::string>	queryMap = parseQuery(serv.getEnvValue("QUERY_STRING"));
 	std::string			fileName = queryMap["file"];
@@ -40,10 +39,10 @@ void	DeleteRequest::delete_file(int fd, const Server &serv)
 			std::cout << "wtf\n";
 	if (std::remove(filePath.c_str()) == 0)
 	{
-		sendHTTPResponse(fd, 204, "", "");
+		return (sendHTTPResponse(fd, 204, "", ""));
 	}
 	else
-		response << "HTTP/1.1 403 Forbidden\r\n\r\n";
+		return (-1);
 }
 
 DeleteRequest::~DeleteRequest()

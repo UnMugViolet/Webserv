@@ -239,6 +239,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			server.setEnvValue("QUERY_STRING", "");
 		
 		// Checks if the path is allowed by the location for the requested method
+		std::string currentLocation = "";
 		std::string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
 		std::vector<std::string> temp = config->getLocationPaths(server.getUid());
 		int status = 0;
@@ -246,7 +247,8 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		for (; it != temp.end(); it++) {
 			if (cleanPath.find((*it)) != std::string::npos) {
 				status = 1;
-				break;
+				if (currentLocation.size() < (*it).size())
+					currentLocation = *it;
 			}
 		}
 		if (status == 0) {
@@ -258,20 +260,34 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			if (!requestObject.isKeepalive())
 				return (-1);
 			return 0;
-		} else if (headermap["method"].find(config->getLocationValue(serverUid, *it, "allow_method")) != std::string::npos) {
-			std::cout << "test: " << *it << std::endl;
-			std::string tmp = config->getLocationValue(serverUid, *it, "allow_method");
-			std::vector<std::string> allowed_methods;
-			for(size_t i = tmp.find(' '); i != std::string::npos; i = tmp.find(' ', i))
+		}
+		status = 0;
+		std::string allowed_methods = config->getLocationValue(serverUid, currentLocation, "allow_methods");
+		if (allowed_methods.find(headermap["method"]) != std::string::npos) {
+			std::cout << "Location: " << currentLocation << std::endl;
+			std::cout << "Value: " << allowed_methods << std::endl;
+			for(size_t i = allowed_methods.find(' '); i != std::string::npos; i = allowed_methods.find(' ', i))
 			{
-				std::cout << tmp << std::endl;
-				std::string subtmp = tmp.substr(0, i);
-				allowed_methods.push_back(subtmp);
-				tmp = tmp.substr(i + 1);
+				std::string one_method = allowed_methods.substr(0, i);
+				if (one_method == headermap["method"])
+				{
+					status = 1;
+					break ;
+				}
+				allowed_methods = allowed_methods.substr(i + 1);
 			}
-			allowed_methods.push_back(tmp);
-			for (std::vector<std::string>::iterator it = allowed_methods.begin(); it != allowed_methods.end(); it++)
-				std::cout << "ECHTEUBEST: " << *it << std::endl;
+			if (allowed_methods == headermap["method"])
+				status = 1;
+		}
+		if (status == 0) {
+			GetRequest requestObject;
+
+			std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
+			if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
+				std::cerr << "Failed to send 403 response" << std::endl;
+			if (!requestObject.isKeepalive())
+				return (-1);
+			return 0;
 		}
 		if (headermap["method"] == "GET")
 		{
@@ -351,7 +367,10 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 					std::cerr << "Failed to send 404 response" << std::endl;
 			}
 			if (!requestObject.isKeepalive())
+			{
+				std::cout << "there?\n";
 				return (-1);
+			}
 		}
 		else
 		{
