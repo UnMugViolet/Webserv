@@ -27,6 +27,13 @@ p {
 	color: #7807ff;
 }
 
+.content {
+	width: 100%;
+	height: 50vh;
+	display: flex;
+	justify-content: center;
+}
+
 .dual-image-container-left {
 	display: flex;
 	flex-direction: row;
@@ -36,7 +43,7 @@ p {
 }
 
 .dual-image-container-left img {
-	width: 45%;
+	width: 60%;
 	height: auto;
 	margin: 0 20px;
 }
@@ -48,7 +55,7 @@ p {
 	margin: 0 20px;
 }
 
-.dual-image-container-left div {
+.dual-image-container-left {
 	width: 45%;
 	display: flex;
 	justify-content: center;
@@ -58,7 +65,43 @@ p {
 	flex-direction: column;
 }
 
+.dual-image-container-right {
+	width: 45%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: auto;
+	margin: 0 20px;
+	flex-direction: column;
+}
+
+.audio-container {
+	height: 50px;
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+	gap: 20px;
+	margin-top: 20px;
+}
+
 button.play-button {
+	position: absolute;
+	left: 60%;
+	background-color: #EBDC7D;
+	color: #7807ff;
+	font-family: "Damion", cursive;
+	font-size: 1.2em;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-top: 20px;
+}
+
+button.stop-button {
+	position: absolute;
+	transition: .5s;
 	background-color: #EBDC7D;
 	color: #7807ff;
 	font-family: "Damion", cursive;
