@@ -96,6 +96,17 @@ Server::~Server()
 		delete _handler;
 		_handler = NULL;
 	}
+	if (!_clientFds.empty())
+	{
+		for (std::vector<int>::iterator it = _clientFds.begin(); it != _clientFds.end(); it++)
+		{
+			if (*it > -1)
+			{
+				close(*it);
+				*it = -1;
+			}
+		}
+	}
 	if (_socketfds.empty()) 
 	{
 		for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
@@ -107,6 +118,7 @@ Server::~Server()
 			}
 		}
 	}
+	
 }
 
 Server &Server::operator=(const Server &other)
