@@ -114,7 +114,7 @@ std::map<std::string, std::string>	RequestHandler::parseHeader(std::string heade
 int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 {
 	std::string serverRoot;
-	const size_t BUFFER_SIZE = 4096;
+	const size_t BUFFER_SIZE = 1;
 	const size_t MAX_HEADER_SIZE = 8192; // 8KB for headers
 	size_t headerlimit;
 	char buff[BUFFER_SIZE];
@@ -186,9 +186,18 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		setMaxBodySize(max_body_size);
 		serverRoot = config->getServerValue(serverUid, "root");
 		// Check if we need to read more body data
+		if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chuncked"))
+		{
+			body = handleChunckedRequest(fd, body);
+			if (body.empty())
+			{
+				
+				std::cout << "empty body\n";
+				return (-1);
+			}
+		}
 		if (headermap.find("Content-Length") != headermap.end())
 		{
-			headermap["Content-Length"] = "miaou";
 			std::istringstream iss(headermap["Content-Length"]);
 			size_t contentLength;
 			if (!(iss >> contentLength))
@@ -208,7 +217,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 				GetRequest requestObject;
 
 				std::cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << std::endl;
-				std::string errorPage = config->getErrorPageContent(const_c		std::cout << "length : " << contentLength << std::endl;ast<ConfigParser&>(*config), serverUid, 413);
+				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 413);
 				if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
 					std::cerr << "Failed to send 413 response" << std::endl;
 				readbody = 0;
@@ -427,4 +436,94 @@ void	RequestHandler::setMaxBodySize(std::string size)
 	}
 	else
 		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
+}
+
+std::string	RequestHandler::handleChunckedRequest(int fd, const std::string &body)
+{
+	std::string	fullBody;
+	
+	std::string	tmp = "";
+	char		buff[4096];
+	int			received;
+	memset(buff, 0, 4096);
+
+	if (!body.empty())
+		tmp.append(body);
+	while (true)
+	{
+		if (tmp.find('\r') != std::string::npos)
+		{
+			std::cout << "tmp : '" << tmp << "'" << std::endl;
+			std::string	chunk;
+			size_t	chunkSize;
+
+			size_t br = tmp.find('\r');
+			if (tmp.size() == br)
+			{
+				memset(buff, 0, 4096);
+				received = recv(fd, buff, 1, 0);
+				if (received <= 0)
+					return (std::cout << "error 1\n", "");//error 
+				tmp.append(buff);
+			}
+			
+			std::istringstream iss(tmp.substr(0, tmp.find("\r\n")));
+			if (!(iss >> std::hex >> chunkSize))
+			{
+				return (std::cout << "error 2\n", "");//error 
+			}
+			
+			chunk.append(tmp.substr(tmp.find("\r\n") + 2));
+			std::cout << "chunksize: " << chunkSize << std::endl;
+			if (chunk.size() > chunkSize)
+			{
+				tmp = chunk.substr(chunkSize + 2);
+				chunk = chunk.substr(0, chunkSize);
+
+			} else {
+				tmp = "";
+			}
+			if (chunkSize == 0)
+			{
+				break;
+			}
+			while (chunk.size() < chunkSize)
+			{
+				memset(buff, 0, 4096);
+				std::cout << "chunk: '" << chunk << "'" << std::endl;
+				int toRead = chunkSize - chunk.size();
+				received = recv(fd, buff, std::min(4095, toRead), 0);
+				if (received <= 0)
+					return (std::cout << "error 3\n", "");//error 
+				chunk.append(buff);
+				std::cout << "chunk after: '" << chunk << "'" << std::endl;
+			}
+			std::cout << "chunk: '" << chunk << "'" << std::endl;
+			if (tmp.empty())
+			{
+				received = recv(fd, buff, 2, 0);
+				if (received <= 0)
+					return (std::cout << "error 4\n", "");//error 
+				if (buff[0] != '\r' || buff[1] != '\n')
+					return (std::cout << "error 5 : \n" << buff << std::endl, "");//error 
+				if (chunkSize == 0)
+					break ;
+			}
+			fullBody.append(chunk);
+		} else {
+			memset(buff, 0, 4096);
+			received = recv(fd, buff, 10, 0);
+			std::cout << "received: " << received << std::endl;
+			if (received < 3)
+				buff[received] = '\0';
+			if (received <= 0)
+			{
+				
+				return (std::cout << "error 6\n", "");//error
+			}
+			tmp.append(buff);
+		}
+	}
+	std::cout << "body : " << fullBody << std::endl;
+	return (fullBody);
 }

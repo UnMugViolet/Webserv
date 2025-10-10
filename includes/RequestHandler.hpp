@@ -36,6 +36,7 @@ class RequestHandler
 		void								setMaxBodySize(std::string size);
 		std::string							trim(const std::string &str) const;
 		std::map<std::string, std::string>	parseHeader(std::string header) const;
+		std::string							handleChunckedRequest(int fd, const std::string &body);
 
 };
 
