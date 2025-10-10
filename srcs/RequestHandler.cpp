@@ -120,6 +120,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	char buff[BUFFER_SIZE];
 	std::string header;
 	std::string body;
+	int			readbody = 1;
 	int			received;
 	std::map<std::string, std::string> headermap;
 	std::string serverUid = server.getUid();
@@ -172,7 +173,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
 			if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
 				std::cerr << "Failed to send 400 response" << std::endl;
-			return -1;
+			readbody = 0;
 		}
 		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
 		if (headermap["Host"].find(':'))
@@ -187,6 +188,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		// Check if we need to read more body data
 		if (headermap.find("Content-Length") != headermap.end())
 		{
+			headermap["Content-Length"] = "miaou";
 			std::istringstream iss(headermap["Content-Length"]);
 			size_t contentLength;
 			if (!(iss >> contentLength))
@@ -197,29 +199,45 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
 				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
 					std::cerr << "Failed to send 400 response" << std::endl;
-				return -1;
+				readbody = 0;
 			}
 			
 			// Check against max body size
-			if (_maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
+			if (readbody && _maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
 			{
 				GetRequest requestObject;
 
 				std::cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << std::endl;
-				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 413);
+				std::string errorPage = config->getErrorPageContent(const_c		std::cout << "length : " << contentLength << std::endl;ast<ConfigParser&>(*config), serverUid, 413);
 				if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
 					std::cerr << "Failed to send 413 response" << std::endl;
-				return -1;
+				readbody = 0;
 			}
-			
 			// Read remaining body if needed
+			if (readbody == 0)
+			{
+				while (true)
+				{
+					received = recv(fd, buff, BUFFER_SIZE, 0);
+					if (received <= 0)
+					{
+						std::cout << " miaou\n";
+						break;
+					}
+				}
+				return (-1);
+			}
 			while (body.size() < contentLength)
 			{
 				received = recv(fd, buff, BUFFER_SIZE, 0);
 				if (received <= 0)
+				{
+					std::cout << " miaou\n";
 					break;
+				}
 				body.append(buff, received);
 			}
+			
 		}
 
 		// get the index full path
@@ -341,7 +359,6 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			}
 			else
 			{
-
 				int res = requestObject.HandlePost(fd, body, serverRoot);
 				if (res == -1)
 				{

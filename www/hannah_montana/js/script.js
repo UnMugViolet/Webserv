@@ -57,6 +57,7 @@ function hideBox(boxId) {
 }
 
 function showSubmitMessage() {
+	
 	const message = document.getElementById("submitMessage");
 	message.style.display = "flex";
 	
