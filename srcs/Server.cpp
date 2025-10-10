@@ -287,69 +287,6 @@ const ConfigParser&	Server::getConfig() const
 {
 	return (*_config);
 }
-// int	Server::addVirtualHost(ConfigParser &config, std::string serverUid)
-// {
-// 	std::string _name;
-// 	sockaddr_in sockaddr;
-
-// 	sockaddr.sin_family = AF_INET;
-// 	if (config.hasServerKey(serverUid, "server_name") && config.hasServerKey(serverUid, "root"))
-// 	{
-// 		int gotit = 0;
-
-// 		sockaddr_in serveraddr;
-// 		socklen_t serveraddr_len = sizeof(serveraddr);
-// 		getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
-
-// 		_name = config.getServerValue(serverUid, "server_name");
-
-// 		// check if server_name is a valid ip
-// 		const char *c_name = _name.c_str();
-// 		if (inet_pton(AF_INET, c_name, &(sockaddr.sin_addr))) // TODO - Not allowed function
-// 			gotit = 1;
-
-// 		// try getting ip address with server_name as alias
-// 		struct addrinfo hints;
-// 		struct addrinfo *res;
-// 		struct addrinfo *r;
-// 		ft_memset(&hints, 0, sizeof(hints));
-// 		hints.ai_family = AF_INET;
-// 		hints.ai_socktype = SOCK_STREAM;
-// 		int status = getaddrinfo(c_name, 0, &hints, &res);
-// 		if (status == 0)
-// 		{
-// 			r = res;
-// 			while (r != NULL)
-// 			{
-// 				if (r->ai_family == AF_INET)
-// 				{
-// 					gotit = 1;
-// 					struct sockaddr_in *ipv4 = (struct sockaddr_in *)r->ai_addr;
-// 					sockaddr.sin_addr = ipv4->sin_addr;
-// 				}
-// 				r = r->ai_next;
-// 			}
-// 			freeaddrinfo(res);
-// 		}
-// 		if (gotit == 0) {
-// 			Logger::error(serverUid, "Invalid server_name in the config file for this virtual host not adding it");
-// 			throw ServException(serverUid + " invalid server_name");
-// 		}
-// 		std::string ip = inet_ntoa(sockaddr.sin_addr);
-// 		if (ip.compare(inet_ntoa(serveraddr.sin_addr)) == 0)
-// 		{
-// 			_IdList[_name] = serverUid;
-// 			return 1;
-// 		}
-	
-// 		return 0;
-// 	}
-// 	else
-// 	{
-// 		std::cerr << "invalid conf for: " << serverUid << std::endl;
-// 		return (1);
-// 	}
-// }
 
 std::vector<int>	Server::getSocket() const
 {
@@ -369,10 +306,10 @@ static std::string get_connection_info(const sockaddr_in& client, const sockaddr
 		<< "Connection:"
 		<< NEUTRAL
 		<< " client "
-        << inet_ntoa(client.sin_addr) << ":"  // TODO - Not allowed function
+        << inet_ntoa(client.sin_addr) << ":"
         << ntohs(client.sin_port)
         << " -> server "
-        << inet_ntoa(server.sin_addr) << ":"  // TODO - Not allowed function
+        << inet_ntoa(server.sin_addr) << ":"
         << ntohs(server.sin_port);
 
     return oss.str();
