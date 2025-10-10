@@ -208,7 +208,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 				GetRequest requestObject;
 
 				std::cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << std::endl;
-				std::string errorPage = config->getErrorPageContent(const_c		std::cout << "length : " << contentLength << std::endl;ast<ConfigParser&>(*config), serverUid, 413);
+				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 413);
 				if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
 					std::cerr << "Failed to send 413 response" << std::endl;
 				readbody = 0;
