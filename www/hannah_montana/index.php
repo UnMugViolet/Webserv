@@ -19,39 +19,46 @@
 	$big_desc = "This is a fun and interactive page dedicated to all things Hannah Montana. Explore, enjoy, and don't forget to sing along!";
 
 	$available_features = [
-		"Get",
-		"Post",
-		"Delete",
-		"Upload",
-		"Download",
+		["Post a comment with an attachment", "post"],
+		["Display Posts with Attachments and Delete", "display-posts"],
+		["Set and View Cookies", "cookies"],
 		"FileTransfer",
 		"List directory",
 		"Redirect",
 		"Errors",
-		"Aliases",
-		"Display Posts"
 	]
 ?>
 
-<body>
+<body onclick="playAudio('./assets/music/theme_song.mp3')">
 	<?php echo "<h1>$project_name</h1>"; ?>
 	<?php echo "<p>$small_desc</p>"; ?>
 
 	<h2>Join the Gang</h2>
-	<div class="dual-image-container-left">
-		<img src="./assets/img/hannah_montana.jpg" alt="Hannah Montana" class="hannah-image">
-		<div>
-			<?php echo "<p>$big_desc</p>"; ?>
-			<button class="play-button" onclick="playAudio('./assets/music/theme_song.mp3')">Play Song ►</button>
+	<section class="content">
+		<div class="dual-image-container-left">
+			<img  src="./assets/img/hannah_montana.jpg" alt="Hannah Montana" class="hannah-image">
 		</div>
-	</div>
+		<div class="dual-image-container-right">
+			<?php echo "<p>$big_desc</p>"; ?>
+			<div class="audio-container">
+				<button class="play-button" onclick="playAudio('./assets/music/theme_song.mp3')">Play Song ►</button>
+				<button id="stop-button" class="stop-button">Reset Song ⏹</button>
+			</div>
+		</div>
+	</section>
 	<div>
 		<h2 class="mt-5">Available Features</h2>
 		<div class="feature-image-container">
 			<?php
 				foreach ($available_features as $feature) {
-					$page_url = strtolower(str_replace(" ", "-", $feature));
-					echo "<a href=\"pages/$page_url.php\" class=\"feature-card\">$feature</a>"; // TODO - must be reachable without the .php as well
+					if (is_array($feature)) {
+						$feature_name = $feature[0];
+						$page_url = $feature[1];
+					} else {
+						$feature_name = $feature;
+						$page_url = strtolower(str_replace(" ", "-", $feature));
+					}
+					echo "<a href=\"pages/$page_url.php\" class=\"feature-card\">$feature_name</a>";
 				}
 			?>
 		</div>

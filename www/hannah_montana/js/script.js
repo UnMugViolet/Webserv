@@ -31,6 +31,18 @@ function sendDelete(file, uploadFile) {
 	div.remove();
 }
 
+
+
+const button = document.getElementById('stop-button');
+button.addEventListener('mouseover', function () {
+    button.style.left = `${Math.ceil(Math.random() * 90)}%`;
+    button.style.top = `${Math.ceil(Math.random() * 90)}%`;
+	button.style.p
+});
+button.addEventListener('click', function () {
+    playAudio('./assets/music/theme_song.mp3');
+})
+
 function showBox(boxId) {
 	console.log("show");
 	const div = document.getElementById(boxId);
