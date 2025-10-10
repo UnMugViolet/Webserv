@@ -63,9 +63,12 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 {
 	std::string base = path;
 	std::string filename;
-	std::string extension = path.substr(path.rfind('.'));
-
-	base.erase(base.rfind('.'), std::string::npos);
+	std::string extension = "";
+	if (path.rfind('.') != std::string::npos)
+	{
+		extension = path.substr(path.rfind('.'));
+		base.erase(base.rfind('.'), std::string::npos);
+	}
 	int i = 0;
 	while (true)
 	{
@@ -78,7 +81,7 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 		if (access(filename.c_str(), F_OK) != 0)
 			break;
 		i++;
-	} 
+	}
 	std::ofstream file(filename.c_str());
 	if (file.is_open())
 	{
@@ -125,10 +128,11 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 			}
 			pos = body.find("name=", pos) + 6;
 			std::string fieldname = body.substr(pos, body.find("\"", pos) - pos);
+			std::cout << "pouet\n";
 			if (body.find("filename=", pos) < end && body.find("filename=", pos) != std::string::npos)
 			{
 				int res;
-				
+
 				pos = body.find("filename=", pos) + 10;
 				filename = body.substr(pos, body.find("\"", pos) - pos);
 				if (filename == "")
@@ -146,12 +150,18 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 					return (-1);
 				if (res > 0)
 				{
-					std::string extension = filename.substr(filename.rfind('.'));
-					filename.erase(filename.rfind('.'), std::string::npos);
+					std::cout << "file?\n" << filename << std::endl;
+					std::string extension = "";
+					if (filename.rfind('.') != std::string::npos)
+					{
+						extension = filename.substr(filename.rfind('.'));
+						filename.erase(filename.rfind('.'), std::string::npos);
+					}
 					filename += "(";
 					filename += res + 48;
 					filename += ")";
 					filename += extension;
+					std::cout << "filename: " << filename << std::endl;
 				}
 				content[fieldname] = filename;
 			}

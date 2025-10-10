@@ -1,3 +1,0 @@
-name=ddd
-message=dddd
-file=www/hannah_montana/var/uploads/level8.json

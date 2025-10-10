@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "RequestHandler.hpp"
+#include <unistd.h>
 
 Server::Server()
 {
@@ -351,13 +352,14 @@ int	Server::setClient(int _socketfd)
 
 void	Server::unsetClient(int position)
 {
+	close(_clientFds[position]);
 	_clientFds.erase(_clientFds.begin()+position);
 }
 
 
 void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* config)
 {
-	for (size_t i = 0; i < _clientFds.size();)
+	for (size_t i = 0; i < _clientFds.size(); i++)
 	{
 		// Check if the file descriptor is valid
 		if (_clientFds[i] < 0)
@@ -366,19 +368,16 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 			unsetClient(i);
 			continue;
 		}
-		
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
 			if (_handler->handleRequest(_clientFds[i], *this, config) == -1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
-				close(_clientFds[i]);
 				unsetClient(i);
 				std::cout << "Client disconnected" << std::endl;
 				continue;
 			}
 		}
-		i++;
 	}
 }
 
