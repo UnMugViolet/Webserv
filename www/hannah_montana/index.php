@@ -22,6 +22,7 @@
 		["Post a comment with an attachment", "post"],
 		["Display Posts with Attachments and Delete", "display-posts"],
 		["Set and View Cookies", "cookies"],
+		["List Directory Contents", ""],
 		"Redirect",
 		"Errors",
 	]
@@ -52,11 +53,13 @@
 					if (is_array($feature)) {
 						$feature_name = $feature[0];
 						$page_url = $feature[1];
+						$page_ext = strlen ($page_url) == 0 ? "" : "php";
 					} else {
 						$feature_name = $feature;
 						$page_url = strtolower(str_replace(" ", "-", $feature));
+						$page_ext = strlen ($page_url) == 0 ? "" : "php";
 					}
-					echo "<a href=\"pages/$page_url.php\" class=\"feature-card\">$feature_name</a>";
+					echo "<a href=\"pages/$page_url.$page_ext\" class=\"feature-card\">$feature_name</a>";
 				}
 			?>
 		</div>

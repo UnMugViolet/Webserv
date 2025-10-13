@@ -135,12 +135,13 @@
 <?php
 
 $errors_arr = [
-	"400" => "Bad Request",
-	"403" => "Forbidden",
-	"404" => "Not Found",
-	"405" => "Method Not Allowed",
-	"415" => "Unsupported Media Type",
-	"500" => "Internal Server Error"
+	"400" => ["Bad Request", "The server could not understand the request due to invalid syntax."],
+	"403" => ["Forbidden", "You do not have permission to access this resource."],
+	"404" => ["Not Found", "The requested resource could not be found on this server."],
+	"405" => ["Method Not Allowed", "The request method is not supported for the requested resource."],
+	"413" => ["Payload Too Large", "When the server refuses to accept the request because the payload is too large."],
+	"415" => ["Unsupported Media Type", "When the server refuses to accept the request because the payload format is in an unsupported format."],
+	"500" => ["Internal Server Error", "The server encountered an internal error and was unable to complete your request."],
 ];
 ?>
 
@@ -157,12 +158,14 @@ $errors_arr = [
 		<div class="error-grid">
 			<?php
 				foreach ($errors_arr as $code => $message) {
+					$error_title = $message[0];
+					$error_desc = $message[1];
 					echo "
 					<div class=\"error-card\">
 						<div class=\"error-code\">$code</div>
-						<h3 class=\"error-name\">$message</h3>
+						<h3 class=\"error-name\">$error_title</h3>
 						<p class=\"error-description\">
-							Description for error code $code.
+							$error_desc
 						</p>
 						<a href=\"error_pages/$code.html\" class=\"view-button\">View Page</a>
 					</div>

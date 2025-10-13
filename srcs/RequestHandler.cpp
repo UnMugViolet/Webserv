@@ -321,9 +321,6 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			// Check if file exists and is not a directory
 			std::ifstream file(fullPath.c_str());
 			DIR *dir = opendir(fullPath.c_str()); 
-
-			if (!dir)
-				std::cout << "not a directory\n";
 				
 			if (!file.is_open() && dir == NULL) {
 				// File not found - send 404 error

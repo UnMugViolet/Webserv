@@ -1,2 +1,0 @@
-name=lenouille
-message=Coucou les copains trop style ce webserv,ca merite un 125. <3 <3
