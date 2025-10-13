@@ -22,8 +22,6 @@
 		["Post a comment with an attachment", "post"],
 		["Display Posts with Attachments and Delete", "display-posts"],
 		["Set and View Cookies", "cookies"],
-		"FileTransfer",
-		"List directory",
 		"Redirect",
 		"Errors",
 	]

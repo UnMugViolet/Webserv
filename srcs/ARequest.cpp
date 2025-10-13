@@ -44,6 +44,27 @@ ARequest&	ARequest::operator=(ARequest &src)
 	return (*this);
 }
 
+std::string generateDirectoryListing(std::string const &dirPath, std::string const &requestPath) {
+    DIR* dir = opendir(dirPath.c_str());
+    if (!dir) return "<h1>Cannot open directory</h1>";
+
+    std::ostringstream html;
+    html << "<html><head><title>Index of " << requestPath << "</title></head><body>";
+    html << "<h1>Index of " << requestPath << "</h1><ul>";
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        std::string name = entry->d_name;
+        if (name == ".") continue;
+		html << "<li><a href=\"" << requestPath
+			 << ((requestPath.length() > 0 && requestPath[requestPath.length() - 1] == '/') ? "" : "/")
+			 << name << "\">" << name << "</a></li>";
+    }
+    closedir(dir);
+    html << "</ul></body></html>";
+    return html.str();
+}
+
 int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &body, const std::string& contentType)
 {
 	std::ostringstream response;
@@ -83,11 +104,20 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &
 
 int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, const ConfigParser *config, const Server &Server)
 {
-	int cgiOutputFd = -1;
+	int 			cgiOutputFd = -1;
+    struct stat 	pathStat;
+
+    if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
+        // It's a directory: generate and send directory listing
+		std::cout << "Directory listing for: " << scriptPath << std::endl;
+        std::string listing = generateDirectoryListing(scriptPath, _path);
+        return sendHTTPResponse(clientFd, 200, listing, "text/html");
+    }
+
 	try {
 		// Execute CGI script
 		cgiOutputFd = CGI::interpret(scriptPath, Server);
-		
+	
 		// Read the CGI output
 		std::string cgiOutput;
 		char buffer[4096];

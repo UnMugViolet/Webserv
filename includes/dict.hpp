@@ -63,6 +63,7 @@
 #define ICO 12
 #define JS 13
 #define MP3 14
+#define FOLDER 15
 
 // Consts 
 #define MAX_BODY_SIZE 1048576

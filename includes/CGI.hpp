@@ -1,8 +1,7 @@
 #pragma once
 
-#include <string>
-#include <iostream>
-#include <sstream>
+
+
 #include "unistd.h"
 #include "fcntl.h"
 #include "stdlib.h"
@@ -10,10 +9,13 @@
 #include "sys/types.h"
 #include "dict.hpp"
 #include "Logger.hpp"
-#include <sys/socket.h>
 #include "Server.hpp"
 
-
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <dirent.h>
+#include <sys/socket.h>
 
 class CGI
 {

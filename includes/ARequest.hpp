@@ -5,6 +5,9 @@
 #include <map>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
+
 #include <fstream>
 #include "dict.hpp"
 #include "Server.hpp"
@@ -42,4 +45,5 @@ public:
 	ARequest&	operator=(ARequest& src);
 };
 
-std::map<std::string, std::string> parseQuery(const std::string &query);
+std::map<std::string, std::string> 	parseQuery(const std::string &query);
+std::string 						generateDirectoryListing(std::string const &dirPath, std::string const &requestPath);

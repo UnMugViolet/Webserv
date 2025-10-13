@@ -113,18 +113,18 @@ std::map<std::string, std::string>	RequestHandler::parseHeader(std::string heade
 
 int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 {
-	std::string serverRoot;
-	const size_t BUFFER_SIZE = 1;
-	const size_t MAX_HEADER_SIZE = 8192; // 8KB for headers
-	size_t headerlimit;
-	char buff[BUFFER_SIZE];
-	std::string header;
-	std::string body;
-	int			readbody = 1;
-	int			received;
-	std::map<std::string, std::string> headermap;
-	std::string serverUid = server.getUid();
-	std::vector<std::string> serverNames = server.getServerNames();
+	int									readbody = 1;
+	int									received;
+	size_t const 						BUFFER_SIZE = 1;
+	size_t const 						MAX_HEADER_SIZE = 8192; // 8KB for headers
+	size_t 								headerlimit;
+	char 								buff[BUFFER_SIZE];
+	std::string							serverRoot;
+	std::string 						serverUid = server.getUid();
+	std::string 						body;
+	std::string 						header;
+	std::vector<std::string> 			serverNames = server.getServerNames();
+	std::map<std::string, std::string> 	headermap;
 
 	// Read initial chunk
 	received = recv(fd, buff, BUFFER_SIZE, 0);
@@ -189,9 +189,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chuncked"))
 		{
 			body = handleChunckedRequest(fd, body);
-			if (body.empty())
-			{
-				
+			if (body.empty()) {
 				std::cout << "empty body\n";
 				return (-1);
 			}
@@ -200,8 +198,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			std::istringstream iss(headermap["Content-Length"]);
 			size_t contentLength;
-			if (!(iss >> contentLength))
-			{
+			if (!(iss >> contentLength)) {
 				GetRequest requestObject;
 
 				std::cerr << "Invalid Content-Length header" << std::endl;
@@ -321,15 +318,21 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
 
-			// Check if file exists
+			// Check if file exists and is not a directory
 			std::ifstream file(fullPath.c_str());
-			if (!file.is_open()) {
+			DIR *dir = opendir(fullPath.c_str()); 
+
+			if (!dir)
+				std::cout << "not a directory\n";
+				
+			if (!file.is_open() && dir == NULL) {
 				// File not found - send 404 error
 				std::string errorPage = requestObject.loadErrorPage(404, config, serverUid);
 				if (requestObject.sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
 					std::cerr << "Failed to send 404 response" << std::endl;
 			} else {
 				file.close();
+				if (dir) closedir(dir);
 				
 				// Check if it's a CGI script (ends with .php, .py, etc.)
 				std::string contentType = requestObject.getContentType(fullPath);

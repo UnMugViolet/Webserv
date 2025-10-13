@@ -10,13 +10,17 @@ CGI::~CGI()
 
 int CGI::_checkAccess(const std::string &path, int type)
 {
-	if (access(path.c_str(), F_OK) == -1)
-		return (-1);
+	DIR* dir = opendir(path.c_str());
+
 	if (type == BINARY && access(path.c_str(), X_OK) == -1)
 		return (0);
 	if (access(path.c_str(), R_OK) == -1)
 		return (0);
-	return (1);
+	if (dir != NULL)
+		return (closedir(dir), 1);
+	if (access(path.c_str(), F_OK) == -1)
+		return (-1);
+	return (2);
 	
 }
 
@@ -76,7 +80,10 @@ int	CGI::interpret(const std::string &path, const Server &Server)
 			throw CGIException("Do not have permission to access :" + path + " on this server", false, 403, Server.getUid());
 		case 1:
 			break;
+		case 2:
+			break;
 	}
+
 	if (path.find("/uploads/") != std::string::npos)
 	{
 		int fd = open(path.c_str(), O_RDONLY);
