@@ -106,8 +106,12 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 {
 	int 			cgiOutputFd = -1;
     struct stat 	pathStat;
+	string 			auto_index = config->getLocationValueForPath(_path, Server.getUid(), "autoindex");
 
-    if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
+	if (auto_index.empty())
+		auto_index = "on";
+
+    if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode) && auto_index == "on") {
         // It's a directory: generate and send directory listing
 		cout << "Directory listing for: " << scriptPath << endl;
         string listing = generateDirectoryListing(scriptPath, _path);

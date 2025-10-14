@@ -27,17 +27,21 @@ GetRequest::GetRequest(GetRequest &src) : ARequest(src)
 int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *config, const string &fullPath)
 {
 	string		decodedUrl = urlDecode(fullPath.c_str());
-	ifstream file(decodedUrl.c_str());
-	DIR *dir = opendir(decodedUrl.c_str()); 
+	ifstream	file(decodedUrl.c_str());
+	DIR 		*dir = opendir(decodedUrl.c_str());
+	string		autoindex = config->getLocationValueForPath(_path, server.getUid(), "autoindex");
 
-	if (!file.is_open() && dir == NULL) {
+	if (!file.is_open() && (dir == NULL || autoindex == "off")) {
 		// File not found - send 404 error
 		string errorPage = loadErrorPage(404, config, server.getUid());
 		if (sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
 			cerr << "Failed to send 404 response" << endl;
-	} else {
+	} 
+	else {
 		file.close();
-		if (dir) closedir(dir);
+
+		if (dir) 
+			closedir(dir);
 		
 		// Check if it's a CGI script (ends with .php, .py, etc.)
 		string contentType = getContentType(decodedUrl);
