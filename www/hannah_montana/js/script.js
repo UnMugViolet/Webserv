@@ -34,14 +34,17 @@ function sendDelete(file, uploadFile) {
 
 
 const button = document.getElementById('stop-button');
-button.addEventListener('mouseover', function () {
-    button.style.left = `${Math.ceil(Math.random() * 90)}%`;
-    button.style.top = `${Math.ceil(Math.random() * 90)}%`;
-	button.style.p
-});
-button.addEventListener('click', function () {
-    playAudio('./assets/music/theme_song.mp3');
-})
+
+if (button) {
+	button.addEventListener('mouseover', function () {
+		button.style.left = `${Math.ceil(Math.random() * 90)}%`;
+		button.style.top = `${Math.ceil(Math.random() * 90)}%`;
+		button.style.p
+	});
+	button.addEventListener('click', function () {
+		playAudio('./assets/music/theme_song.mp3');
+	})
+}
 
 function showBox(boxId) {
 	console.log("show");

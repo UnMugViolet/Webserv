@@ -23,7 +23,8 @@
 		["Display Posts with Attachments and Delete", "display-posts"],
 		["Set and View Cookies", "cookies"],
 		["List Directory Contents", ""],
-		"Redirect",
+		["Redirect internal", "redirect-internal"],
+		["Redirect external", "redirect-external"],
 		"Errors",
 	]
 ?>
