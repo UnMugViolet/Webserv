@@ -64,6 +64,9 @@ int	PostRequest::UploadFile(string body, string path)
 	string base = path;
 	string filename;
 	string extension = "";
+
+	cout << "path: " << path << endl;
+
 	if (path.rfind('.') != string::npos)
 	{
 		extension = path.substr(path.rfind('.'));
@@ -205,6 +208,8 @@ int PostRequest::handlePost(int fd, const Server &server, const string &body, co
 	// define target directory
 	if (uploadir.find('/') == 0 && serverRoot.rfind('/') == serverRoot.size() - 1)
 		uploadir.erase(0, 1);
+	if (uploadir.rfind('/') != uploadir.size() - 1)
+		uploadir += '/';
 	uploadir = serverRoot + uploadir;
 	DIR* dir = opendir(uploadir.c_str());
 	if (dir == NULL)
@@ -220,6 +225,8 @@ int PostRequest::handlePost(int fd, const Server &server, const string &body, co
 	closedir(dir);
 	if (postdir.find('/') == 0 && serverRoot.rfind('/') == serverRoot.size() - 1)
 		postdir.erase(0, 1);
+	if (postdir.rfind('/') != postdir.size() - 1)
+		postdir += '/';
 	postdir = serverRoot + postdir;
 	dir = opendir(postdir.c_str());
 	if (dir == NULL)

@@ -13,7 +13,7 @@ function sendDelete(file, uploadFile) {
 	console.log(uploadFile);
 	mess.style.display = "none";
 	if (uploadFile)
-		uploadFile = '&upload=' + uploadFile
+		uploadFile = '&upload=/var/uploads/' + uploadFile
 	fetch('/delete-post?file=/var/posts/' + file + uploadFile, {
 		method: 'DELETE'
 	})
