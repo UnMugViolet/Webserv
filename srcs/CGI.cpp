@@ -73,9 +73,8 @@ int	CGI::interpret(const std::string &path, const Server &Server)
 
 	switch (_checkAccess(path, type))
 	{
-		case -1: {
+		case -1:
 			throw CGIException("file " + path + " does not exist", false, 404, Server.getUid());
-		}
 		case 0:
 			throw CGIException("Do not have permission to access :" + path + " on this server", false, 403, Server.getUid());
 		case 1:
@@ -135,7 +134,7 @@ int	CGI::interpret(const std::string &path, const Server &Server)
 			case BINARY :
 				std::string tmp = "./" + path;
 				char *arg[2] = {(char *)tmp.c_str(), NULL};
-				execve(tmp.c_str(), arg, Server.getEnvAsArray()); // TODO - Replace environ with the actual environment variables
+				execve(tmp.c_str(), arg, Server.getEnvAsArray());
 				throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
 			
 		}
