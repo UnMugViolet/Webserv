@@ -150,7 +150,7 @@ int	CGI::interpret(const string &path, const Server &Server)
 	{
 		int exitStatus = WEXITSTATUS(status);
 		if (exitStatus == 0)
-        	return fd[0];
+			return fd[0];
 		else
 		{
 			// For script errors (like PHP syntax/runtime errors), 
