@@ -26,6 +26,6 @@ public:
 	int	handlePost(int fd, const Server &server, const string &body, const ConfigParser *config);
 
 	/*operator overloads*/
-	PostRequest&	operator=(PostRequest& src);
+	PostRequest	&operator=(PostRequest& src);
 };
 

@@ -112,7 +112,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 		auto_index = "on";
 
     if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode) && auto_index == "on") {
-        // It's a directory: generate and send directory listing
+        // It's a directory and autoindex is on: generate and send directory listing
 		cout << "Directory listing for: " << scriptPath << endl;
         string listing = generateDirectoryListing(scriptPath, _path);
         return sendHTTPResponse(clientFd, 200, listing, "text/html");

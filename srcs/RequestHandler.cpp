@@ -64,7 +64,7 @@ string RequestHandler::getExtension(const string &path)
 	return (path.substr(pos + 1));
 }
 
-string RequestHandler::getIndex(const string &indexes, const string &root) const
+string getIndex(string const &indexes, string const &root)
 {
 	string fullPath;
 	string goodIndex;
@@ -81,11 +81,8 @@ string RequestHandler::getIndex(const string &indexes, const string &root) const
 		if (goodIndex[0] != '/')
 			goodIndex = "/" + goodIndex;
 		fullPath = root + goodIndex;
-		if (_checkAccess(fullPath) == 1)
-		{
-			// cout << "Index found: " << fullPath << endl;
+		if (RequestHandler::_checkAccess(fullPath) == 1)
 			return (goodIndex);
-		}
 	}
 	return ("");
 }

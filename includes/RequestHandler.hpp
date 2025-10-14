@@ -31,7 +31,6 @@ class RequestHandler
 		/*member functions*/
 		static string					getExtension(const string &path);
 		static int							_checkAccess(const string &path);
-		string							getIndex(const string &indexes, const string &root) const;
 		int									handleRequest(int fd, Server &server, ConfigParser *config);
 		void								setMaxBodySize(string size);
 		map<string, string>	parseHeader(string header) const;
@@ -39,4 +38,6 @@ class RequestHandler
 };
 
 string	trim(const string &str);
-string urlDecode(const string &src);
+string	urlDecode(const string &src);
+string	getIndex(const string &indexes, const string &root);
+
