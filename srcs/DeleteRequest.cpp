@@ -26,7 +26,8 @@ DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 int	DeleteRequest::delete_file(int fd, const Server &serv)
 {
 	std::string			root = serv.getEnvValue("SERVER_ROOT");
-	std::map<std::string, std::string>	queryMap = parseQuery(serv.getEnvValue("QUERY_STRING"));
+	string				query = urlDecode(serv.getEnvValue("QUERY_STRING"));
+	std::map<std::string, std::string>	queryMap = parseQuery(query);
 	std::string			fileName = queryMap["file"];
 	std::string			uploadPath = queryMap["upload"];
 

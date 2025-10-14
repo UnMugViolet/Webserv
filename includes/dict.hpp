@@ -47,6 +47,8 @@
 #define DEFAULT_ERROR_LOG_FILE "error.log"
 #define DEFAULT_ACCESS_LOG_FILE "access.log"
 
+using namespace std;
+
 // Languages
 #define PYTHON 0
 #define PERL 1

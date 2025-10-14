@@ -26,8 +26,9 @@ GetRequest::GetRequest(GetRequest &src) : ARequest(src)
 
 int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *config, const std::string &fullPath)
 {
-	std::ifstream file(fullPath.c_str());
-	DIR *dir = opendir(fullPath.c_str()); 
+	std::string		decodedUrl = urlDecode(fullPath.c_str());
+	std::ifstream file(decodedUrl.c_str());
+	DIR *dir = opendir(decodedUrl.c_str()); 
 
 	if (!file.is_open() && dir == NULL) {
 		// File not found - send 404 error
@@ -39,10 +40,10 @@ int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *conf
 		if (dir) closedir(dir);
 		
 		// Check if it's a CGI script (ends with .php, .py, etc.)
-		std::string contentType = getContentType(fullPath);
-		std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << fullPath << NEUTRAL << std::endl;
+		std::string contentType = getContentType(decodedUrl);
+		std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << std::endl;
 		// Handle as CGI
-		if (sendCGIResponse(fd, fullPath, config, server) == -1)
+		if (sendCGIResponse(fd, decodedUrl, config, server) == -1)
 			std::cerr << "Failed to send CGI response" << std::endl;
 	}
 	if (!isKeepalive())

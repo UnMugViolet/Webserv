@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "ARequest.hpp"
+#include "RequestHandler.hpp"
 
 class DeleteRequest: public ARequest
 {

@@ -2,7 +2,9 @@
 
 #include <string>
 #include <iostream>
+
 #include "ARequest.hpp"
+#include "RequestHandler.hpp"
 
 class GetRequest: public ARequest
 {
