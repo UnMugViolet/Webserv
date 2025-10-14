@@ -484,3 +484,38 @@ string	ConfigParser::getLocationValueForPath(const string &path, const string &s
 		throw ErrorException("No valid location");
 	return (getLocationValue(serverUid, currentLocation, parameter));
 }
+
+vector<string> ConfigParser::getLocationVectorforPath(const string &path, const string &serverUid, const string &parameter) const
+{
+	vector<string> result;
+	string currentLocation = "";
+	vector<string> temp = getLocationPaths(serverUid);
+
+	int status = 0;
+	vector<string>::iterator it = temp.begin();
+	for (; it != temp.end(); it++) {
+		if (path.find((*it)) != string::npos) {
+			status = 1;
+			if (currentLocation.size() < (*it).size())
+				currentLocation = *it;
+		}
+	}
+	if (status == 0)
+		throw ErrorException("No valid location");
+	map<string, map<string, map<string, string> > >::const_iterator serverIt = _locationBlocks.find(serverUid);
+	if (serverIt != _locationBlocks.end())
+	{
+		map<string, map<string, string> >::const_iterator locationIt = serverIt->second.find(currentLocation);
+		if (locationIt != serverIt->second.end())
+		{
+			for (map<string, string>::const_iterator keyIt = locationIt->second.find(parameter); keyIt != locationIt->second.end(); keyIt++)
+			{
+				if (keyIt->first == parameter)
+				{
+					result.push_back(keyIt->second);
+				}
+			}
+		}
+	}
+	return (result);
+}
