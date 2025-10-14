@@ -1,3 +1,9 @@
+# Webserv specific ignores
+*.pid
+uploads/
+posts/
+
+
 # Prerequisites
 *.d
 

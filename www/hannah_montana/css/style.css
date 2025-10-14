@@ -194,6 +194,8 @@ img.image-file {
 	width: 50%;
 	text-align: center;
 	z-index: 1;
+	white-space: pre-line;
+	word-break: break-word;
 }
 
 .cross {
