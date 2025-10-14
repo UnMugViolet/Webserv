@@ -16,6 +16,7 @@ public:
 	~GetRequest();
 
 	/*member functions*/
+	int	handleGet(int fd, const Server &server, const ConfigParser *config, const std::string &fullPath);
 
 	/*operator overloads*/
 	GetRequest&	operator=(GetRequest& src);

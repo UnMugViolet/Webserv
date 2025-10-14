@@ -164,7 +164,6 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	try {
 		headermap = parseHeader(header);
 		
-		// get virtual server root
 		if (headermap.find("Host") == headermap.end())
 		{
 			GetRequest requestObject;
@@ -263,47 +262,37 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			server.setEnvValue("QUERY_STRING", "");
 		
 		// Checks if the path is allowed by the location for the requested method
-		std::string currentLocation = "";
 		std::string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
-		std::vector<std::string> temp = config->getLocationPaths(server.getUid());
-		int status = 0;
-		std::vector<std::string>::iterator it = temp.begin();
-		for (; it != temp.end(); it++) {
-			if (cleanPath.find((*it)) != std::string::npos) {
-				status = 1;
-				if (currentLocation.size() < (*it).size())
-					currentLocation = *it;
-			}
-		}
-		if (status == 0) {
-			GetRequest requestObject;
-
-			std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
-			if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-				std::cerr << "Failed to send 403 response" << std::endl;
-			if (!requestObject.isKeepalive())
-				return (-1);
-			return 0;
-		}
-		status = 0;
-		std::string allowed_methods = config->getLocationValue(serverUid, currentLocation, "allow_methods");
-		if (allowed_methods.find(headermap["method"]) != std::string::npos) {
-			std::cout << "Location: " << currentLocation << std::endl;
-			std::cout << "Value: " << allowed_methods << std::endl;
-			for(size_t i = allowed_methods.find(' '); i != std::string::npos; i = allowed_methods.find(' ', i))
-			{
-				std::string one_method = allowed_methods.substr(0, i);
-				if (one_method == headermap["method"])
+		try {
+			int status = 0;
+			std::string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods");
+			if (allowed_methods.find(headermap["method"]) != std::string::npos) {
+				for(size_t i = allowed_methods.find(' '); i != std::string::npos; i = allowed_methods.find(' ', i))
 				{
-					status = 1;
-					break ;
+					std::string one_method = allowed_methods.substr(0, i);
+					if (one_method == headermap["method"])
+					{
+						status = 1;
+						break ;
+					}
+					allowed_methods = allowed_methods.substr(i + 1);
 				}
-				allowed_methods = allowed_methods.substr(i + 1);
+				if (allowed_methods == headermap["method"])
+					status = 1;
 			}
-			if (allowed_methods == headermap["method"])
-				status = 1;
+			if (status == 0) {
+				GetRequest requestObject;
+
+				std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
+				if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
+					std::cerr << "Failed to send 403 response" << std::endl;
+				if (!requestObject.isKeepalive())
+					return (-1);
+				return 0;
+			}
 		}
-		if (status == 0) {
+		catch (const std::exception& e)
+		{
 			GetRequest requestObject;
 
 			std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
@@ -312,91 +301,32 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			if (!requestObject.isKeepalive())
 				return (-1);
 			return 0;
+		}
+		std::string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return");
+		if (!redirect.empty())
+		{
+			;// redirect here
 		}
 		if (headermap["method"] == "GET")
 		{
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
 
-			// Check if file exists and is not a directory
-			std::ifstream file(fullPath.c_str());
-			DIR *dir = opendir(fullPath.c_str()); 
-				
-			if (!file.is_open() && dir == NULL) {
-				// File not found - send 404 error
-				std::string errorPage = requestObject.loadErrorPage(404, config, serverUid);
-				if (requestObject.sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
-					std::cerr << "Failed to send 404 response" << std::endl;
-			} else {
-				file.close();
-				if (dir) closedir(dir);
-				
-				// Check if it's a CGI script (ends with .php, .py, etc.)
-				std::string contentType = requestObject.getContentType(fullPath);
-				std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << fullPath << NEUTRAL << std::endl;
-				// Handle as CGI
-				if (requestObject.sendCGIResponse(fd, fullPath, config, server) == -1)
-					std::cerr << "Failed to send CGI response" << std::endl;
-			}
-			if (!requestObject.isKeepalive())
-				return (-1);
+			return (requestObject.handleGet(fd, server, config, fullPath));
 		}
 		else if (headermap["method"] == "POST")
 		{
 			PostRequest requestObject(headermap);
 			// Process the POST request
-			std::string path = serverRoot;
-
-			// define target directory
-			path += "/var/uploads";
-			if (access(path.c_str(), X_OK) == -1)
-			{
-				std::cerr << "no uploads directory" << std::endl;//what? no appropriate directory or no permission
-				std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
-				if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-					std::cerr << "Failed to send 500 response" << std::endl;
-				return (-1);
-			}
-			path = serverRoot + "/var/posts";
-			if (access(path.c_str(), X_OK) == -1)
-			{
-				std::cerr << "no posts directory" << std::endl;//what? no appropriate directory or no permission
-				std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
-				if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-					std::cerr << "Failed to send 500 response" << std::endl;
-				return (-1);
-			}
-			else
-			{
-				int res = requestObject.HandlePost(fd, body, serverRoot);
-				if (res == -1)
-				{
-					std::string errorPage = requestObject.loadErrorPage(500, config, serverUid);
-					if (requestObject.sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-						std::cerr << "Failed to send 500 response" << std::endl;
-				}
-			}
-			if (!requestObject.isKeepalive())
-				return (-1);
+			
+			return (requestObject.handlePost(fd, server, body, config));
 		}
 		else if (headermap["method"] == "DELETE")
 		{
 			DeleteRequest requestObject(headermap);
 			// Process the DELETE request
 
-			if (access(fullPath.c_str(), F_OK))
-				requestObject.delete_file(fd, server);
-			else
-			{
-				std::string errorPage = requestObject.loadErrorPage(404, config, serverUid);
-				if (requestObject.sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
-					std::cerr << "Failed to send 404 response" << std::endl;
-			}
-			if (!requestObject.isKeepalive())
-			{
-				std::cout << "there?\n";
-				return (-1);
-			}
+			return (requestObject.handleDelete(fd, server, config, fullPath));
 		}
 		else
 		{

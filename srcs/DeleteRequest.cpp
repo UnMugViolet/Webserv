@@ -45,6 +45,27 @@ int	DeleteRequest::delete_file(int fd, const Server &serv)
 		return (-1);
 }
 
+
+int DeleteRequest::handleDelete(int fd, const Server &server, const ConfigParser *config, const std::string &path)
+{
+
+
+	if (access(path.c_str(), F_OK))
+		delete_file(fd, server);
+	else
+	{
+		std::string errorPage = loadErrorPage(404, config, server.getUid());
+		if (sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
+			std::cerr << "Failed to send 404 response" << std::endl;
+	}
+	if (!isKeepalive())
+	{
+		std::cout << "there?\n";
+		return (-1);
+	}
+	return (0);
+}
+
 DeleteRequest::~DeleteRequest()
 {
 	return ;

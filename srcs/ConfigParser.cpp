@@ -466,3 +466,21 @@ void	ConfigParser::_checkSemicolons(const std::string &filePath) const
 		throw ErrorException("Block error in config file: " + filePath);
 	}
 }
+
+std::string	ConfigParser::getLocationValueForPath(const std::string &path, const std::string &serverUid, const std::string &parameter) const
+{
+	std::string currentLocation = "";
+	std::vector<std::string> temp = getLocationPaths(serverUid);
+	int status = 0;
+	std::vector<std::string>::iterator it = temp.begin();
+	for (; it != temp.end(); it++) {
+		if (path.find((*it)) != std::string::npos) {
+			status = 1;
+			if (currentLocation.size() < (*it).size())
+				currentLocation = *it;
+		}
+	}
+	if (status == 0)
+		throw ErrorException("No valid location");
+	return (getLocationValue(serverUid, currentLocation, parameter));
+}

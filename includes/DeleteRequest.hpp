@@ -19,6 +19,7 @@ class DeleteRequest: public ARequest
 
 		/*member functions*/
 		int	delete_file(int fd, const Server &serv);
+		int	handleDelete(int fd, const Server &server, const ConfigParser *config, const std::string &path);
 
 		/*operator overloads*/
 		DeleteRequest &operator=(DeleteRequest &src);

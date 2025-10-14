@@ -22,7 +22,8 @@ public:
 	/*member functions*/
 	int	UploadFile(std::string body, std::string path);
 	int	UploadContent(std::map<std::string, std::string> content, std::string path);
-	int	HandlePost(int fd, std::string body, std::string fullPath);
+	int	createPost(int fd, std::string body, std::string fullPath);
+	int	handlePost(int fd, const Server &server, const std::string &body, const ConfigParser *config);
 
 	/*operator overloads*/
 	PostRequest&	operator=(PostRequest& src);

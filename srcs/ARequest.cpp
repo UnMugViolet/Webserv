@@ -10,7 +10,7 @@ ARequest::ARequest()
 	_method = 0;
 	_path = "";
 	_host = "";
-	_keep_alive = false;
+	_keep_alive = true;
 	_client = "";
 }
 

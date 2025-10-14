@@ -95,7 +95,7 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 	}
 }
 
-int	PostRequest::HandlePost(int fd, std::string body, std::string path)
+int	PostRequest::createPost(int fd, std::string body, std::string path)
 {
 	std::string	filename;
 	std::map<std::string, std::string>	content;
@@ -192,6 +192,52 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 	return (0);
 }
 
+int PostRequest::handlePost(int fd, const Server &server, const std::string &body, const ConfigParser *config)
+{
+	std::string serverRoot = config->getServerValue(server.getUid(), "root");
+	std::string path = server.getEnvValue("REQUEST_URI");
+	std::string cleanPath = path.substr(0, path.find('?'));
+	
+	std::string uploadir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_uploads");
+	std::string postdir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_posts");
+	// define target directory
+	path = serverRoot + uploadir;
+	DIR* dir = opendir(path.c_str());
+	if (dir == NULL)
+	{
+		std::cerr << "no uploads directory" << std::endl;//what? no appropriate directory or no permission
+		std::string errorPage = loadErrorPage(500, config, server.getUid());
+		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
+			std::cerr << "Failed to send 500 response" << std::endl;
+		if (isKeepalive())
+			return (0);
+		return (-1);
+	}
+	closedir(dir);
+	path = serverRoot + postdir;
+	dir = opendir(path.c_str());
+	if (dir == NULL)
+	{
+		std::cerr << "no posts directory" << std::endl;//what? no appropriate directory or no permission
+		std::string errorPage = loadErrorPage(500, config, server.getUid());
+		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
+			std::cerr << "Failed to send 500 response" << std::endl;
+		if (isKeepalive())
+			return (0);
+		return (-1);
+	}
+	closedir(dir);
+	int res = createPost(fd, body, serverRoot);
+	if (res == -1)
+	{
+		std::string errorPage = loadErrorPage(500, config, server.getUid());
+		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
+			std::cerr << "Failed to send 500 response" << std::endl;
+	}
+	if (!isKeepalive())
+		return (-1);
+	return (0);
+}
 
 PostRequest::~PostRequest()
 {
