@@ -29,12 +29,15 @@ int	DeleteRequest::delete_file(int fd, const Server &serv)
 	string				query = urlDecode(serv.getEnvValue("QUERY_STRING"));
 	map<string, string>	queryMap = parseQuery(query);
 	string				fileName = queryMap["file"];
-	string				uploadPath = queryMap["upload"];
+	string				uploadName = queryMap["upload"];
 
 	if (root.rfind('/') == root.size() - 1 && fileName[0] == '/')
 		fileName.erase(0, 1);
 	string			filePath = root + fileName;
 
+	if (root.rfind('/') == root.size() - 1 && uploadName[0] == '/')
+		uploadName.erase(0, 1);
+	string			uploadPath = root + uploadName;
 	if (!uploadPath.empty())
 		if (remove(uploadPath.c_str()) != 0)
 			cout << "wtf\n";

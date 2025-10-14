@@ -10,9 +10,10 @@ function sendDelete(file, uploadFile) {
 	const div = document.getElementById(file);
 	const mess = document.getElementById("messageBox_" + file);
 
+	console.log(uploadFile);
 	mess.style.display = "none";
 	if (uploadFile)
-		uploadFile = '&upload=' + uploadFile
+		uploadFile = '&upload=/var/uploads/' + uploadFile
 	fetch('/delete-post?file=/var/posts/' + file + uploadFile, {
 		method: 'DELETE'
 	})

@@ -64,6 +64,9 @@ int	PostRequest::UploadFile(string body, string path)
 	string base = path;
 	string filename;
 	string extension = "";
+
+	cout << "path: " << path << endl;
+
 	if (path.rfind('.') != string::npos)
 	{
 		extension = path.substr(path.rfind('.'));
@@ -97,15 +100,14 @@ int	PostRequest::UploadFile(string body, string path)
 	}
 }
 
-int	PostRequest::createPost(int fd, string body, string path)
+int	PostRequest::createPost(int fd, string body, string postpath, string uploadpath)
 {
 	string	filename;
 	map<string, string>	content;
 
 	if (_Content_type.compare("text/plain") == 0)
 	{
-		path += "/var/posts";
-		filename = path + "/post.txt";
+		filename = postpath + "/post.txt";
 		
 		if(UploadFile(body, filename) == -1)
 			return (-1);
@@ -143,10 +145,10 @@ int	PostRequest::createPost(int fd, string body, string path)
 					end = body.find(boundary, pos) - 2;
 					continue;
 				}
-				filename = path + "/var/uploads/" + filename;
 				pos = body.find("\r\n\r\n", pos) + 4;
 				bodypart = body.substr(pos, end - pos);
-				res = UploadFile(bodypart, filename);
+				cout << "filename: " << filename << endl;
+				res = UploadFile(bodypart, uploadpath + filename);
 				if(res == -1)
 					return (-1);
 				if (res > 0)
@@ -180,7 +182,7 @@ int	PostRequest::createPost(int fd, string body, string path)
 		}
 		if (!content.empty())
 		{
-			filename = path + "/var/posts/data";
+			filename = postpath + "/data";
 			if (UploadContent(content, filename) == -1)
 				return (-1);
 			else
@@ -204,8 +206,12 @@ int PostRequest::handlePost(int fd, const Server &server, const string &body, co
 	string uploadir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_uploads");
 	string postdir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_posts");
 	// define target directory
-	path = serverRoot + uploadir;
-	DIR* dir = opendir(path.c_str());
+	if (uploadir.find('/') == 0 && serverRoot.rfind('/') == serverRoot.size() - 1)
+		uploadir.erase(0, 1);
+	if (uploadir.rfind('/') != uploadir.size() - 1)
+		uploadir += '/';
+	uploadir = serverRoot + uploadir;
+	DIR* dir = opendir(uploadir.c_str());
 	if (dir == NULL)
 	{
 		cerr << "no uploads directory" << endl;//what? no appropriate directory or no permission
@@ -217,8 +223,12 @@ int PostRequest::handlePost(int fd, const Server &server, const string &body, co
 		return (-1);
 	}
 	closedir(dir);
-	path = serverRoot + postdir;
-	dir = opendir(path.c_str());
+	if (postdir.find('/') == 0 && serverRoot.rfind('/') == serverRoot.size() - 1)
+		postdir.erase(0, 1);
+	if (postdir.rfind('/') != postdir.size() - 1)
+		postdir += '/';
+	postdir = serverRoot + postdir;
+	dir = opendir(postdir.c_str());
 	if (dir == NULL)
 	{
 		cerr << "no posts directory" << endl;//what? no appropriate directory or no permission
@@ -230,7 +240,8 @@ int PostRequest::handlePost(int fd, const Server &server, const string &body, co
 		return (-1);
 	}
 	closedir(dir);
-	int res = createPost(fd, body, serverRoot);
+	int res = createPost(fd, body, postdir, uploadir);
+	cout << "miaou\n" << serverRoot << endl;
 	if (res == -1)
 	{
 		string errorPage = loadErrorPage(500, config, server.getUid());
