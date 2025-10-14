@@ -1,2 +1,0 @@
-name=cloclo
-message=coucou les petits loups
