@@ -67,7 +67,9 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 	if (path.rfind('.') != std::string::npos)
 	{
 		extension = path.substr(path.rfind('.'));
-		base.erase(base.rfind('.'), std::string::npos);
+		size_t pos = base.rfind('.');
+		if (pos != std::string::npos)
+			base.erase(pos, std::string::npos);
 	}
 	int i = 0;
 	while (true)
@@ -90,7 +92,7 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 	}
 	else
 	{
-		std::cerr << "couldn't create file for upload" << std::endl;//couldn't create file
+		std::cerr << "couldn't create file for upload" << std::endl;
 		return (-1);
 	}
 }
@@ -128,7 +130,6 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 			}
 			pos = body.find("name=", pos) + 6;
 			std::string fieldname = body.substr(pos, body.find("\"", pos) - pos);
-			std::cout << "pouet\n";
 			if (body.find("filename=", pos) < end && body.find("filename=", pos) != std::string::npos)
 			{
 				int res;
@@ -154,8 +155,10 @@ int	PostRequest::HandlePost(int fd, std::string body, std::string path)
 					std::string extension = "";
 					if (filename.rfind('.') != std::string::npos)
 					{
-						extension = filename.substr(filename.rfind('.'));
-						filename.erase(filename.rfind('.'), std::string::npos);
+						size_t pos = filename.rfind('.');
+						extension = filename.substr(pos);
+						if (pos != std::string::npos)
+							filename.erase(pos, std::string::npos);
 					}
 					filename += "(";
 					filename += res + 48;

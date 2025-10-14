@@ -25,6 +25,25 @@ RequestHandler::~RequestHandler()
 {
 	return ;
 }
+
+std::string urlDecode(const std::string &src) {
+    std::ostringstream out;
+    for (size_t i = 0; i < src.length(); ++i) {
+        if (src[i] == '%' && i + 2 < src.length()) {
+            std::istringstream iss(src.substr(i + 1, 2));
+            int hex = 0;
+            if (iss >> std::hex >> hex)
+                out << static_cast<char>(hex);
+            i += 2;
+        } else if (src[i] == '+') {
+            out << ' ';
+        } else {
+            out << src[i];
+        }
+    }
+    return out.str();
+}
+
 int RequestHandler::_checkAccess(const std::string &path)
 {
 	if (access(path.c_str(), F_OK) == -1)
@@ -62,13 +81,15 @@ std::string RequestHandler::getIndex(const std::string &indexes, const std::stri
 		if (goodIndex[0] != '/')
 			goodIndex = "/" + goodIndex;
 		fullPath = root + goodIndex;
-		if (_checkAccess(fullPath) == 1)
+		if (_checkAccess(fullPath) == 1) {
+			std::cout << "Index found: " << fullPath << std::endl;
 			return (goodIndex);
+		}
 	}
 	return ("");
 }
 
-std::string	RequestHandler::trim(const std::string &str) const
+std::string	trim(const std::string &str)
 {
 	size_t first = str.find_first_not_of(" \r\n\t");
 	if (first == std::string::npos)
@@ -157,7 +178,8 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		std::cout << header << std::endl;
 	}
 	body = header.substr(headerlimit + 4, std::string::npos);
-	header.erase(headerlimit, std::string::npos);
+	if (headerlimit != std::string::npos)
+		header.erase(headerlimit, std::string::npos);
 	
 	Logger::access(serverUid, "http request: " + header);
 	
@@ -279,6 +301,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			GetRequest requestObject;
 
 			std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
+			std::cout << "HERE\n";
 			if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
 				std::cerr << "Failed to send 403 response" << std::endl;
 			if (!requestObject.isKeepalive())
@@ -318,8 +341,14 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
 
-			// Check if file exists and is not a directory
-			std::ifstream file(fullPath.c_str());
+			/*
+			 * 1. Check if the file exists and is accessible
+			 * 2. If it's a CGI script, handle it accordingly
+			 * 3. Otherwise, serve the static file and fetch taking into account the spaces and special characters
+			 * 4. If the file doesn't exist, send a 404 error page 
+			*/
+			std::string decodedPath = urlDecode(fullPath);
+			std::ifstream file(decodedPath.c_str());
 			DIR *dir = opendir(fullPath.c_str()); 
 				
 			if (!file.is_open() && dir == NULL) {
@@ -332,10 +361,10 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 				if (dir) closedir(dir);
 				
 				// Check if it's a CGI script (ends with .php, .py, etc.)
-				std::string contentType = requestObject.getContentType(fullPath);
-				std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << fullPath << NEUTRAL << std::endl;
+				std::string contentType = requestObject.getContentType(decodedPath);
+				std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << decodedPath << NEUTRAL << std::endl;
 				// Handle as CGI
-				if (requestObject.sendCGIResponse(fd, fullPath, config, server) == -1)
+				if (requestObject.sendCGIResponse(fd, decodedPath, config, server) == -1)
 					std::cerr << "Failed to send CGI response" << std::endl;
 			}
 			if (!requestObject.isKeepalive())
