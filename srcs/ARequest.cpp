@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include "ConfigParser.hpp"
+#include "RequestHandler.hpp"
 
 ARequest::ARequest()
 {
@@ -106,16 +107,28 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 {
 	int 			cgiOutputFd = -1;
     struct stat 	pathStat;
-	string 			auto_index = config->getLocationValueForPath(_path, Server.getUid(), "autoindex");
+    
+    // For location matching, use path with trailing slash if it's a directory
+    string pathForConfig = _path;
+    if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
+        if (_path[_path.length() - 1] != '/') {
+            pathForConfig += "/";
+        }
+    }
+    
+	string 			auto_index = config->getLocationValueForPath(pathForConfig, Server.getUid(), "autoindex");
 
 	if (auto_index.empty())
 		auto_index = "on";
 
-    if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode) && auto_index == "on") {
-        // It's a directory and autoindex is on: generate and send directory listing
-		cout << "Directory listing for: " << scriptPath << endl;
-        string listing = generateDirectoryListing(scriptPath, _path);
-        return sendHTTPResponse(clientFd, 200, listing, "text/html");
+    if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
+        if (auto_index == "on") {
+            string listing = generateDirectoryListing(scriptPath, _path);
+            return sendHTTPResponse(clientFd, 200, listing, "text/html");
+        } else {
+            string errorPage = loadErrorPage(403, config, Server.getUid());
+            return sendHTTPResponse(clientFd, 403, errorPage, "text/html");
+        }
     }
 
 	try {

@@ -12,6 +12,7 @@ int CGI::_checkAccess(const string &path, int type)
 {
 	DIR* dir = opendir(path.c_str());
 
+	cout << "Checking access for: " << path << " of type " << type << endl;
 	if (type == BINARY && access(path.c_str(), X_OK) == -1)
 		return (0);
 	if (access(path.c_str(), R_OK) == -1)
