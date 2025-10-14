@@ -108,7 +108,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 	int 			cgiOutputFd = -1;
     struct stat 	pathStat;
     
-    // For location matching, use path with trailing slash if it's a directory
+    // For location matching add trailing slash if it's a directory
     string pathForConfig = _path;
     if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
         if (_path[_path.length() - 1] != '/') {
@@ -116,7 +116,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
         }
     }
     
-	string 			auto_index = config->getLocationValueForPath(pathForConfig, Server.getUid(), "autoindex");
+	string 	auto_index = config->getLocationValueForPath(pathForConfig, Server.getUid(), "autoindex");
 
 	if (auto_index.empty())
 		auto_index = "on";
