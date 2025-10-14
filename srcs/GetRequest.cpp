@@ -5,7 +5,7 @@ GetRequest::GetRequest()
 	return ;
 }
 
-GetRequest::GetRequest(std::map<std::string, std::string> header)
+GetRequest::GetRequest(map<string, string> header)
 {
 	_path = header["path"];
 	_method = GET;
@@ -24,27 +24,27 @@ GetRequest::GetRequest(GetRequest &src) : ARequest(src)
 	return ;
 }
 
-int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *config, const std::string &fullPath)
+int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *config, const string &fullPath)
 {
-	std::string		decodedUrl = urlDecode(fullPath.c_str());
-	std::ifstream file(decodedUrl.c_str());
+	string		decodedUrl = urlDecode(fullPath.c_str());
+	ifstream file(decodedUrl.c_str());
 	DIR *dir = opendir(decodedUrl.c_str()); 
 
 	if (!file.is_open() && dir == NULL) {
 		// File not found - send 404 error
-		std::string errorPage = loadErrorPage(404, config, server.getUid());
+		string errorPage = loadErrorPage(404, config, server.getUid());
 		if (sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
-			std::cerr << "Failed to send 404 response" << std::endl;
+			cerr << "Failed to send 404 response" << endl;
 	} else {
 		file.close();
 		if (dir) closedir(dir);
 		
 		// Check if it's a CGI script (ends with .php, .py, etc.)
-		std::string contentType = getContentType(decodedUrl);
-		std::cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << std::endl;
+		string contentType = getContentType(decodedUrl);
+		cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << endl;
 		// Handle as CGI
 		if (sendCGIResponse(fd, decodedUrl, config, server) == -1)
-			std::cerr << "Failed to send CGI response" << std::endl;
+			cerr << "Failed to send CGI response" << endl;
 	}
 	if (!isKeepalive())
 		return (-1);

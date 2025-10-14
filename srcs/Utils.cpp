@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include "dict.hpp"
+
 void	*ft_memset(void *s, int c, unsigned long int n)
 {
 	unsigned long int	i;
@@ -18,7 +20,7 @@ void	*ft_memset(void *s, int c, unsigned long int n)
 	return (s);
 }
 
-int ft_atoi(const std::string &str) {
+int ft_atoi(string const &str) {
     int i = 0;
     int n = str.size();
 
@@ -49,16 +51,16 @@ int ft_atoi(const std::string &str) {
     return static_cast<int>(result);
 }
 
-int ft_inet_pton4(std::string &src, struct in_addr *dst) {
-    std::istringstream iss(src);
-    std::string token;
+int ft_inet_pton4(string &src, struct in_addr *dst) {
+    istringstream iss(src);
+    string token;
     unsigned char bytes[4];
     int i = 0;
 
     if (src == "localhost")
         src = "127.0.0.1";
 
-    while (std::getline(iss, token, '.')) {
+    while (getline(iss, token, '.')) {
         if (i >= 4)
             return 0;
         int val = ft_atoi(token);

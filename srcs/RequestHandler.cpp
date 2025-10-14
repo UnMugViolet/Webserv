@@ -26,13 +26,13 @@ RequestHandler::~RequestHandler()
 	return ;
 }
 
-std::string urlDecode(const std::string &src) {
-    std::ostringstream out;
+string urlDecode(const string &src) {
+    ostringstream out;
     for (size_t i = 0; i < src.length(); ++i) {
         if (src[i] == '%' && i + 2 < src.length()) {
-            std::istringstream iss(src.substr(i + 1, 2));
+            istringstream iss(src.substr(i + 1, 2));
             int hex = 0;
-            if (iss >> std::hex >> hex)
+            if (iss >> hex >> hex)
                 out << static_cast<char>(hex);
             i += 2;
         } else if (src[i] == '+') {
@@ -44,7 +44,7 @@ std::string urlDecode(const std::string &src) {
     return out.str();
 }
 
-int RequestHandler::_checkAccess(const std::string &path)
+int RequestHandler::_checkAccess(const string &path)
 {
 	if (access(path.c_str(), F_OK) == -1)
 		return (-1);
@@ -56,25 +56,25 @@ int RequestHandler::_checkAccess(const std::string &path)
 	
 }
 
-std::string	RequestHandler::getExtension(const std::string &path)
+string	RequestHandler::getExtension(const string &path)
 {
 	size_t pos = path.rfind('.');
-	if (pos == std::string::npos)
+	if (pos == string::npos)
 		return ("");
 	return (path.substr(pos + 1));
 }
 
-std::string RequestHandler::getIndex(const std::string &indexes, const std::string &root) const
+string RequestHandler::getIndex(const string &indexes, const string &root) const
 {
-	std::string	fullPath;
-	std::string	goodIndex;
+	string	fullPath;
+	string	goodIndex;
 	size_t	space1;
 	size_t	space2 = 0;
 
 	while (true)
 	{
 		space1 = indexes.find_first_not_of(" ", space2);
-		if (space1 == std::string::npos)
+		if (space1 == string::npos)
 			break ;
 		space2 = indexes.find(' ', space1);
 		goodIndex = indexes.substr(space1, space2);
@@ -82,50 +82,50 @@ std::string RequestHandler::getIndex(const std::string &indexes, const std::stri
 			goodIndex = "/" + goodIndex;
 		fullPath = root + goodIndex;
 		if (_checkAccess(fullPath) == 1) {
-			std::cout << "Index found: " << fullPath << std::endl;
+			cout << "Index found: " << fullPath << endl;
 			return (goodIndex);
 		}
 	}
 	return ("");
 }
 
-std::string	trim(const std::string &str)
+string	trim(const string &str)
 {
 	size_t first = str.find_first_not_of(" \r\n\t");
-	if (first == std::string::npos)
+	if (first == string::npos)
 		return ("");
 	size_t last = str.find_last_not_of(" \n\r\t");
 	return (str.substr(first, last - first + 1));
 }
 
-std::map<std::string, std::string>	RequestHandler::parseHeader(std::string header) const
+map<string, string>	RequestHandler::parseHeader(string header) const
 {
-	std::map<std::string, std::string> headers;
-	std::istringstream	stream(header);
-	std::string			line;
-	std::string			method;
-	std::string			path;
+	map<string, string> headers;
+	istringstream	stream(header);
+	string			line;
+	string			method;
+	string			path;
 	size_t	colon;
 	
-	std::getline(stream, line);
-	std::istringstream requestLine(line);
+	getline(stream, line);
+	istringstream requestLine(line);
 	
 	// Parse the request line: METHOD PATH HTTP/VERSION
 	requestLine >> method >> path;
 	headers["path"] = path;
 	headers["method"] = method;
 	
-	while (std::getline(stream, line) && line != "\r" && !line.empty())
+	while (getline(stream, line) && line != "\r" && !line.empty())
 	{
 		colon = line.find(':');
-		if (colon != std::string::npos)
+		if (colon != string::npos)
 		{
-			std::string key = line.substr(0, colon);
-			if (key.find(' ') != std::string::npos)
-				throw std::runtime_error("Bad Request: Invalid header key");
-			std::string value = trim(line.substr(colon + 1));
+			string key = line.substr(0, colon);
+			if (key.find(' ') != string::npos)
+				throw runtime_error("Bad Request: Invalid header key");
+			string value = trim(line.substr(colon + 1));
 			if (value.empty())
-				throw std::runtime_error("Bad Request: Empty header value");
+				throw runtime_error("Bad Request: Empty header value");
 			headers[key] = value;
 		}
 	}
@@ -140,12 +140,12 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	size_t const 						MAX_HEADER_SIZE = 8192; // 8KB for headers
 	size_t 								headerlimit;
 	char 								buff[BUFFER_SIZE];
-	std::string							serverRoot;
-	std::string 						serverUid = server.getUid();
-	std::string 						body;
-	std::string 						header;
-	std::vector<std::string> 			serverNames = server.getServerNames();
-	std::map<std::string, std::string> 	headermap;
+	string							serverRoot;
+	string 						serverUid = server.getUid();
+	string 						body;
+	string 						header;
+	vector<string> 			serverNames = server.getServerNames();
+	map<string, string> 	headermap;
 
 	// Read initial chunk
 	received = recv(fd, buff, BUFFER_SIZE, 0);
@@ -155,25 +155,22 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	// Quick exit for HTTPS/TLS handshake
 	if ((unsigned char)buff[0] == 0x16) {
 		Logger::error(serverUid, "Received HTTPS/TLS handshake, closing connection.");
-		std::cerr << "Received HTTPS/TLS handshake, closing connection." << std::endl;
+		cerr << "Received HTTPS/TLS handshake, closing connection." << endl;
 		close(fd);
 		return -1;
 	}
 	
 	// Read the complete header
-	while (received > 0)
+	while (received > 0) 
 	{
 		header.append(buff, received);
 		headerlimit = header.find("\r\n\r\n");
-		if (headerlimit != std::string::npos)
+		if (headerlimit != string::npos)
 			break ;
 		
 		// Prevent header from being too large
 		if (header.size() > MAX_HEADER_SIZE)
-		{
-			Logger::error(serverUid, "Header too large");
-			return -1;
-		}
+			return (Logger::error(serverUid, "Header too large"), -1);
 		
 		received = recv(fd, buff, BUFFER_SIZE, 0);
 		if (received <= 0)
@@ -181,13 +178,13 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	}
 	
 	// Extract body if present
-	if (headerlimit == std::string::npos)
+	if (headerlimit == string::npos)
 	{
-		std::cout << header << std::endl;
+		cout << header << endl;
 	}
-	body = header.substr(headerlimit + 4, std::string::npos);
-	if (headerlimit != std::string::npos)
-		header.erase(headerlimit, std::string::npos);
+	body = header.substr(headerlimit + 4, string::npos);
+	if (headerlimit != string::npos)
+		header.erase(headerlimit, string::npos);
 	
 	Logger::access(serverUid, "http request: " + header);
 	
@@ -198,10 +195,10 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			GetRequest requestObject;
 
-			std::cerr << "No server_name, bad request" << std::endl;
-			std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+			cerr << "No server_name, bad request" << endl;
+			string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
 			if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
-				std::cerr << "Failed to send 400 response" << std::endl;
+				cerr << "Failed to send 400 response" << endl;
 			readbody = 0;
 		}
 		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
@@ -209,7 +206,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			server.setEnvValue("SERVER_PORT", headermap["Host"].substr(headermap["Host"].find(':') + 1));
 		else
 			server.setEnvValue("SERVER_PORT", "80");
-		std::string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
+		string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");
 		setMaxBodySize(max_body_size);
@@ -219,21 +216,21 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			body = handleChunckedRequest(fd, body);
 			if (body.empty()) {
-				std::cout << "empty body\n";
+				cout << "empty body\n";
 				return (-1);
 			}
 		}
 		if (headermap.find("Content-Length") != headermap.end())
 		{
-			std::istringstream iss(headermap["Content-Length"]);
+			istringstream iss(headermap["Content-Length"]);
 			size_t contentLength;
 			if (!(iss >> contentLength)) {
 				GetRequest requestObject;
 
-				std::cerr << "Invalid Content-Length header" << std::endl;
-				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+				cerr << "Invalid Content-Length header" << endl;
+				string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
 				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
-					std::cerr << "Failed to send 400 response" << std::endl;
+					cerr << "Failed to send 400 response" << endl;
 				readbody = 0;
 			}
 			
@@ -242,33 +239,28 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			{
 				GetRequest requestObject;
 
-				std::cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << std::endl;
-				std::string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 413);
+				cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << endl;
+				string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 413);
 				if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
-					std::cerr << "Failed to send 413 response" << std::endl;
+					cerr << "Failed to send 413 response" << endl;
 				readbody = 0;
 			}
 			// Read remaining body if needed
 			if (readbody == 0)
 			{
-				while (true)
-				{
+				while (true) {
 					received = recv(fd, buff, BUFFER_SIZE, 0);
 					if (received <= 0)
-					{
-						std::cout << " miaou\n";
-						break;
-					}
+						break; // TODO - Error or connection closed ?
 				}
 				return (-1);
 			}
 			while (body.size() < contentLength)
 			{
 				received = recv(fd, buff, BUFFER_SIZE, 0);
-				if (received <= 0)
-				{
-					std::cout << " miaou\n";
-					break;
+				if (received <= 0) {
+					cerr << "error while reading body" << endl;
+					return (-1);
 				}
 				body.append(buff, received);
 			}
@@ -278,28 +270,28 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		// get the index full path
 		if (serverRoot[serverRoot.length() - 1] == '/')
 			serverRoot = serverRoot.substr(0, serverRoot.length() -1);
-		std::string fullPath = serverRoot + headermap["path"];
-		std::string indexFile = getIndex(config->getServerValue(serverUid, "index"), serverRoot);
+		string fullPath = serverRoot + headermap["path"];
+		string indexFile = getIndex(config->getServerValue(serverUid, "index"), serverRoot);
 
 		if (headermap["path"] == "/")
 			fullPath = serverRoot + indexFile;
 
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);
-		if (headermap["path"].find('?') != std::string::npos)
+		if (headermap["path"].find('?') != string::npos)
 			server.setEnvValue("QUERY_STRING", headermap["path"].substr(headermap["path"].find('?') + 1));
 		else
 			server.setEnvValue("QUERY_STRING", "");
 		
 		// Checks if the path is allowed by the location for the requested method
-		std::string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
+		string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
 		try {
 			int status = 0;
-			std::string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods");
-			if (allowed_methods.find(headermap["method"]) != std::string::npos) {
-				for(size_t i = allowed_methods.find(' '); i != std::string::npos; i = allowed_methods.find(' ', i))
+			string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods");
+			if (allowed_methods.find(headermap["method"]) != string::npos) {
+				for(size_t i = allowed_methods.find(' '); i != string::npos; i = allowed_methods.find(' ', i))
 				{
-					std::string one_method = allowed_methods.substr(0, i);
+					string one_method = allowed_methods.substr(0, i);
 					if (one_method == headermap["method"])
 					{
 						status = 1;
@@ -313,26 +305,26 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			if (status == 0) {
 				GetRequest requestObject;
 
-				std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
+				string errorPage = requestObject.loadErrorPage(403, config, serverUid);
 				if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-					std::cerr << "Failed to send 403 response" << std::endl;
+					cerr << "Failed to send 403 response" << endl;
 				if (!requestObject.isKeepalive())
 					return (-1);
 				return 0;
 			}
 		}
-		catch (const std::exception& e)
+		catch (const exception& e)
 		{
 			GetRequest requestObject;
 
-			std::string errorPage = requestObject.loadErrorPage(403, config, serverUid);
+			string errorPage = requestObject.loadErrorPage(403, config, serverUid);
 			if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-				std::cerr << "Failed to send 403 response" << std::endl;
+				cerr << "Failed to send 403 response" << endl;
 			if (!requestObject.isKeepalive())
 				return (-1);
 			return 0;
 		}
-		std::string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return");
+		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return");
 		if (!redirect.empty())
 		{
 			;// redirect here
@@ -364,18 +356,18 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			return (-1);
 		}
 	}
-	catch (const std::exception& e) {
-		std::cerr << "Error parsing request: " << e.what() << std::endl;
+	catch (const exception& e) {
+		cerr << "Error parsing request: " << e.what() << endl;
 		return (-1);
 	}
 	return (0);
 }
 
-void	RequestHandler::setMaxBodySize(std::string size)
+void	RequestHandler::setMaxBodySize(string size)
 {
-	std::istringstream iss(size);
+	istringstream iss(size);
 	int value;
-	std::string unit;
+	string unit;
 
 	if (iss >> value && value >= 0) {
 		_maxBodySize = value;
@@ -388,21 +380,21 @@ void	RequestHandler::setMaxBodySize(std::string size)
 				_maxBodySize *= 1024 * 1024;
 			else
 			{
-				std::cerr << "unsupported unit" << std::endl;
+				cerr << "unsupported unit" << endl;
 				_maxBodySize = 0;
 			}
 		}
-		// std::cout << "Body size = " << value << std::endl; TODO - Convert the figure in MB and set the value to the attribute
+		// cout << "Body size = " << value << endl; TODO - Convert the figure in MB and set the value to the attribute
 	}
 	else
 		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
 }
 
-std::string	RequestHandler::handleChunckedRequest(int fd, const std::string &body)
+string	RequestHandler::handleChunckedRequest(int fd, const string &body)
 {
-	std::string	fullBody;
+	string	fullBody;
 	
-	std::string	tmp = "";
+	string	tmp = "";
 	char		buff[4096];
 	int			received;
 	memset(buff, 0, 4096);
@@ -411,10 +403,10 @@ std::string	RequestHandler::handleChunckedRequest(int fd, const std::string &bod
 		tmp.append(body);
 	while (true)
 	{
-		if (tmp.find('\r') != std::string::npos)
+		if (tmp.find('\r') != string::npos)
 		{
-			std::cout << "tmp : '" << tmp << "'" << std::endl;
-			std::string	chunk;
+			cout << "tmp : '" << tmp << "'" << endl;
+			string	chunk;
 			size_t	chunkSize;
 
 			size_t br = tmp.find('\r');
@@ -423,18 +415,18 @@ std::string	RequestHandler::handleChunckedRequest(int fd, const std::string &bod
 				memset(buff, 0, 4096);
 				received = recv(fd, buff, 1, 0);
 				if (received <= 0)
-					return (std::cout << "error 1\n", "");//error 
+					return (cout << "error 1\n", "");//error 
 				tmp.append(buff);
 			}
 			
-			std::istringstream iss(tmp.substr(0, tmp.find("\r\n")));
-			if (!(iss >> std::hex >> chunkSize))
+			istringstream iss(tmp.substr(0, tmp.find("\r\n")));
+			if (!(iss >> hex >> chunkSize))
 			{
-				return (std::cout << "error 2\n", "");//error 
+				return (cout << "error 2\n", "");//error 
 			}
 			
 			chunk.append(tmp.substr(tmp.find("\r\n") + 2));
-			std::cout << "chunksize: " << chunkSize << std::endl;
+			cout << "chunksize: " << chunkSize << endl;
 			if (chunk.size() > chunkSize)
 			{
 				tmp = chunk.substr(chunkSize + 2);
@@ -450,22 +442,22 @@ std::string	RequestHandler::handleChunckedRequest(int fd, const std::string &bod
 			while (chunk.size() < chunkSize)
 			{
 				memset(buff, 0, 4096);
-				std::cout << "chunk: '" << chunk << "'" << std::endl;
+				cout << "chunk: '" << chunk << "'" << endl;
 				int toRead = chunkSize - chunk.size();
-				received = recv(fd, buff, std::min(4095, toRead), 0);
+				received = recv(fd, buff, min(4095, toRead), 0);
 				if (received <= 0)
-					return (std::cout << "error 3\n", "");//error 
+					return (cout << "error 3\n", "");//error 
 				chunk.append(buff);
-				std::cout << "chunk after: '" << chunk << "'" << std::endl;
+				cout << "chunk after: '" << chunk << "'" << endl;
 			}
-			std::cout << "chunk: '" << chunk << "'" << std::endl;
+			cout << "chunk: '" << chunk << "'" << endl;
 			if (tmp.empty())
 			{
 				received = recv(fd, buff, 2, 0);
 				if (received <= 0)
-					return (std::cout << "error 4\n", "");//error 
+					return (cout << "error 4\n", "");//error 
 				if (buff[0] != '\r' || buff[1] != '\n')
-					return (std::cout << "error 5 : \n" << buff << std::endl, "");//error 
+					return (cout << "error 5 : \n" << buff << endl, "");//error 
 				if (chunkSize == 0)
 					break ;
 			}
@@ -473,17 +465,17 @@ std::string	RequestHandler::handleChunckedRequest(int fd, const std::string &bod
 		} else {
 			memset(buff, 0, 4096);
 			received = recv(fd, buff, 10, 0);
-			std::cout << "received: " << received << std::endl;
+			cout << "received: " << received << endl;
 			if (received < 3)
 				buff[received] = '\0';
 			if (received <= 0)
 			{
 				
-				return (std::cout << "error 6\n", "");//error
+				return (cout << "error 6\n", "");//error
 			}
 			tmp.append(buff);
 		}
 	}
-	std::cout << "body : " << fullBody << std::endl;
+	cout << "body : " << fullBody << endl;
 	return (fullBody);
 }

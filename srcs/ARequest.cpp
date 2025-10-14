@@ -44,17 +44,17 @@ ARequest&	ARequest::operator=(ARequest &src)
 	return (*this);
 }
 
-std::string generateDirectoryListing(std::string const &dirPath, std::string const &requestPath) {
+string generateDirectoryListing(string const &dirPath, string const &requestPath) {
     DIR* dir = opendir(dirPath.c_str());
     if (!dir) return "<h1>Cannot open directory</h1>";
 
-    std::ostringstream html;
+    ostringstream html;
     html << "<html><head><title>Index of " << requestPath << "</title></head><body>";
     html << "<h1>Index of " << requestPath << "</h1><ul>";
 
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
-        std::string name = entry->d_name;
+        string name = entry->d_name;
         if (name == ".") continue;
 		html << "<li><a href=\"" << requestPath
 			 << ((requestPath.length() > 0 && requestPath[requestPath.length() - 1] == '/') ? "" : "/")
@@ -65,10 +65,10 @@ std::string generateDirectoryListing(std::string const &dirPath, std::string con
     return html.str();
 }
 
-int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &body, const std::string& contentType)
+int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body, const string& contentType)
 {
-	std::ostringstream response;
-	std::string statusText;
+	ostringstream response;
+	string statusText;
 	
 	// Set status text based on code
 	switch (statusCode) {
@@ -94,23 +94,23 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const std::string &
 	response << "\r\n";
 	response << body;
 	
-	std::string responseStr = response.str();
+	string responseStr = response.str();
 	if (send(clientFd, responseStr.c_str(), responseStr.length(), 0) == -1) {
-		std::cerr << "Failed to send HTTP response" << std::endl;
+		cerr << "Failed to send HTTP response" << endl;
 		return -1;
 	}
 	return 0;
 }
 
-int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, const ConfigParser *config, const Server &Server)
+int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const ConfigParser *config, const Server &Server)
 {
 	int 			cgiOutputFd = -1;
     struct stat 	pathStat;
 
     if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
         // It's a directory: generate and send directory listing
-		std::cout << "Directory listing for: " << scriptPath << std::endl;
-        std::string listing = generateDirectoryListing(scriptPath, _path);
+		cout << "Directory listing for: " << scriptPath << endl;
+        string listing = generateDirectoryListing(scriptPath, _path);
         return sendHTTPResponse(clientFd, 200, listing, "text/html");
     }
 
@@ -119,7 +119,7 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, const
 		cgiOutputFd = CGI::interpret(scriptPath, Server);
 	
 		// Read the CGI output
-		std::string cgiOutput;
+		string cgiOutput;
 		char buffer[4096];
 		ssize_t bytesRead;
 		
@@ -133,7 +133,7 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, const
 		}
 		
 		// Send successful response with CGI output
-		std::string contentType = getContentType(scriptPath);
+		string contentType = getContentType(scriptPath);
 		return sendHTTPResponse(clientFd, 200, cgiOutput, contentType);
 		
 	} catch (const CGI::CGIException &e) {
@@ -144,7 +144,7 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, const
 		
 		// Handle true CGI execution errors (file not found, permission denied, etc.)
 		// These are cases where the script couldn't even run
-		std::string errorPage = loadErrorPage(e.getHttpStatus(), config, Server.getUid());
+		string errorPage = loadErrorPage(e.getHttpStatus(), config, Server.getUid());
 		return sendHTTPResponse(clientFd, e.getHttpStatus(), errorPage, "text/html");
 	} catch (...) {
 		// Handle any other exceptions
@@ -152,24 +152,24 @@ int ARequest::sendCGIResponse(int clientFd, const std::string &scriptPath, const
 			close(cgiOutputFd);
 		}
 		
-		std::string errorPage = loadErrorPage(500, config, Server.getUid());
+		string errorPage = loadErrorPage(500, config, Server.getUid());
 		return sendHTTPResponse(clientFd, 500, errorPage, "text/html");
 	}
 }
 
-std::string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverUid) const
+string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const string &serverUid) const
 {
 	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, statusCode);
 }
 
-std::string ARequest::getContentType(const std::string &filePath) const
+string ARequest::getContentType(const string &filePath) const
 {
 	size_t pos = filePath.rfind('.');
-	if (pos == std::string::npos)
+	if (pos == string::npos)
 		return "application/octet-stream";
-	if (filePath.find("/uploads/") != std::string::npos)
+	if (filePath.find("/uploads/") != string::npos)
 		return "application/octet-stream";
-	std::string ext = filePath.substr(pos + 1);
+	string ext = filePath.substr(pos + 1);
 	
 	if (ext == "html" || ext == "htm" || ext == "php" || ext == "py")
 		return "text/html";
@@ -201,11 +201,11 @@ std::string ARequest::getContentType(const std::string &filePath) const
 		return "application/octet-stream";
 }
 
-std::map<std::string, std::string> parseQuery(const std::string &query)
+map<string, string> parseQuery(const string &query)
 {
-	std::map<std::string, std::string> map;
-	std::string	key;
-	std::string	value;
+	map<string, string> map;
+	string	key;
+	string	value;
 	size_t amperPos = query.find('&');
 	size_t equalPos = query.find('=');
 
@@ -216,7 +216,7 @@ std::map<std::string, std::string> parseQuery(const std::string &query)
 		if (!key.empty())
 			map[key] = value;
 		equalPos = query.find('=', amperPos);
-		if (equalPos == std::string::npos)
+		if (equalPos == string::npos)
 			break ;
 		key = query.substr(amperPos + 1, equalPos - amperPos - 1);
 		amperPos = query.find('&', equalPos);

@@ -21,10 +21,10 @@ class CGI
 {
 private:
 	/*attributes here*/
-	static int	_getType(std::string ext);
-	static std::string	_getExtension(const std::string &path);
-	static int	_checkAccess(const std::string &path, int type);
-	std::string	http_status_to_error_page(unsigned int http_status, std::string &error_code);
+	static int	_getType(string ext);
+	static string	_getExtension(const string &path);
+	static int	_checkAccess(const string &path, int type);
+	string	http_status_to_error_page(unsigned int http_status, string &error_code);
 public:
 	/*constructors and destructor*/
 	CGI();
@@ -32,23 +32,23 @@ public:
 
 	/*member functions*/
 	
-	static int	interpret(const std::string &path, const Server &Server);
+	static int	interpret(const string &path, const Server &Server);
 
 	/*operator overloads*/
 
-	class CGIException : public std::exception
+	class CGIException : public exception
 	{
 		private:
-			std::string 	_message;
+			string 	_message;
 			int				_exit;
 			unsigned int	_http_status;
-			std::string		_serverUid;
+			string		_serverUid;
 		public:
-			CGIException(std::string message, bool must_exit_prog, unsigned int http_status, std::string const serverUid) throw()
+			CGIException(string message, bool must_exit_prog, unsigned int http_status, string const serverUid) throw()
 			{
 				_message = "CGIException error: " + message;
 				Logger::error(serverUid, _message);
-				_message = std::string(RED) + _message + std::string(NEUTRAL);
+				_message = string(RED) + _message + string(NEUTRAL);
 				if (must_exit_prog)
 					_exit = must_exit_prog;
 				if (http_status != 0)

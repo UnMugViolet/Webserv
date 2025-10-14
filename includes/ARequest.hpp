@@ -24,10 +24,10 @@ class ARequest
 protected:
 	/*attributes here*/
 	int			_method;
-	std::string	_path;
-	std::string	_host;
+	string	_path;
+	string	_host;
 	bool		_keep_alive;
-	std::string	_client;
+	string	_client;
 public:
 	/*constructors and destructor*/
 	ARequest();
@@ -36,14 +36,14 @@ public:
 
 	/*member functions*/
 	int			isKeepalive() const;
-	int			sendCGIResponse(int clientFd, const std::string &scriptPath, const ConfigParser *config, const Server &Server);
-	int			sendHTTPResponse(int clientFd, int statusCode, const std::string &body, const std::string &contentType = "text/html");
-	std::string loadErrorPage(int statusCode, const ConfigParser *config, const std::string &serverUid) const;
-	std::string getContentType(const std::string &filePath) const;
+	int			sendCGIResponse(int clientFd, const string &scriptPath, const ConfigParser *config, const Server &Server);
+	int			sendHTTPResponse(int clientFd, int statusCode, const string &body, const string &contentType = "text/html");
+	string loadErrorPage(int statusCode, const ConfigParser *config, const string &serverUid) const;
+	string getContentType(const string &filePath) const;
 
 	/*operator overloads*/
 	ARequest&	operator=(ARequest& src);
 };
 
-std::map<std::string, std::string> 	parseQuery(const std::string &query);
-std::string 						generateDirectoryListing(std::string const &dirPath, std::string const &requestPath);
+map<string, string> 	parseQuery(const string &query);
+string 						generateDirectoryListing(string const &dirPath, string const &requestPath);

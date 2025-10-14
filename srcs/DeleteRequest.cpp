@@ -4,7 +4,7 @@ DeleteRequest::DeleteRequest()
 {
 }
 
-DeleteRequest::DeleteRequest(std::map<std::string, std::string> header)
+DeleteRequest::DeleteRequest(map<string, string> header)
 {
 	_path = header["path"];
 	_method = DELETE;
@@ -25,20 +25,20 @@ DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 
 int	DeleteRequest::delete_file(int fd, const Server &serv)
 {
-	std::string			root = serv.getEnvValue("SERVER_ROOT");
+	string			root = serv.getEnvValue("SERVER_ROOT");
 	string				query = urlDecode(serv.getEnvValue("QUERY_STRING"));
-	std::map<std::string, std::string>	queryMap = parseQuery(query);
-	std::string			fileName = queryMap["file"];
-	std::string			uploadPath = queryMap["upload"];
+	map<string, string>	queryMap = parseQuery(query);
+	string			fileName = queryMap["file"];
+	string			uploadPath = queryMap["upload"];
 
 	if (root.rfind('/') == root.size() - 1 && fileName[0] == '/')
 		fileName.erase(0, 1);
-	std::string			filePath = root + fileName;
+	string			filePath = root + fileName;
 
 	if (!uploadPath.empty())
-		if (std::remove(uploadPath.c_str()) != 0)
-			std::cout << "wtf\n";
-	if (std::remove(filePath.c_str()) == 0)
+		if (remove(uploadPath.c_str()) != 0)
+			cout << "wtf\n";
+	if (remove(filePath.c_str()) == 0)
 	{
 		return (sendHTTPResponse(fd, 204, "", ""));
 	}
@@ -47,7 +47,7 @@ int	DeleteRequest::delete_file(int fd, const Server &serv)
 }
 
 
-int DeleteRequest::handleDelete(int fd, const Server &server, const ConfigParser *config, const std::string &path)
+int DeleteRequest::handleDelete(int fd, const Server &server, const ConfigParser *config, const string &path)
 {
 
 
@@ -55,13 +55,13 @@ int DeleteRequest::handleDelete(int fd, const Server &server, const ConfigParser
 		delete_file(fd, server);
 	else
 	{
-		std::string errorPage = loadErrorPage(404, config, server.getUid());
+		string errorPage = loadErrorPage(404, config, server.getUid());
 		if (sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
-			std::cerr << "Failed to send 404 response" << std::endl;
+			cerr << "Failed to send 404 response" << endl;
 	}
 	if (!isKeepalive())
 	{
-		std::cout << "there?\n";
+		cout << "there?\n";
 		return (-1);
 	}
 	return (0);

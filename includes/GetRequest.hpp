@@ -13,12 +13,12 @@ private:
 public:
 	/*constructors and destructor*/
 	GetRequest();
-	GetRequest(std::map<std::string, std::string> header);
+	GetRequest(map<string, string> header);
 	GetRequest(GetRequest& src);
 	~GetRequest();
 
 	/*member functions*/
-	int	handleGet(int fd, const Server &server, const ConfigParser *config, const std::string &fullPath);
+	int	handleGet(int fd, const Server &server, const ConfigParser *config, const string &fullPath);
 
 	/*operator overloads*/
 	GetRequest&	operator=(GetRequest& src);

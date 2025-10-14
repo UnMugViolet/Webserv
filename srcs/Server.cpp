@@ -20,7 +20,7 @@ Server::Server(const Server &other)
 
 		// Transfer ownership of the socket to avoid double-close
 
-		for (std::vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
+		for (vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
 		{
 			if (*it > -1)
 			{
@@ -32,10 +32,10 @@ Server::Server(const Server &other)
 	
 }
 
-Server::Server(ConfigParser &config, std::string serverUid)
+Server::Server(ConfigParser &config, string serverUid)
 {
-	std::vector<sockaddr_in>	sockvector;
-	std::vector<int>			portvector; 
+	vector<sockaddr_in>	sockvector;
+	vector<int>			portvector; 
 
 	this->_config = &config;
 	this->_handler = NULL;
@@ -78,7 +78,7 @@ Server::Server(ConfigParser &config, std::string serverUid)
 			_handler = NULL;
 		}
 		if (!_socketfds.empty()) {
-			for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
+			for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
 			{
 				if (*it > -1)
 				{
@@ -99,7 +99,7 @@ Server::~Server()
 	}
 	if (!_clientFds.empty())
 	{
-		for (std::vector<int>::iterator it = _clientFds.begin(); it != _clientFds.end(); it++)
+		for (vector<int>::iterator it = _clientFds.begin(); it != _clientFds.end(); it++)
 		{
 			if (*it > -1)
 			{
@@ -110,7 +110,7 @@ Server::~Server()
 	}
 	if (_socketfds.empty()) 
 	{
-		for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
+		for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
 		{
 			if (*it > -1)
 			{
@@ -128,7 +128,7 @@ Server &Server::operator=(const Server &other)
 	{
 		// Close current socket if we have one
 		if (_socketfds.empty()) {
-		for (std::vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
+		for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
 		{
 			if (*it > -1)
 			{
@@ -147,7 +147,7 @@ Server &Server::operator=(const Server &other)
 		this->_handler = new RequestHandler();
 		
 		// Transfer ownership of the socket to avoid double-close
-		for (std::vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
+		for (vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
 		{
 			if (*it > -1)
 			{
@@ -158,15 +158,15 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-void	Server::CreateSockets(const std::string &serverUid, std::vector<int> &ports, std::vector<sockaddr_in> &sockaddrs)
+void	Server::CreateSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs)
 {
-	std::ostringstream oss;
+	ostringstream oss;
 
-	for (std::vector<sockaddr_in>::iterator it = sockaddrs.begin(); it != sockaddrs.end(); it++)
+	for (vector<sockaddr_in>::iterator it = sockaddrs.begin(); it != sockaddrs.end(); it++)
 	{
 		sockaddr_in sockaddr = *it;
 
-		for (std::vector<int>::iterator port_it = ports.begin(); port_it != ports.end(); port_it++)
+		for (vector<int>::iterator port_it = ports.begin(); port_it != ports.end(); port_it++)
 		{
 			int portnbr = *port_it;
 
@@ -203,17 +203,17 @@ void	Server::CreateSockets(const std::string &serverUid, std::vector<int> &ports
 	}
 }
 
-std::vector<sockaddr_in>	Server::setServerNames(const ConfigParser &config, const std::string &serverUid)
+vector<sockaddr_in>	Server::setServerNames(const ConfigParser &config, const string &serverUid)
 {
-	std::vector<sockaddr_in>	sockvector;
-	std::string _names = config.getServerValue(serverUid, "server_name");
+	vector<sockaddr_in>	sockvector;
+	string _names = config.getServerValue(serverUid, "server_name");
 
 	while (true)
 	{
 		sockaddr_in sockaddr;
 		sockaddr.sin_family = AF_INET;
 		int	gotit = 0;
-		std::string _one_name = _names.substr(0, _names.find(' '));
+		string _one_name = _names.substr(0, _names.find(' '));
 
 		// check if server_name is a valid ip
 		const char *c_name = _one_name.c_str();
@@ -252,30 +252,30 @@ std::vector<sockaddr_in>	Server::setServerNames(const ConfigParser &config, cons
 		}
 		sockvector.push_back(sockaddr);
 		_server_names.push_back(_one_name);
-		if (_names.find(' ') == std::string::npos)
+		if (_names.find(' ') == string::npos)
 			break;
 		_names = _names.substr(_names.find(' ') + 1);
 	}
 	return (sockvector);
 }
 
-std::vector<int>	Server::checkPorts(const ConfigParser &config, const std::string &serverUid)
+vector<int>	Server::checkPorts(const ConfigParser &config, const string &serverUid)
 {
 	if (!config.hasServerKey(serverUid,  "listen"))
 	{
 		Logger::error(serverUid, "No port number found in the config file for this server not starting up the services");
 		throw ServException(serverUid + " has no port number");
 	}
-	std::string ports = config.getServerValue(serverUid, "listen");
-	std::string _one_port;
+	string ports = config.getServerValue(serverUid, "listen");
+	string _one_port;
 	int portnbr;
-	std::vector<int>	portvector;
+	vector<int>	portvector;
 
 	while (true)
 	{
 		_one_port = ports.substr(0, ports.find(' '));
 
-		for (std::string::iterator pos = _one_port.begin(); pos != _one_port.end(); pos++)
+		for (string::iterator pos = _one_port.begin(); pos != _one_port.end(); pos++)
 		{
 			if (*pos > '9' || *pos < '0')
 			{
@@ -289,7 +289,7 @@ std::vector<int>	Server::checkPorts(const ConfigParser &config, const std::strin
 			throw ServException(serverUid + " has invalid port number");
 		}
 		portvector.push_back(portnbr);
-		if (ports.find(' ') == std::string::npos)
+		if (ports.find(' ') == string::npos)
 			break;
 		ports = ports.substr(ports.find(' ') + 1);
 	}
@@ -301,18 +301,18 @@ const ConfigParser&	Server::getConfig() const
 	return (*_config);
 }
 
-std::vector<int>	Server::getSocket() const
+vector<int>	Server::getSocket() const
 {
 	return (_socketfds);
 }
 
-std::string Server::getUid() const
+string Server::getUid() const
 {
 	return _uid;
 }
 
-static std::string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
-    std::ostringstream oss;
+static string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
+    ostringstream oss;
 
     oss << YELLOW 
 		<< BOLD
@@ -341,10 +341,10 @@ int	Server::setClient(int _socketfd)
 	sockaddr_in serveraddr;
 	socklen_t serveraddr_len = sizeof(serveraddr);
 	getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
-	std::string connexion = get_connection_info(peeraddr, serveraddr);
-	std::string logInfo = connexion + " [Server: " + _uid + ", Root: " + _config->getServerValue(_uid, "root") + "]";
+	string connexion = get_connection_info(peeraddr, serveraddr);
+	string logInfo = connexion + " [Server: " + _uid + ", Root: " + _config->getServerValue(_uid, "root") + "]";
 	Logger::access(this->_uid, logInfo);
-	std::cout << logInfo << std::endl;
+	cout << logInfo << endl;
 
 	_clientFds.push_back(cfd);
 	return (cfd);
@@ -374,7 +374,7 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
 				unsetClient(i);
-				std::cout << "Client disconnected" << std::endl;
+				cout << "Client disconnected" << endl;
 				continue;
 			}
 		}
@@ -394,12 +394,12 @@ void	Server::initEnv(char **env)
 	}
 	for (int i = 0; env[i]; i++)
 	{
-		std::string var(env[i]);
+		string var(env[i]);
 		size_t pos = var.find('=');
-		if (pos != std::string::npos)
+		if (pos != string::npos)
 		{
-			std::string key = var.substr(0, pos);
-			std::string value = var.substr(pos + 1);
+			string key = var.substr(0, pos);
+			string value = var.substr(pos + 1);
 			_env[key] = value;
 		}
 	}
@@ -415,18 +415,18 @@ void	Server::initEnv(char **env)
 	setEnvValue("SERVER_NAME", _config->getServerValue(_uid, "server_name")); //re set after request
 }
 
-std::string	Server::getEnvValue(std::string const &key) const
+string	Server::getEnvValue(string const &key) const
 {
-	std::map<std::string, std::string>::const_iterator it = _env.find(key);
+	map<string, string>::const_iterator it = _env.find(key);
 	if (it != _env.end())
 		return it->second;
 	else
 		return "";
 }
 
-void Server::setEnvValue(std::string const &key, std::string const &value)
+void Server::setEnvValue(string const &key, string const &value)
 {
-	std::map<std::string, std::string>::iterator it = _env.find(key);
+	map<string, string>::iterator it = _env.find(key);
 	if (it != _env.end()) 
 		it->second = value;
 	else if (!key.empty())
@@ -436,8 +436,8 @@ void Server::setEnvValue(std::string const &key, std::string const &value)
 char	**Server::getEnvAsArray() const {
 	char	**env = new char*[_env.size() + 1];
 	int	j = 0;
-	for (std::map<std::string, std::string>::const_iterator i = _env.begin(); i != _env.end(); i++) {
-		std::string	element = i->first + "=" + i->second;
+	for (map<string, string>::const_iterator i = _env.begin(); i != _env.end(); i++) {
+		string	element = i->first + "=" + i->second;
 		env[j] = new char[element.size() + 1];
 		env[j] = strcpy(env[j], (const char*)element.c_str());
 		j++;
@@ -446,23 +446,23 @@ char	**Server::getEnvAsArray() const {
 	return env;
 }
 
-const std::map<std::string, std::string> Server::getEnv() const {
+const map<string, string> Server::getEnv() const {
 	return (_env);
 }
 
 void	Server::printEnv() const
 {
-	std::cout << YELLOW 
+	cout << YELLOW 
 	<< BOLD << YELLOW
 	<< "=== Environment Variables ==="
-	<< NEUTRAL << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = _env.begin(); it != _env.end(); ++it)
+	<< NEUTRAL << endl;
+	for (map<string, string>::const_iterator it = _env.begin(); it != _env.end(); ++it)
 	{
-		std::cout << it->first << "=" << it->second << std::endl;
+		cout << it->first << "=" << it->second << endl;
 	}
 }
 
-std::vector<std::string> Server::getServerNames() const
+vector<string> Server::getServerNames() const
 {
 	return (_server_names);
 }

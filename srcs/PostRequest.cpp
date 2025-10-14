@@ -4,7 +4,7 @@ PostRequest::PostRequest()
 {
 }
 
-PostRequest::PostRequest(std::map<std::string, std::string> header)
+PostRequest::PostRequest(map<string, string> header)
 {
 	_path = header["path"];
 	_method = POST;
@@ -27,14 +27,14 @@ PostRequest::PostRequest(PostRequest& src) : ARequest(src)
 	return ;
 }
 
-int	PostRequest::UploadContent(std::map<std::string, std::string> content, std::string path)
+int	PostRequest::UploadContent(map<string, string> content, string path)
 {
-	std::string filename;
+	string filename;
 
 	int i = 0;
 	while (true)
 	{
-		std::ostringstream oss;
+		ostringstream oss;
 		if (i > 0)
 			oss << path << "(" << i << ")" << ".txt";
 		else
@@ -44,12 +44,12 @@ int	PostRequest::UploadContent(std::map<std::string, std::string> content, std::
 			break;
 		i++;
 	}
-	std::ofstream file(filename.c_str());
+	ofstream file(filename.c_str());
 	if (file.is_open())
 	{
-		for (std::map<std::string, std::string>::reverse_iterator it = content.rbegin(); it != content.rend(); it++)
+		for (map<string, string>::reverse_iterator it = content.rbegin(); it != content.rend(); it++)
 		{
-			file << it->first << "=" << it->second << std::endl;
+			file << it->first << "=" << it->second << endl;
 		}
 		return (i);
 	}
@@ -59,22 +59,22 @@ int	PostRequest::UploadContent(std::map<std::string, std::string> content, std::
 	}
 }
 
-int	PostRequest::UploadFile(std::string body, std::string path)
+int	PostRequest::UploadFile(string body, string path)
 {
-	std::string base = path;
-	std::string filename;
-	std::string extension = "";
-	if (path.rfind('.') != std::string::npos)
+	string base = path;
+	string filename;
+	string extension = "";
+	if (path.rfind('.') != string::npos)
 	{
 		extension = path.substr(path.rfind('.'));
 		size_t pos = base.rfind('.');
-		if (pos != std::string::npos)
-			base.erase(pos, std::string::npos);
+		if (pos != string::npos)
+			base.erase(pos, string::npos);
 	}
 	int i = 0;
 	while (true)
 	{
-		std::ostringstream oss;
+		ostringstream oss;
 		if (i > 0)
 			oss << base << "(" << i << ")" << extension;
 		else
@@ -84,7 +84,7 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 			break;
 		i++;
 	}
-	std::ofstream file(filename.c_str());
+	ofstream file(filename.c_str());
 	if (file.is_open())
 	{
 		file << body;
@@ -92,15 +92,15 @@ int	PostRequest::UploadFile(std::string body, std::string path)
 	}
 	else
 	{
-		std::cerr << "couldn't create file for upload" << std::endl;
+		cerr << "couldn't create file for upload" << endl;
 		return (-1);
 	}
 }
 
-int	PostRequest::createPost(int fd, std::string body, std::string path)
+int	PostRequest::createPost(int fd, string body, string path)
 {
-	std::string	filename;
-	std::map<std::string, std::string>	content;
+	string	filename;
+	map<string, string>	content;
 
 	if (_Content_type.compare("text/plain") == 0)
 	{
@@ -112,10 +112,10 @@ int	PostRequest::createPost(int fd, std::string body, std::string path)
 		else
 			return (sendHTTPResponse(fd, 204, "", ""));
 	}
-	if (_Content_type.find("multipart/form-data") != std::string::npos)
+	if (_Content_type.find("multipart/form-data") != string::npos)
 	{
-		std::string bodypart;
-		std::string boundary = _Content_type.substr(_Content_type.find("boundary=") + 9);
+		string bodypart;
+		string boundary = _Content_type.substr(_Content_type.find("boundary=") + 9);
 
 		size_t pos = body.find(boundary);
 		pos += boundary.size();
@@ -129,8 +129,8 @@ int	PostRequest::createPost(int fd, std::string body, std::string path)
 				break;
 			}
 			pos = body.find("name=", pos) + 6;
-			std::string fieldname = body.substr(pos, body.find("\"", pos) - pos);
-			if (body.find("filename=", pos) < end && body.find("filename=", pos) != std::string::npos)
+			string fieldname = body.substr(pos, body.find("\"", pos) - pos);
+			if (body.find("filename=", pos) < end && body.find("filename=", pos) != string::npos)
 			{
 				int res;
 
@@ -151,20 +151,20 @@ int	PostRequest::createPost(int fd, std::string body, std::string path)
 					return (-1);
 				if (res > 0)
 				{
-					std::cout << "file?\n" << filename << std::endl;
-					std::string extension = "";
-					if (filename.rfind('.') != std::string::npos)
+					cout << "file?\n" << filename << endl;
+					string extension = "";
+					if (filename.rfind('.') != string::npos)
 					{
 						size_t pos = filename.rfind('.');
 						extension = filename.substr(pos);
-						if (pos != std::string::npos)
-							filename.erase(pos, std::string::npos);
+						if (pos != string::npos)
+							filename.erase(pos, string::npos);
 					}
 					filename += "(";
 					filename += res + 48;
 					filename += ")";
 					filename += extension;
-					std::cout << "filename: " << filename << std::endl;
+					cout << "filename: " << filename << endl;
 				}
 				content[fieldname] = filename;
 			}
@@ -191,27 +191,27 @@ int	PostRequest::createPost(int fd, std::string body, std::string path)
 			return (-1);
 		}
 	}
-	std::cerr << RED BOLD << "[ERROR]" << NEUTRAL RED << "unknown content type: " << _Content_type << NEUTRAL << std::endl;
+	cerr << RED BOLD << "[ERROR]" << NEUTRAL RED << "unknown content type: " << _Content_type << NEUTRAL << endl;
 	return (0);
 }
 
-int PostRequest::handlePost(int fd, const Server &server, const std::string &body, const ConfigParser *config)
+int PostRequest::handlePost(int fd, const Server &server, const string &body, const ConfigParser *config)
 {
-	std::string serverRoot = config->getServerValue(server.getUid(), "root");
-	std::string path = server.getEnvValue("REQUEST_URI");
-	std::string cleanPath = path.substr(0, path.find('?'));
+	string serverRoot = config->getServerValue(server.getUid(), "root");
+	string path = server.getEnvValue("REQUEST_URI");
+	string cleanPath = path.substr(0, path.find('?'));
 	
-	std::string uploadir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_uploads");
-	std::string postdir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_posts");
+	string uploadir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_uploads");
+	string postdir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_posts");
 	// define target directory
 	path = serverRoot + uploadir;
 	DIR* dir = opendir(path.c_str());
 	if (dir == NULL)
 	{
-		std::cerr << "no uploads directory" << std::endl;//what? no appropriate directory or no permission
-		std::string errorPage = loadErrorPage(500, config, server.getUid());
+		cerr << "no uploads directory" << endl;//what? no appropriate directory or no permission
+		string errorPage = loadErrorPage(500, config, server.getUid());
 		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-			std::cerr << "Failed to send 500 response" << std::endl;
+			cerr << "Failed to send 500 response" << endl;
 		if (isKeepalive())
 			return (0);
 		return (-1);
@@ -221,10 +221,10 @@ int PostRequest::handlePost(int fd, const Server &server, const std::string &bod
 	dir = opendir(path.c_str());
 	if (dir == NULL)
 	{
-		std::cerr << "no posts directory" << std::endl;//what? no appropriate directory or no permission
-		std::string errorPage = loadErrorPage(500, config, server.getUid());
+		cerr << "no posts directory" << endl;//what? no appropriate directory or no permission
+		string errorPage = loadErrorPage(500, config, server.getUid());
 		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-			std::cerr << "Failed to send 500 response" << std::endl;
+			cerr << "Failed to send 500 response" << endl;
 		if (isKeepalive())
 			return (0);
 		return (-1);
@@ -233,9 +233,9 @@ int PostRequest::handlePost(int fd, const Server &server, const std::string &bod
 	int res = createPost(fd, body, serverRoot);
 	if (res == -1)
 	{
-		std::string errorPage = loadErrorPage(500, config, server.getUid());
+		string errorPage = loadErrorPage(500, config, server.getUid());
 		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-			std::cerr << "Failed to send 500 response" << std::endl;
+			cerr << "Failed to send 500 response" << endl;
 	}
 	if (!isKeepalive())
 		return (-1);

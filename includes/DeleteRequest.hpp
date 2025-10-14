@@ -14,13 +14,13 @@ class DeleteRequest: public ARequest
 	public:
 		/*constructors and destructor*/
 		DeleteRequest();
-		DeleteRequest(std::map<std::string, std::string> header);
+		DeleteRequest(map<string, string> header);
 		DeleteRequest(DeleteRequest &src);
 		~DeleteRequest();
 
 		/*member functions*/
 		int	delete_file(int fd, const Server &serv);
-		int	handleDelete(int fd, const Server &server, const ConfigParser *config, const std::string &path);
+		int	handleDelete(int fd, const Server &server, const ConfigParser *config, const string &path);
 
 		/*operator overloads*/
 		DeleteRequest &operator=(DeleteRequest &src);

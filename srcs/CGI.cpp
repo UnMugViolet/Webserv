@@ -8,7 +8,7 @@ CGI::~CGI()
 {
 }
 
-int CGI::_checkAccess(const std::string &path, int type)
+int CGI::_checkAccess(const string &path, int type)
 {
 	DIR* dir = opendir(path.c_str());
 
@@ -24,15 +24,15 @@ int CGI::_checkAccess(const std::string &path, int type)
 	
 }
 
-std::string	CGI::_getExtension(const std::string &path)
+string	CGI::_getExtension(const string &path)
 {
 	size_t pos = path.rfind('.');
-	if (pos == std::string::npos)
+	if (pos == string::npos)
 		return ("");
 	return (path.substr(pos + 1));
 }
 
-int	CGI::_getType(std::string ext)
+int	CGI::_getType(string ext)
 {
 	if (ext == "py")
 		return (PYTHON);
@@ -67,7 +67,7 @@ int	CGI::_getType(std::string ext)
 }
 
 
-int	CGI::interpret(const std::string &path, const Server &Server)
+int	CGI::interpret(const string &path, const Server &Server)
 {
 	int type = _getType(_getExtension(path));
 
@@ -83,7 +83,7 @@ int	CGI::interpret(const std::string &path, const Server &Server)
 			break;
 	}
 
-	if (path.find("/uploads/") != std::string::npos)
+	if (path.find("/uploads/") != string::npos)
 	{
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)
@@ -111,7 +111,7 @@ int	CGI::interpret(const std::string &path, const Server &Server)
 	if (pid == 0)
 	{
 		const char	*cpath = path.c_str();
-		std::string	interpreter;
+		string	interpreter;
 		
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
@@ -132,7 +132,7 @@ int	CGI::interpret(const std::string &path, const Server &Server)
 				interpreter = "/usr/bin/sh";
 				break;
 			case BINARY :
-				std::string tmp = "./" + path;
+				string tmp = "./" + path;
 				char *arg[2] = {(char *)tmp.c_str(), NULL};
 				execve(tmp.c_str(), arg, Server.getEnvAsArray());
 				throw CGIException("Internal error: execve failed", true, 500, Server.getUid());

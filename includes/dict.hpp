@@ -16,6 +16,8 @@
 #ifndef DICT_HPP
 # define DICT_HPP
 
+using namespace std;
+
 #include <iostream>
 #include <limits>
 
@@ -32,22 +34,20 @@
 #define UNDERLINE "\033[4m"
 #define ITALIC "\033[3m"
 
-#define MAX_INT std::numeric_limits<int>::max()
-#define MIN_INT std::numeric_limits<int>::min()
-#define MAX_UINT std::numeric_limits<unsigned int>::max()
-#define MIN_UINT -std::numeric_limits<unsigned int>::min()
-#define MAX_FLOAT std::numeric_limits<float>::max()
-#define MIN_FLOAT -std::numeric_limits<float>::max()
-#define MAX_DOUBLE std::numeric_limits<double>::max()
-#define MIN_DOUBLE -std::numeric_limits<double>::max()
+#define MAX_INT numeric_limits<int>::max()
+#define MIN_INT numeric_limits<int>::min()
+#define MAX_UINT numeric_limits<unsigned int>::max()
+#define MIN_UINT -numeric_limits<unsigned int>::min()
+#define MAX_FLOAT numeric_limits<float>::max()
+#define MIN_FLOAT -numeric_limits<float>::max()
+#define MAX_DOUBLE numeric_limits<double>::max()
+#define MIN_DOUBLE -numeric_limits<double>::max()
 
 #define DEFAULT_ERROR_PAGES_PATH "error_pages/default/"
 #define LOG_FOLDER_PATH "logs/"
 
 #define DEFAULT_ERROR_LOG_FILE "error.log"
 #define DEFAULT_ACCESS_LOG_FILE "access.log"
-
-using namespace std;
 
 // Languages
 #define PYTHON 0

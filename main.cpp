@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yguinio <yguinio@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:27:21 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/09 14:30:02 by yguinio          ###   ########.fr       */
+/*   Updated: 2025/10/14 16:21:18 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,9 @@ int main(int ac, char **av)
 	if (ac != 2)
 	{
 		if (ac < 2)
-			std::cerr << RED BOLD << "Error: No conf file given as parameters" << NEUTRAL << std::endl;
+			cerr << RED BOLD << "Error: No conf file given as parameters" << NEUTRAL << endl;
 		if (ac > 2)
-			std::cerr << RED BOLD << "Error: Too many arguments" << NEUTRAL << std::endl;
+			cerr << RED BOLD << "Error: Too many arguments" << NEUTRAL << endl;
 		return 1;
 	}
 
@@ -35,7 +35,7 @@ int main(int ac, char **av)
 		signal(SIGQUIT, Webserv::signalHandler);
 		signal(SIGPIPE, Webserv::signalHandler);
 
-		std::cout << "Using config file: " << BOLD << av[1] << NEUTRAL << std::endl << std::endl;
+		cout << "Using config file: " << BOLD << av[1] << NEUTRAL << endl << endl;
 
 		ConfigParser config(av[1]);
 		config.printConfig();
@@ -48,22 +48,22 @@ int main(int ac, char **av)
 			Webserv webserv(config);
 			webserv.serverLoop();
 		} catch (const Webserv::WebservException &e) {
-			std::cerr << e.what() << NEUTRAL << std::endl;
+			cerr << e.what() << NEUTRAL << endl;
 			return 1;
 		} catch (const Server::ServException &e) {
-			std::cerr << RED BOLD << "Server Error: " << e.what() << NEUTRAL << std::endl;
+			cerr << RED BOLD << "Server Error: " << e.what() << NEUTRAL << endl;
 			return 1;
-		} catch (const std::exception &e) {
-			std::cerr << RED BOLD << "Unexpected Error: " << e.what() << NEUTRAL << std::endl;
+		} catch (const exception &e) {
+			cerr << RED BOLD << "Unexpected Error: " << e.what() << NEUTRAL << endl;
 			return 1;
 		} catch (...) {
-			std::cerr << RED BOLD << "Unknown Error occurred" << NEUTRAL << std::endl;
+			cerr << RED BOLD << "Unknown Error occurred" << NEUTRAL << endl;
 			return 1;
 		}
 
 	}
 	catch (const ConfigParser::ErrorException &e) {
-		std::cerr << RED BOLD << e.what() << NEUTRAL << std::endl;
+		cerr << RED BOLD << e.what() << NEUTRAL << endl;
 		return 1;
 	}
 

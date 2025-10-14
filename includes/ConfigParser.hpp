@@ -18,46 +18,48 @@
 #include <map>
 #include <unistd.h>
 
+#include "dict.hpp"
+
 class ConfigParser {
 	private:
-		std::map<std::string, std::string> _configMap;
-		std::map<std::string, std::map<std::string, std::string> > _serverBlocks;
-		std::map<std::string, std::map<std::string, std::map<std::string, std::string> > > _locationBlocks;
+		map<string, string> _configMap;
+		map<string, map<string, string> > _serverBlocks;
+		map<string, map<string, map<string, string> > > _locationBlocks;
 
-		void	_checkSemicolons(const std::string &file) const;
-		std::string _trim(const std::string &str) const;
-		std::string _formatLine(const std::string &str) const;
-		std::string _intToString(int num) const;
-		void _parseServerBlock(std::ifstream &file, std::string const &serverName);
-		void _parseLocationBlock(std::ifstream &file, std::string const &serverName, std::string const &location);
+		void	_checkSemicolons(const string &file) const;
+		string _trim(const string &str) const;
+		string _formatLine(const string &str) const;
+		string _intToString(int num) const;
+		void _parseServerBlock(ifstream &file, string const &serverName);
+		void _parseLocationBlock(ifstream &file, string const &serverName, string const &location);
 
 	public:
 		ConfigParser();
-		ConfigParser(const std::string &filePath);
+		ConfigParser(const string &filePath);
 		ConfigParser(const ConfigParser &other);
 		ConfigParser &operator=(const ConfigParser &other);
 		~ConfigParser();
 
-		void parseFile(const std::string &filePath);
-		std::string getErrorPageContent(ConfigParser &parser, const std::string &serverUid, unsigned int error_code) const;
-		std::string getValue(const std::string &key) const;
-		std::string getServerValue(const std::string &serverName, const std::string &key) const;
-		std::string getLocationValue(const std::string &serverName, const std::string &location, const std::string &key) const;
-		bool hasKey(const std::string &key) const;
-		bool hasServerKey(const std::string &serverName, const std::string &key) const;
-		bool hasLocationKey(const std::string &serverName, const std::string &location, const std::string &key) const;
-		std::vector<std::string> getServerUids() const;
-		std::vector<std::string> getLocationPaths(const std::string &serverUid) const;
-		std::string	getLocationValueForPath(const std::string &path, const std::string &serverUid, const std::string &parameter) const;
+		void parseFile(const string &filePath);
+		string getErrorPageContent(ConfigParser &parser, const string &serverUid, unsigned int error_code) const;
+		string getValue(const string &key) const;
+		string getServerValue(const string &serverName, const string &key) const;
+		string getLocationValue(const string &serverName, const string &location, const string &key) const;
+		bool hasKey(const string &key) const;
+		bool hasServerKey(const string &serverName, const string &key) const;
+		bool hasLocationKey(const string &serverName, const string &location, const string &key) const;
+		vector<string> getServerUids() const;
+		vector<string> getLocationPaths(const string &serverUid) const;
+		string	getLocationValueForPath(const string &path, const string &serverUid, const string &parameter) const;
 
 		void printConfig() const;
 		
-		class ErrorException : public std::exception
+		class ErrorException : public exception
 		{
 			private:
-				std::string _message;
+				string _message;
 			public:
-				ErrorException(std::string message) throw() {
+				ErrorException(string message) throw() {
 					_message = "ConfigParser error: " + message;
 				}
 				virtual const char *what() const throw() {

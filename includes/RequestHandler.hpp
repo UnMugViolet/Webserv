@@ -29,14 +29,14 @@ class RequestHandler
 		~RequestHandler();
 
 		/*member functions*/
-		static std::string					getExtension(const std::string &path);
-		static int							_checkAccess(const std::string &path);
-		std::string							getIndex(const std::string &indexes, const std::string &root) const;
+		static string					getExtension(const string &path);
+		static int							_checkAccess(const string &path);
+		string							getIndex(const string &indexes, const string &root) const;
 		int									handleRequest(int fd, Server &server, ConfigParser *config);
-		void								setMaxBodySize(std::string size);
-		std::map<std::string, std::string>	parseHeader(std::string header) const;
-		std::string							handleChunckedRequest(int fd, const std::string &body);
+		void								setMaxBodySize(string size);
+		map<string, string>	parseHeader(string header) const;
+		string							handleChunckedRequest(int fd, const string &body);
 };
 
-std::string	trim(const std::string &str);
-std::string urlDecode(const std::string &src);
+string	trim(const string &str);
+string urlDecode(const string &src);

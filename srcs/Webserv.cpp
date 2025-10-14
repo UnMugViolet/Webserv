@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/13 14:16:44 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/10/14 16:21:18 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,8 @@ Webserv::Webserv()
 
 Webserv::Webserv(ConfigParser &config)
 {
-	std::string					serverUid;
-	std::vector<std::string>	serverUids;
+	string					serverUid;
+	vector<string>	serverUids;
 
 	
 	_config = &config;
@@ -36,9 +36,9 @@ Webserv::Webserv(ConfigParser &config)
 		try {
 			Server server(config, serverUid);
 			_servers.push_back(server);
-		} catch (const std::exception &e) {
+		} catch (const exception &e) {
 			// Failed to create server, log error and continue
-			std::cerr << RED << e.what() << NEUTRAL << std::endl;
+			cerr << RED << e.what() << NEUTRAL << endl;
 		}
 	}
 }
@@ -65,17 +65,17 @@ void Webserv::serverLoop()
 	}
 	
 	if (validServers == 0) {
-		std::cerr << "No valid servers created. Exiting." << std::endl;
+		cerr << "No valid servers created. Exiting." << endl;
 		return;
 	}
 
-	std::cout << GREEN BOLD << validServers << " SERVER INSTANCE RUNNING" << NEUTRAL << std::endl;
+	cout << GREEN BOLD << validServers << " SERVER INSTANCE RUNNING" << NEUTRAL << endl;
 	
 	//mettre les fd d'ecoute de chaque serveur dans readFd
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		std::vector<int> serverFds = _servers[i].getSocket();
-		for (std::vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
+		vector<int> serverFds = _servers[i].getSocket();
+		for (vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
 		{
 			fd = *it;
 			if (fd != -1) {  // Only add valid file descriptors
@@ -114,7 +114,7 @@ void Webserv::serverLoop()
 		
 		if (maxFd == 0)
 		{
-			std::cerr << "No valid file descriptors in set, exiting" << std::endl;
+			cerr << "No valid file descriptors in set, exiting" << endl;
 			break;
 		}
 		
@@ -132,15 +132,15 @@ void Webserv::serverLoop()
 				// Interrupted by signal, check shutdown flag
 				continue;
 			}
-			std::cerr << "Select error: " << strerror(errno) << std::endl;
+			cerr << "Select error: " << strerror(errno) << endl;
 			continue;
 		}
 		else if (selectResult > 0)
 		{
 			for (size_t i = 0; i < _servers.size(); i++)
 			{
-				std::vector<int> serverFds = _servers[i].getSocket();
-				for (std::vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
+				vector<int> serverFds = _servers[i].getSocket();
+				for (vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
 				{
 					if (*it != -1 && FD_ISSET(*it, &readFd))
 					{
@@ -170,23 +170,23 @@ void Webserv::signalHandler(int signal)
 	switch (signal)
 	{
 		case SIGINT:
-			std::cout << std::endl << YELLOW BOLD << "SIGINT (Ctrl+C) received. Preparing to shut down..." << NEUTRAL << std::endl;
+			cout << endl << YELLOW BOLD << "SIGINT (Ctrl+C) received. Preparing to shut down..." << NEUTRAL << endl;
 			_shutdown = true;
 			break;
 		case SIGTERM:
-			std::cout << std::endl << YELLOW BOLD << "SIGTERM received. Preparing to shut down..." << NEUTRAL << std::endl;
+			cout << endl << YELLOW BOLD << "SIGTERM received. Preparing to shut down..." << NEUTRAL << endl;
 			_shutdown = true;
 			break;
 		case SIGQUIT:
-			std::cout << std::endl << YELLOW BOLD << "SIGQUIT (Ctrl+\\) received. Preparing to shut down..." << NEUTRAL << std::endl;
+			cout << endl << YELLOW BOLD << "SIGQUIT (Ctrl+\\) received. Preparing to shut down..." << NEUTRAL << endl;
 			_shutdown = true;
 			break;
 		case SIGPIPE:
-			std::cout << std::endl << YELLOW BOLD << "SIGPIPE received. Preparing to shut down..." << NEUTRAL << std::endl;
+			cout << endl << YELLOW BOLD << "SIGPIPE received. Preparing to shut down..." << NEUTRAL << endl;
 			_shutdown = true;
 			break;
 		default:
-			std::cout << std::endl << YELLOW BOLD << "Unknown signal " << signal << " received. Ignoring..." << NEUTRAL << std::endl;
+			cout << endl << YELLOW BOLD << "Unknown signal " << signal << " received. Ignoring..." << NEUTRAL << endl;
 			break;
 	}
 }
@@ -198,30 +198,30 @@ void Webserv::stopServer()
 
 	if (server_count == 0)
 	{
-		std::cout << BLUE BOLD << "No servers to stop." << NEUTRAL << std::endl;
+		cout << BLUE BOLD << "No servers to stop." << NEUTRAL << endl;
 		return;
 	} 
 	else if (server_count == 1)
-		std::cout << BLUE BOLD << "Stopping the server..." << NEUTRAL << std::endl;
+		cout << BLUE BOLD << "Stopping the server..." << NEUTRAL << endl;
 	else 
-		std::cout << BLUE BOLD << "Stopping all servers..." << NEUTRAL << std::endl;
+		cout << BLUE BOLD << "Stopping all servers..." << NEUTRAL << endl;
 
 	// Close all server sockets
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		std::vector<int> serverFds = _servers[i].getSocket();
-		std::string serverUid = _servers[i].getUid();
-		for (std::vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
+		vector<int> serverFds = _servers[i].getSocket();
+		string serverUid = _servers[i].getUid();
+		for (vector<int>::iterator it = serverFds.begin(); it != serverFds.end(); it++)
 		{
 			int serverSocket = *it;
 			if (serverSocket != -1)
 			{
 				close(serverSocket);
-				std::cout << BLUE << "Closed socket " << serverSocket << " on server " << serverUid << std::endl;
+				cout << BLUE << "Closed socket " << serverSocket << " on server " << serverUid << endl;
 			}
 		}
-		std::cout << BLUE BOLD << "Closed server " << serverUid << std::endl;
+		cout << BLUE BOLD << "Closed server " << serverUid << endl;
 	}
 	
-	std::cout << GREEN BOLD << "Server stopped successfully." << NEUTRAL << std::endl;
+	cout << GREEN BOLD << "Server stopped successfully." << NEUTRAL << endl;
 }

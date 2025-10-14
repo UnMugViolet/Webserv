@@ -6,16 +6,16 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:49:10 by yguinio           #+#    #+#             */
-/*   Updated: 2025/09/30 11:46:43 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/10/14 16:21:53 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Logger.hpp"
 
-std::ofstream Logger::_accessLogStream;
-std::ofstream Logger::_errorLogStream;
-std::string Logger::_accessFile;
-std::string Logger::_errorFile;
+ofstream Logger::_accessLogStream;
+ofstream Logger::_errorLogStream;
+string Logger::_accessFile;
+string Logger::_errorFile;
 
 Logger::Logger(ConfigParser &config)
 {
@@ -33,8 +33,8 @@ Logger::Logger(ConfigParser &config)
 	_accessFile = LOG_FOLDER_PATH + _accessFile;
 	_errorFile = LOG_FOLDER_PATH + _errorFile;
 
-	_accessLogStream.open(_accessFile.c_str(), std::ios::app);
-	_errorLogStream.open(_errorFile.c_str(), std::ios::app);
+	_accessLogStream.open(_accessFile.c_str(), ios::app);
+	_errorLogStream.open(_errorFile.c_str(), ios::app);
 }
 
 Logger::~Logger()
@@ -47,63 +47,63 @@ Logger::~Logger()
 
 void	Logger::init()
 {
-	std::ofstream a(_accessFile.c_str(), std::ios::trunc);
-	std::ofstream e(_errorFile.c_str(), std::ios::trunc);
+	ofstream a(_accessFile.c_str(), ios::trunc);
+	ofstream e(_errorFile.c_str(), ios::trunc);
 	
 	if (_accessLogStream.is_open())
         _accessLogStream.close();
-    _accessLogStream.open(_accessFile.c_str(), std::ios::app);
+    _accessLogStream.open(_accessFile.c_str(), ios::app);
 
     if (_errorLogStream.is_open())
         _errorLogStream.close();
-    _errorLogStream.open(_errorFile.c_str(), std::ios::app);
+    _errorLogStream.open(_errorFile.c_str(), ios::app);
 }
 
-void	Logger::info(const std::string &msg)
+void	Logger::info(const string &msg)
 {
 	if (msg.empty())
 		return ;
-	std::cout << BOLD << "[INFO] " << NEUTRAL << msg  << std::endl;
+	cout << BOLD << "[INFO] " << NEUTRAL << msg  << endl;
 }
 
-void	Logger::access(const std::string &serverUid, const std::string &msg)
+void	Logger::access(const string &serverUid, const string &msg)
 {
 	if (!_accessLogStream.is_open())
-        std::cerr << "Logger: _accessLogStream not open!" << std::endl;
+        cerr << "Logger: _accessLogStream not open!" << endl;
 	else {
 		// Check if rotation is needed before writing
 		if (countLines(_accessFile) >= MAX_LOG_LINES) {
 			rotateLogFile(_accessFile, _accessLogStream);
 		}
-		_accessLogStream << "[" << serverUid << "]\n" << msg << std::endl << std::endl;
+		_accessLogStream << "[" << serverUid << "]\n" << msg << endl << endl;
 		_accessLogStream.flush();
 	}
 }
 
-void	Logger::error(const std::string &serverUid, const std::string &msg)
+void	Logger::error(const string &serverUid, const string &msg)
 {
 	if (!_errorLogStream.is_open())
-        std::cerr << "Logger: _errorLogStream not open!" << std::endl << std::endl;
+        cerr << "Logger: _errorLogStream not open!" << endl << endl;
 	else {
 		// Check if rotation is needed before writing
 		if (countLines(_errorFile) >= MAX_LOG_LINES) {
 			rotateLogFile(_errorFile, _errorLogStream);
 		}
-		_errorLogStream << "[" << serverUid << "]\n" << "ERROR: " << msg << std::endl;
+		_errorLogStream << "[" << serverUid << "]\n" << "ERROR: " << msg << endl;
 		_errorLogStream.flush();
 	}
 }
 
 // Count the number of lines in a file
-int Logger::countLines(const std::string &filename)
+int Logger::countLines(const string &filename)
 {
-	std::ifstream file(filename.c_str());
+	ifstream file(filename.c_str());
 	if (!file.is_open())
 		return 0;
 		
 	int lineCount = 0;
-	std::string line;
-	while (std::getline(file, line))
+	string line;
+	while (getline(file, line))
 		lineCount++;
 		
 	file.close();
@@ -111,18 +111,18 @@ int Logger::countLines(const std::string &filename)
 }
 
 // Rotate log file by keeping only the most recent lines
-void Logger::rotateLogFile(const std::string &filename, std::ofstream &stream)
+void Logger::rotateLogFile(const string &filename, ofstream &stream)
 {
 	const int linesToKeep = MAX_LOG_LINES / 2; // Keep half the max amount of lines
 	
 	// Read all lines
-	std::ifstream file(filename.c_str());
+	ifstream file(filename.c_str());
 	if (!file.is_open())
 		return;
 		
-	std::vector<std::string> lines;
-	std::string line;
-	while (std::getline(file, line))
+	vector<string> lines;
+	string line;
+	while (getline(file, line))
 		lines.push_back(line);
 	file.close();
 	
@@ -131,11 +131,11 @@ void Logger::rotateLogFile(const std::string &filename, std::ofstream &stream)
 		stream.close();
 		
 	// Rewrite file with only the most recent lines
-	stream.open(filename.c_str(), std::ios::trunc);
+	stream.open(filename.c_str(), ios::trunc);
 	if (stream.is_open()) {
 		int startIndex = (lines.size() > linesToKeep) ? lines.size() - linesToKeep : 0;
 		for (int i = startIndex; i < (int)lines.size(); i++) {
-			stream << lines[i] << std::endl;
+			stream << lines[i] << endl;
 		}
 		stream.flush();
 	}

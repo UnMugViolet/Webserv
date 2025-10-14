@@ -16,8 +16,8 @@
 #include "Logger.hpp"
 
 void	*ft_memset(void *s, int c, unsigned long int n);
-int 	ft_atoi(const std::string &str);
-int 	ft_inet_pton4(std::string &src, struct in_addr *dst);
+int 	ft_atoi(const string &str);
+int 	ft_inet_pton4(string &src, struct in_addr *dst);
 
 class RequestHandler;
 
@@ -25,11 +25,11 @@ class Server
 {
 private:
 	/*attributes here*/
-	std::string							_uid;
-	std::map<std::string, std::string>	_env;
-	std::vector<std::string>			_server_names;
-	std::vector<int>					_socketfds;
-	std::vector<int>					_clientFds;
+	string							_uid;
+	map<string, string>	_env;
+	vector<string>			_server_names;
+	vector<int>					_socketfds;
+	vector<int>					_clientFds;
 	RequestHandler						*_handler;
 	ConfigParser						*_config;
 
@@ -37,17 +37,17 @@ public:
 	/*constructors and destructor*/
 	Server();
 	Server(const Server &other);
-	Server(ConfigParser &config, std::string Name);
+	Server(ConfigParser &config, string Name);
 	~Server();
 
 	/*member functions*/
-	std::vector<sockaddr_in>	setServerNames(const ConfigParser &config, const std::string &serverUid);
-	std::vector<int>			checkPorts(const ConfigParser &config, const std::string &serverUid);
-	void						CreateSockets(const std::string &serverUid, std::vector<int> &ports, std::vector<sockaddr_in> &sockaddrs);
-	// int			addVirtualHost(ConfigParser &config, std::string serverUid);
-	std::vector<int>	getSocket() const;
-	std::string	getUid() const;
-	std::vector<std::string> getServerNames() const;
+	vector<sockaddr_in>	setServerNames(const ConfigParser &config, const string &serverUid);
+	vector<int>			checkPorts(const ConfigParser &config, const string &serverUid);
+	void						CreateSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs);
+	// int			addVirtualHost(ConfigParser &config, string serverUid);
+	vector<int>	getSocket() const;
+	string	getUid() const;
+	vector<string> getServerNames() const;
 	const ConfigParser&	getConfig() const;
 	int			setClient(int _socketfd);
 	void		unsetClient(int position);
@@ -56,20 +56,20 @@ public:
 	// Env handling methods
 	void		initEnv(char **env);
 	void		printEnv() const;
-	std::string	getEnvValue(const std::string &key) const;
-	void		setEnvValue(const std::string &key, const std::string &value);
+	string	getEnvValue(const string &key) const;
+	void		setEnvValue(const string &key, const string &value);
 	char		**getEnvAsArray() const;
-	const std::map<std::string, std::string> getEnv() const;
+	const map<string, string> getEnv() const;
 
 	/*operator overloads*/
 	Server		&operator=(const Server &other);
-	class ServException : public std::exception
+	class ServException : public exception
 		{
 			private:
-				std::string _message;
+				string _message;
 			public:
-				ServException(std::string message) throw() {
-					_message = std::string(RED) + std::string(BOLD) + "[ERROR] " + std::string(NEUTRAL) + std::string(RED) + "Server: " + message;
+				ServException(string message) throw() {
+					_message = string(RED) + string(BOLD) + "[ERROR] " + string(NEUTRAL) + string(RED) + "Server: " + message;
 				}
 				virtual const char *what() const throw() {
 					return (_message.c_str());

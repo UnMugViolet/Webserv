@@ -20,7 +20,7 @@ ConfigParser::ConfigParser()
 	_locationBlocks.clear();
 }
 
-ConfigParser::ConfigParser(const std::string &filePath)
+ConfigParser::ConfigParser(const string &filePath)
 {
 	parseFile(filePath);
 }
@@ -50,19 +50,19 @@ ConfigParser::~ConfigParser()
 	_configMap.clear();
 }
 
-void ConfigParser::parseFile(const std::string &filePath)
+void ConfigParser::parseFile(const string &filePath)
 {
 	_checkSemicolons(filePath);
-	std::ifstream file(filePath.c_str());
+	ifstream file(filePath.c_str());
 	if (!file.is_open())
 	{
 		throw ErrorException("Cannot open config file: " + filePath);
 	}
 
-	std::string line;
+	string line;
 	int lineNumber = 0;
 	
-	while (std::getline(file, line))
+	while (getline(file, line))
 	{
 		lineNumber++;
 		
@@ -74,20 +74,20 @@ void ConfigParser::parseFile(const std::string &filePath)
 			continue;
 		
 		// Check if this is a server block
-		if (line.find("server") == 0 && line.find("{") != std::string::npos)
+		if (line.find("server") == 0 && line.find("{") != string::npos)
 		{
 			// Create a default server name
-			std::string serverUid = "server_" + _intToString(_serverBlocks.size());
+			string serverUid = "server_" + _intToString(_serverBlocks.size());
 			_parseServerBlock(file, serverUid);
 		}
 		else
 		{
 			// Parse global configuration (outside server blocks)
 			size_t pos = line.find(' ');
-			if (pos == std::string::npos || pos + 1 >= line.length())
+			if (pos == string::npos || pos + 1 >= line.length())
 				continue;
 			
-			std::string key = _trim(line.substr(0, pos));
+			string key = _trim(line.substr(0, pos));
 			if (key == "error_page")
 			{
 				// Find the error code (skip any extra spaces)
@@ -96,14 +96,14 @@ void ConfigParser::parseFile(const std::string &filePath)
 					codeStart++;
 				
 				size_t codeEnd = line.find(' ', codeStart);
-				if (codeEnd != std::string::npos && codeEnd + 1 < line.length())
+				if (codeEnd != string::npos && codeEnd + 1 < line.length())
 				{
-					std::string errorCode = _trim(line.substr(codeStart, codeEnd - codeStart));
+					string errorCode = _trim(line.substr(codeStart, codeEnd - codeStart));
 					key += " " + errorCode;
 					pos = codeEnd;
 				}
 			}
-			std::string value = _trim(line.substr(pos + 1));
+			string value = _trim(line.substr(pos + 1));
 			
 			// Remove semicolon if present
 			if (!value.empty() && value[value.length() - 1] == ';')
@@ -115,13 +115,13 @@ void ConfigParser::parseFile(const std::string &filePath)
 	file.close();
 }
 
-void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &serverName)
+void ConfigParser::_parseServerBlock(ifstream &file, const string &serverName)
 {
-	std::string line;
-	std::map<std::string, std::string> serverConfig;
+	string line;
+	map<string, string> serverConfig;
 	bool 		rootSet = false;
 	
-	while (std::getline(file, line))
+	while (getline(file, line))
 	{
 		line = _trim(line);
 		
@@ -134,14 +134,14 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 			break;
 		
 		// Check for location block
-		if (line.find("location") == 0 && line.find("{") != std::string::npos)
+		if (line.find("location") == 0 && line.find("{") != string::npos)
 		{
 			// Extract location path
 			size_t start = line.find(' ');
 			size_t end = line.find('{');
-			if (start != std::string::npos && end != std::string::npos)
+			if (start != string::npos && end != string::npos)
 			{
-				std::string location = _trim(line.substr(start, end - start));
+				string location = _trim(line.substr(start, end - start));
 				_parseLocationBlock(file, serverName, location);
 			}
 			continue;
@@ -154,19 +154,19 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 		
 		// Parse server directive
 		size_t pos = line.find(' ');
-		if (pos != std::string::npos && pos + 1 < line.length())
+		if (pos != string::npos && pos + 1 < line.length())
 		{
-			std::string key = _trim(line.substr(0, pos));
-			std::string value = _trim(line.substr(pos + 1));
+			string key = _trim(line.substr(0, pos));
+			string value = _trim(line.substr(pos + 1));
 			
 			if (key == "root")
 				rootSet = true;
 			if (key == "error_page")
 			{
 				size_t secondSpace = value.find(' ');
-				if (secondSpace != std::string::npos && secondSpace + 1 < value.length())
+				if (secondSpace != string::npos && secondSpace + 1 < value.length())
 				{
-					std::string errorCode = _trim(value.substr(0, secondSpace));
+					string errorCode = _trim(value.substr(0, secondSpace));
 					key += " " + errorCode;
 					value = _trim(value.substr(secondSpace + 1));
 				}
@@ -180,11 +180,11 @@ void ConfigParser::_parseServerBlock(std::ifstream &file, const std::string &ser
 	_serverBlocks[serverName] = serverConfig;
 }
 
-void ConfigParser::_parseLocationBlock(std::ifstream &file, const std::string &serverName, const std::string &location)
+void ConfigParser::_parseLocationBlock(ifstream &file, const string &serverName, const string &location)
 {
-	std::string line;
+	string line;
 	
-	while (std::getline(file, line))
+	while (getline(file, line))
 	{
 		line = _trim(line);
 		
@@ -203,10 +203,10 @@ void ConfigParser::_parseLocationBlock(std::ifstream &file, const std::string &s
 
 		// Parse location directive
 		size_t pos = line.find(' ');
-		if (pos != std::string::npos && pos + 1 < line.length())
+		if (pos != string::npos && pos + 1 < line.length())
 		{
-			std::string key = _trim(line.substr(0, pos));
-			std::string value = _trim(line.substr(pos + 1));
+			string key = _trim(line.substr(0, pos));
+			string value = _trim(line.substr(pos + 1));
 			
 			// Store location-specific config
 			_locationBlocks[serverName][location][key] = value;
@@ -214,35 +214,35 @@ void ConfigParser::_parseLocationBlock(std::ifstream &file, const std::string &s
 	}
 }
 
-std::string ConfigParser::getValue(const std::string &key) const
+string ConfigParser::getValue(const string &key) const
 {
-	std::map<std::string, std::string>::const_iterator it = _configMap.find(key);
+	map<string, string>::const_iterator it = _configMap.find(key);
 	if (it != _configMap.end())
 		return it->second;
 	return "";
 }
 
-std::string ConfigParser::getServerValue(const std::string &serverName, const std::string &key) const
+string ConfigParser::getServerValue(const string &serverName, const string &key) const
 {
-	std::map<std::string, std::map<std::string, std::string> >::const_iterator serverIt = _serverBlocks.find(serverName);
+	map<string, map<string, string> >::const_iterator serverIt = _serverBlocks.find(serverName);
 	if (serverIt != _serverBlocks.end())
 	{
-		std::map<std::string, std::string>::const_iterator keyIt = serverIt->second.find(key);
+		map<string, string>::const_iterator keyIt = serverIt->second.find(key);
 		if (keyIt != serverIt->second.end())
 			return keyIt->second;
 	}
 	return "";
 }
 
-std::string ConfigParser::getLocationValue(const std::string &serverName, const std::string &location, const std::string &key) const
+string ConfigParser::getLocationValue(const string &serverName, const string &location, const string &key) const
 {
-	std::map<std::string, std::map<std::string, std::map<std::string, std::string> > >::const_iterator serverIt = _locationBlocks.find(serverName);
+	map<string, map<string, map<string, string> > >::const_iterator serverIt = _locationBlocks.find(serverName);
 	if (serverIt != _locationBlocks.end())
 	{
-		std::map<std::string, std::map<std::string, std::string> >::const_iterator locationIt = serverIt->second.find(location);
+		map<string, map<string, string> >::const_iterator locationIt = serverIt->second.find(location);
 		if (locationIt != serverIt->second.end())
 		{
-			std::map<std::string, std::string>::const_iterator keyIt = locationIt->second.find(key);
+			map<string, string>::const_iterator keyIt = locationIt->second.find(key);
 			if (keyIt != locationIt->second.end())
 				return keyIt->second;
 		}
@@ -250,14 +250,14 @@ std::string ConfigParser::getLocationValue(const std::string &serverName, const 
 	return "";
 }
 
-bool ConfigParser::hasKey(const std::string &key) const
+bool ConfigParser::hasKey(const string &key) const
 {
 	return _configMap.find(key) != _configMap.end();
 }
 
-bool ConfigParser::hasServerKey(const std::string &serverName, const std::string &key) const
+bool ConfigParser::hasServerKey(const string &serverName, const string &key) const
 {
-	std::map<std::string, std::map<std::string, std::string> >::const_iterator serverIt = _serverBlocks.find(serverName);
+	map<string, map<string, string> >::const_iterator serverIt = _serverBlocks.find(serverName);
 	if (serverIt != _serverBlocks.end())
 	{
 		return serverIt->second.find(key) != serverIt->second.end();
@@ -265,12 +265,12 @@ bool ConfigParser::hasServerKey(const std::string &serverName, const std::string
 	return false;
 }
 
-bool ConfigParser::hasLocationKey(const std::string &serverName, const std::string &location, const std::string &key) const
+bool ConfigParser::hasLocationKey(const string &serverName, const string &location, const string &key) const
 {
-	std::map<std::string, std::map<std::string, std::map<std::string, std::string> > >::const_iterator serverIt = _locationBlocks.find(serverName);
+	map<string, map<string, map<string, string> > >::const_iterator serverIt = _locationBlocks.find(serverName);
 	if (serverIt != _locationBlocks.end())
 	{
-		std::map<std::string, std::map<std::string, std::string> >::const_iterator locationIt = serverIt->second.find(location);
+		map<string, map<string, string> >::const_iterator locationIt = serverIt->second.find(location);
 		if (locationIt != serverIt->second.end())
 		{
 			return locationIt->second.find(key) != locationIt->second.end();
@@ -279,10 +279,10 @@ bool ConfigParser::hasLocationKey(const std::string &serverName, const std::stri
 	return false;
 }
 
-std::vector<std::string> ConfigParser::getServerUids() const
+vector<string> ConfigParser::getServerUids() const
 {
-	std::vector<std::string> names;
-	for (std::map<std::string, std::map<std::string, std::string> >::const_iterator it = _serverBlocks.begin();
+	vector<string> names;
+	for (map<string, map<string, string> >::const_iterator it = _serverBlocks.begin();
 		 it != _serverBlocks.end(); ++it)
 	{
 		names.push_back(it->first);
@@ -290,13 +290,13 @@ std::vector<std::string> ConfigParser::getServerUids() const
 	return names;
 }
 
-std::vector<std::string> ConfigParser::getLocationPaths(const std::string &serverUid) const
+vector<string> ConfigParser::getLocationPaths(const string &serverUid) const
 {
-	std::vector<std::string> paths;
-	std::map<std::string, std::map<std::string, std::map<std::string, std::string> > >::const_iterator serverIt = _locationBlocks.find(serverUid);
+	vector<string> paths;
+	map<string, map<string, map<string, string> > >::const_iterator serverIt = _locationBlocks.find(serverUid);
 	if (serverIt != _locationBlocks.end())
 	{
-		for (std::map<std::string, std::map<std::string, std::string> >::const_iterator locationIt = serverIt->second.begin();
+		for (map<string, map<string, string> >::const_iterator locationIt = serverIt->second.begin();
 			 locationIt != serverIt->second.end(); ++locationIt)
 		{
 			paths.push_back(locationIt->first);
@@ -307,69 +307,69 @@ std::vector<std::string> ConfigParser::getLocationPaths(const std::string &serve
 
 void ConfigParser::printConfig() const
 {
-	std::cout << YELLOW BOLD << "=== Global Configuration ===" << NEUTRAL << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = _configMap.begin();
+	cout << YELLOW BOLD << "=== Global Configuration ===" << NEUTRAL << endl;
+	for (map<string, string>::const_iterator it = _configMap.begin();
 		 it != _configMap.end(); ++it)
 	{
-		std::cout << GREEN << it->first << NEUTRAL << " = " 
-				  << CYAN << it->second << NEUTRAL << std::endl;
+		cout << GREEN << it->first << NEUTRAL << " = " 
+				  << CYAN << it->second << NEUTRAL << endl;
 	}
 	
-	std::cout << YELLOW BOLD << "\n=== Server Blocks ===" << NEUTRAL << std::endl;
-	for (std::map<std::string, std::map<std::string, std::string> >::const_iterator serverIt = _serverBlocks.begin();
+	cout << YELLOW BOLD << "\n=== Server Blocks ===" << NEUTRAL << endl;
+	for (map<string, map<string, string> >::const_iterator serverIt = _serverBlocks.begin();
 		 serverIt != _serverBlocks.end(); ++serverIt)
 	{
-		std::cout << RED BOLD << "\n[" << serverIt->first << "]" << NEUTRAL << std::endl;
-		for (std::map<std::string, std::string>::const_iterator keyIt = serverIt->second.begin();
+		cout << RED BOLD << "\n[" << serverIt->first << "]" << NEUTRAL << endl;
+		for (map<string, string>::const_iterator keyIt = serverIt->second.begin();
 			 keyIt != serverIt->second.end(); ++keyIt)
 		{
-			std::cout << "  " << GREEN << keyIt->first << NEUTRAL << " = " 
-					  << CYAN << keyIt->second << NEUTRAL << std::endl;
+			cout << "  " << GREEN << keyIt->first << NEUTRAL << " = " 
+					  << CYAN << keyIt->second << NEUTRAL << endl;
 		}
 		// Print associated location blocks
-		std::map<std::string, std::map<std::string, std::map<std::string, std::string> > >::const_iterator locIt = _locationBlocks.find(serverIt->first);
+		map<string, map<string, map<string, string> > >::const_iterator locIt = _locationBlocks.find(serverIt->first);
 		if (locIt != _locationBlocks.end())
 		{
-			for (std::map<std::string, std::map<std::string, std::string> >::const_iterator locationIt = locIt->second.begin();
+			for (map<string, map<string, string> >::const_iterator locationIt = locIt->second.begin();
 				 locationIt != locIt->second.end(); ++locationIt)
 			{
-				std::cout << BLUE BOLD << "  [location " << locationIt->first << "]" << NEUTRAL << std::endl;
-				for (std::map<std::string, std::string>::const_iterator locKeyIt = locationIt->second.begin();
+				cout << BLUE BOLD << "  [location " << locationIt->first << "]" << NEUTRAL << endl;
+				for (map<string, string>::const_iterator locKeyIt = locationIt->second.begin();
 					 locKeyIt != locationIt->second.end(); ++locKeyIt)
 				{
-					std::cout << "    " << GREEN << locKeyIt->first << NEUTRAL << " = " 
-							  << CYAN << locKeyIt->second << NEUTRAL << std::endl;
+					cout << "    " << GREEN << locKeyIt->first << NEUTRAL << " = " 
+							  << CYAN << locKeyIt->second << NEUTRAL << endl;
 				}
 			}
 		}
 	}
-	std::cout << YELLOW BOLD << "===================" << NEUTRAL << std::endl;
+	cout << YELLOW BOLD << "===================" << NEUTRAL << endl;
 }
 
-std::string ConfigParser::_trim(const std::string &str) const
+string ConfigParser::_trim(const string &str) const
 {
 	size_t start = str.find_first_not_of(" \t\r\n");
-	if (start == std::string::npos)
+	if (start == string::npos)
 		return "";
 	
 	size_t end = str.find_last_not_of(" \t\r\n");
 	return str.substr(start, end - start + 1);
 }
 
-std::string ConfigParser::_intToString(int num) const
+string ConfigParser::_intToString(int num) const
 {
-	std::ostringstream oss;
+	ostringstream oss;
 	oss << num;
 	return oss.str();
 }
 
-std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::string &serverUid, unsigned int error_code) const
+string ConfigParser::getErrorPageContent(ConfigParser &parser, const string &serverUid, unsigned int error_code) const
 {
-	std::ifstream file;
-	std::ostringstream oss;
+	ifstream file;
+	ostringstream oss;
 	oss << error_code;
-	std::string error_code_str = oss.str();
-	std::string context_path = parser.getServerValue(serverUid, "root");
+	string error_code_str = oss.str();
+	string context_path = parser.getServerValue(serverUid, "root");
 
 	if (context_path.empty() || context_path[context_path.length() - 1] != '/')
 		context_path += '/';
@@ -377,17 +377,17 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	// Priority 1: Check specific server error page first
 	if (parser.hasServerKey(serverUid, "error_page " + error_code_str))
 	{
-		std::string serverErrorPage = parser.getServerValue(serverUid, "error_page " + error_code_str);
+		string serverErrorPage = parser.getServerValue(serverUid, "error_page " + error_code_str);
 		if (serverErrorPage[0] == '/')
 			serverErrorPage = serverErrorPage.substr(1);
-		std::string relative_path = context_path + serverErrorPage;
+		string relative_path = context_path + serverErrorPage;
 
 		file.open(relative_path.c_str());
 		if (!file.is_open())
 			file.open(serverErrorPage.c_str());
 		if (file.is_open())
 		{
-			std::stringstream buffer;
+			stringstream buffer;
 			buffer << file.rdbuf();
 			file.close();
 			return buffer.str();
@@ -395,15 +395,15 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	}
 
 	// Priority 2: Check global configuration error pages
-	std::string globalErrorKey = "error_page " + error_code_str;
-	std::map<std::string, std::string>::const_iterator it = parser._configMap.find(globalErrorKey);
+	string globalErrorKey = "error_page " + error_code_str;
+	map<string, string>::const_iterator it = parser._configMap.find(globalErrorKey);
 
 	if (it != parser._configMap.end() && !it->second.empty())
 	{
 		file.open(it->second.c_str());
 		if (file.is_open())
 		{
-			std::stringstream buffer;
+			stringstream buffer;
 			buffer << file.rdbuf();
 			file.close();
 			return buffer.str();
@@ -411,28 +411,28 @@ std::string ConfigParser::getErrorPageContent(ConfigParser &parser, const std::s
 	}
 
 	// Priority 3: Use default error pages
-	std::string defaultPath = DEFAULT_ERROR_PAGES_PATH + error_code_str + ".html";
+	string defaultPath = DEFAULT_ERROR_PAGES_PATH + error_code_str + ".html";
 	file.open(defaultPath.c_str());
 	if (file.is_open())
 	{
-		std::stringstream buffer;
+		stringstream buffer;
 		buffer << file.rdbuf();
 		file.close();
 		return buffer.str();
 	}
 
 	// Final fallback: return basic HTML error message
-	std::cout << std::string(RED) << "No error page found, using fallback HTML for the code: " << error_code_str << std::string(NEUTRAL) << std::endl;
+	cout << string(RED) << "No error page found, using fallback HTML for the code: " << error_code_str << string(NEUTRAL) << endl;
 	return "<html><body><h1>Error " + error_code_str + "</h1><p>An undefined error occurred.</p></body></html>";
 }
 
 /* Format the line suppressing all unnecessaries whitespaces and the last semicolon if found
-*  @param std::string
-*  @return std::string
+*  @param string
+*  @return string
 */
-std::string ConfigParser::_formatLine(const std::string &str) const
+string ConfigParser::_formatLine(const string &str) const
 {
-	std::string line = str;
+	string line = str;
 	if (line[line.length() - 1] == ';')
 		line = line.substr(0, line.length() - 1);
 	for (size_t i = 0; i < line.length() ; i++)
@@ -444,16 +444,16 @@ std::string ConfigParser::_formatLine(const std::string &str) const
 	return (line);
 }
 
-void	ConfigParser::_checkSemicolons(const std::string &filePath) const
+void	ConfigParser::_checkSemicolons(const string &filePath) const
 {
-	std::ifstream file(filePath.c_str());
+	ifstream file(filePath.c_str());
 	if (!file.is_open())
 	{
 		throw ErrorException("Cannot open config file: " + filePath);
 	}
-	std::string line;
+	string line;
 	int i = 0;
-	while (std::getline(file, line)) {
+	while (getline(file, line)) {
 		for (size_t j = 0; line[j]; j++) {
 			if (line[j] == '{')
 				i++;
@@ -467,14 +467,14 @@ void	ConfigParser::_checkSemicolons(const std::string &filePath) const
 	}
 }
 
-std::string	ConfigParser::getLocationValueForPath(const std::string &path, const std::string &serverUid, const std::string &parameter) const
+string	ConfigParser::getLocationValueForPath(const string &path, const string &serverUid, const string &parameter) const
 {
-	std::string currentLocation = "";
-	std::vector<std::string> temp = getLocationPaths(serverUid);
+	string currentLocation = "";
+	vector<string> temp = getLocationPaths(serverUid);
 	int status = 0;
-	std::vector<std::string>::iterator it = temp.begin();
+	vector<string>::iterator it = temp.begin();
 	for (; it != temp.end(); it++) {
-		if (path.find((*it)) != std::string::npos) {
+		if (path.find((*it)) != string::npos) {
 			status = 1;
 			if (currentLocation.size() < (*it).size())
 				currentLocation = *it;
