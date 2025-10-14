@@ -44,13 +44,14 @@
 				$data[trim($key)] = trim($value);
 				$inMessage = true;
 			}
-			else if ($inMessage){
-				$data['message'] .= "\n" . $line;
+			else if ($inMessage) {
+				if (isset($data['message']))
+					$data['message'] .= "\n" . $line;					
 			}
 		}
 
-		$name = htmlspecialchars($data['name']);
-		$message = nl2br(htmlspecialchars($data['message']));
+		$name = isset($data['name']) ? htmlspecialchars($data['name']) : 'Anonymous';
+		$message = isset($data['message']) ? nl2br(htmlspecialchars($data['message'])) : '';
 		$file = $data['file'] ?? null;
 		$safePostFile = htmlspecialchars(basename($postFile), ENT_QUOTES, 'UTF-8');
 
