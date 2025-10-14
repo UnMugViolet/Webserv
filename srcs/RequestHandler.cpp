@@ -25,6 +25,25 @@ RequestHandler::~RequestHandler()
 {
 	return ;
 }
+
+std::string urlDecode(const std::string &src) {
+    std::ostringstream out;
+    for (size_t i = 0; i < src.length(); ++i) {
+        if (src[i] == '%' && i + 2 < src.length()) {
+            std::istringstream iss(src.substr(i + 1, 2));
+            int hex = 0;
+            if (iss >> std::hex >> hex)
+                out << static_cast<char>(hex);
+            i += 2;
+        } else if (src[i] == '+') {
+            out << ' ';
+        } else {
+            out << src[i];
+        }
+    }
+    return out.str();
+}
+
 int RequestHandler::_checkAccess(const std::string &path)
 {
 	if (access(path.c_str(), F_OK) == -1)
@@ -62,13 +81,15 @@ std::string RequestHandler::getIndex(const std::string &indexes, const std::stri
 		if (goodIndex[0] != '/')
 			goodIndex = "/" + goodIndex;
 		fullPath = root + goodIndex;
-		if (_checkAccess(fullPath) == 1)
+		if (_checkAccess(fullPath) == 1) {
+			std::cout << "Index found: " << fullPath << std::endl;
 			return (goodIndex);
+		}
 	}
 	return ("");
 }
 
-std::string	RequestHandler::trim(const std::string &str) const
+std::string	trim(const std::string &str)
 {
 	size_t first = str.find_first_not_of(" \r\n\t");
 	if (first == std::string::npos)
@@ -130,6 +151,14 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	received = recv(fd, buff, BUFFER_SIZE, 0);
 	if (received <= 0)
 		return -1;
+
+	// Quick exit for HTTPS/TLS handshake
+	if ((unsigned char)buff[0] == 0x16) {
+		Logger::error(serverUid, "Received HTTPS/TLS handshake, closing connection.");
+		std::cerr << "Received HTTPS/TLS handshake, closing connection." << std::endl;
+		close(fd);
+		return -1;
+	}
 	
 	// Read the complete header
 	while (received > 0)
@@ -157,7 +186,8 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		std::cout << header << std::endl;
 	}
 	body = header.substr(headerlimit + 4, std::string::npos);
-	header.erase(headerlimit, std::string::npos);
+	if (headerlimit != std::string::npos)
+		header.erase(headerlimit, std::string::npos);
 	
 	Logger::access(serverUid, "http request: " + header);
 	

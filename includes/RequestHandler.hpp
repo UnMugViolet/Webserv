@@ -34,9 +34,9 @@ class RequestHandler
 		std::string							getIndex(const std::string &indexes, const std::string &root) const;
 		int									handleRequest(int fd, Server &server, ConfigParser *config);
 		void								setMaxBodySize(std::string size);
-		std::string							trim(const std::string &str) const;
 		std::map<std::string, std::string>	parseHeader(std::string header) const;
 		std::string							handleChunckedRequest(int fd, const std::string &body);
-
 };
 
+std::string	trim(const std::string &str);
+std::string urlDecode(const std::string &src);
