@@ -151,6 +151,14 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	received = recv(fd, buff, BUFFER_SIZE, 0);
 	if (received <= 0)
 		return -1;
+
+	// Quick exit for HTTPS/TLS handshake
+	if ((unsigned char)buff[0] == 0x16) {
+		Logger::error(serverUid, "Received HTTPS/TLS handshake, closing connection.");
+		std::cerr << "Received HTTPS/TLS handshake, closing connection." << std::endl;
+		close(fd);
+		return -1;
+	}
 	
 	// Read the complete header
 	while (received > 0)
