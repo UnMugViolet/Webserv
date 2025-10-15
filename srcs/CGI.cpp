@@ -83,8 +83,6 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 		case 2:
 			break;
 	}
-
-	cout << "broken\n";
 	if (cgi_list.find(extension) == cgi_list.end())
 	{
 		int fd = open(path.c_str(), O_RDONLY);
@@ -121,12 +119,8 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 	if (pid == 0)
 	{
 		const char	*cpath = path.c_str();
-		if (cgi_list.find(extension) != cgi_list.end())
-			cout << "first: " << cgi_list.find(extension)->first << " second: " << cgi_list.find(extension)->second << endl;
 		string	interpreter = cgi_list.find(extension)->second;
 		
-
-		cout << "what: " << interpreter << endl;
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
 		dup2(fd[1], STDERR_FILENO); // Redirect stderr to the pipe as well to get the error output on the client side
@@ -136,7 +130,6 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 			char *arg[2] = {(char *)tmp.c_str(), NULL};
 			execve(tmp.c_str(), arg, Server.getEnvAsArray());
 			throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
-			
 		}
 		const char *arg[3] = {interpreter.c_str(), cpath, NULL};
 		execve(interpreter.c_str(), (char *const *)arg, Server.getEnvAsArray());
