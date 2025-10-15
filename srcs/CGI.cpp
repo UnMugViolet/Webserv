@@ -17,7 +17,7 @@ int CGI::_checkAccess(const string &path, int type)
 	if (access(path.c_str(), R_OK) == -1)
 		return (0);
 	if (dir != NULL)
-		return (closedir(dir), 1);
+		return (closedir(dir), 0);
 	if (access(path.c_str(), F_OK) == -1)
 		return (-1);
 	return (2);

@@ -21,6 +21,6 @@ public:
 	int	handleGet(int fd, const Server &server, const ConfigParser *config, const string &fullPath);
 
 	/*operator overloads*/
-	GetRequest&	operator=(GetRequest& src);
+	GetRequest &operator=(GetRequest& src);
 };
 
