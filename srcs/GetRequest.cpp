@@ -60,25 +60,28 @@ int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *conf
 	
 	string autoindex = config->getLocationValueForPath(pathForConfig, server.getUid(), "autoindex");
 	string indexPages = config->getLocationValueForPath(pathForConfig, server.getUid(), "index");
-	string indexFile;
-
-	cout << "Index file " << indexFile << endl;
+	map<string, size_t> indexFile;
 
 	// Default autoindex to "on" if not explicitly set
 	if (autoindex.empty())
 		autoindex = "on";
 
 	if (isDirectory) {
+		cout << CYAN << BOLD << "Directory requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << endl;
+		cout << YELLOW << BOLD << "Index pages configured: " << NEUTRAL << YELLOW << indexPages << NEUTRAL << endl;
+		
+		// TO REMOVE 
 		if (!indexPages.empty())
-			indexFile = getIndex(indexPages, fullPath);
-
+			indexFile = getIndex(indexPages, decodedUrl);
+		
+		cout << RED << BOLD << "Index files found: " << indexFile.begin()->first << NEUTRAL << RED << endl;
 		// If index file is found, try to serve it
 		if (!indexFile.empty()) {
 			string indexPath = fullPath;
-			if (indexFile[0] == '/')
-				indexPath += indexFile;
+			if (indexFile.begin()->first[0] == '/')
+				indexPath += indexFile.begin()->first;
 			else
-				indexPath += "/" + indexFile;
+				indexPath += "/" + indexFile.begin()->first;
 			string decodedIndexPath = urlDecode(indexPath.c_str());
 			
 			// Check if index file exists and is accessible
