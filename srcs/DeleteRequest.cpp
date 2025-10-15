@@ -35,12 +35,14 @@ int	DeleteRequest::delete_file(int fd, Server &serv)
 		fileName.erase(0, 1);
 	string			filePath = root + fileName;
 
-	if (root.rfind('/') == root.size() - 1 && uploadName[0] == '/')
-		uploadName.erase(0, 1);
-	string			uploadPath = root + uploadName;
-	if (!uploadPath.empty())
+	if (!uploadName.empty())
+	{
+		if (root.rfind('/') == root.size() - 1 && uploadName[0] == '/')
+			uploadName.erase(0, 1);
+		string			uploadPath = root + uploadName;
 		if (remove(uploadPath.c_str()) != 0)
-			cout << "wtf\n";
+				cout << "wtf\n";
+	}
 	if (remove(filePath.c_str()) == 0)
 	{
 		string response = writeHTTPResponse(204, "", "");

@@ -6,7 +6,7 @@
 /*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/15 16:05:51 by andrean          ###   ########.fr       */
+/*   Updated: 2025/10/15 17:38:46 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,11 +115,6 @@ void Webserv::serverLoop()
 						maxFd = testFd;
 				}
 			}
-		}
-		
-		int maxWFd = 0;
-		for (int testFd = 0; testFd < FD_SETSIZE; testFd++)
-		{
 			if (FD_ISSET(testFd, &fullWriteFd))
 			{
 				// Validate the file descriptor before including it
@@ -131,13 +126,13 @@ void Webserv::serverLoop()
 				}
 				else
 				{
-					if (testFd > maxWFd)
-						maxWFd = testFd;
+					if (testFd > maxFd)
+						maxFd = testFd;
 				}
 			}
 		}
 		
-		if (maxFd == 0 && maxWFd == 0)
+		if (maxFd == 0)
 		{
 			cerr << "No valid file descriptors in set, exiting" << endl;
 			break;

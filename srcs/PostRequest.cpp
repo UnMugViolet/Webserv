@@ -119,11 +119,13 @@ int	PostRequest::createPost(string body, string postpath, string uploadpath)
 		string bodypart;
 		string boundary = _Content_type.substr(_Content_type.find("boundary=") + 9);
 
+		cout << "boundary: " << boundary << endl;
 		size_t pos = body.find(boundary);
 		pos += boundary.size();
 		size_t end = body.find(boundary, pos) - 2;
 		while (true)
 		{
+			cout << "before pos : " << pos << " end: " << end << endl;
 			bodypart = "";
 
 			if (body[pos] != '\r')
@@ -138,6 +140,7 @@ int	PostRequest::createPost(string body, string postpath, string uploadpath)
 
 				pos = body.find("filename=", pos) + 10;
 				filename = body.substr(pos, body.find("\"", pos) - pos);
+		
 				if (filename == "")
 				{
 					pos = body.find(boundary, pos);
@@ -145,9 +148,10 @@ int	PostRequest::createPost(string body, string postpath, string uploadpath)
 					end = body.find(boundary, pos) - 2;
 					continue;
 				}
+				cout << "got file: " << filename << endl;
 				pos = body.find("\r\n\r\n", pos) + 4;
 				bodypart = body.substr(pos, end - pos);
-				cout << "filename: " << filename << endl;
+				cout << "file size: " << bodypart.size() << endl;
 				res = UploadFile(bodypart, uploadpath + filename);
 				if(res == -1)
 					return (-1);
@@ -169,6 +173,7 @@ int	PostRequest::createPost(string body, string postpath, string uploadpath)
 					cout << "filename: " << filename << endl;
 				}
 				content[fieldname] = filename;
+				cout << "content : " << fieldname << "->" << filename << endl;
 			}
 			else
 			{
@@ -176,9 +181,10 @@ int	PostRequest::createPost(string body, string postpath, string uploadpath)
 				bodypart = body.substr(pos, end - pos - 2);
 				content[fieldname] = bodypart;
 			}
-			pos = body.find(boundary, pos);
+			pos = body.find(boundary, end);
 			pos += boundary.size();
 			end = body.find(boundary, pos) - 2;
+
 		}
 		if (!content.empty())
 		{

@@ -20,14 +20,13 @@ private:
 	
 	/*private helper methods*/
 	PathType getPathType(string const &path);
-	int handleDirectory(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl);
-	int handleFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl);
-	int tryServeIndexFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &indexPages);
-	int serveIndexFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &indexFileName);
-	int handleDirectoryListing(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &pathForConfig);
+	int handleDirectory(int fd, Server &server, ConfigParser const *config, string const &decodedUrl);
+	int handleFile(int fd, Server &server, ConfigParser const *config, string const &decodedUrl);
+	int tryServeIndexFile(int fd, Server &server, ConfigParser const *config, string const &decodedUrl, string const &indexPages);
+	int serveIndexFile(int fd, Server &server, ConfigParser const *config, string const &decodedUrl, string const &indexFileName);
+	int handleDirectoryListing(int fd, Server &server, ConfigParser const *config, string const &decodedUrl, string const &pathForConfig);
 	string getPathForConfig(string const &decodedUrl);
-	int sendErrorResponse(int fd, int errorCode, ConfigParser const *config, string const &serverUid);
-	int checkKeepAlive();
+	int sendErrorResponse(int fd, int errorCode, ConfigParser const *config, Server &server);
 
 public:
 	/*constructors and destructor*/
