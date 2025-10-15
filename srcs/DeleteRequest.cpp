@@ -64,7 +64,6 @@ int DeleteRequest::handleDelete(int fd, const Server &server, const ConfigParser
 	}
 	if (!isKeepalive())
 	{
-		cout << "there?\n";
 		return (-1);
 	}
 	return (0);

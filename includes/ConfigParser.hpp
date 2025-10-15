@@ -48,6 +48,8 @@ class ConfigParser {
 		vector<string> getServerUids() const;
 		vector<string> getLocationPaths(const string &serverUid) const;
 		string	getLocationValueForPath(const string &path, const string &serverUid, const string &parameter) const;
+		vector<string> getLocationVectorforPath(const string &path, const string &serverUid, const string &parameter) const;
+
 
 		void printConfig() const;
 		

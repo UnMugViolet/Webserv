@@ -106,6 +106,8 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body,
 int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const ConfigParser *config, const Server &Server)
 {
 	int 			cgiOutputFd = -1;
+	vector<string>	location_cgi = config->getLocationVectorforPath(scriptPath, Server.getUid(), "cgi");
+	string			autoindex = config->getLocationValueForPath(scriptPath, Server.getUid(), "autoindex");
     struct stat 	pathStat;
     
     // For location matching add trailing slash if it's a directory
@@ -133,7 +135,31 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 
 	try {
 		// Execute CGI script
-		cgiOutputFd = CGI::interpret(scriptPath, Server);
+		
+		map<string, string> cgi_list;
+		for (vector<string>::iterator it = location_cgi.begin(); it != location_cgi.end(); it++)
+		{
+			if (it->find(' ') != string::npos)
+			{
+				string extension = it->substr(0, it->find(' '));
+				string cgi = it->substr(it->find(' ') + 1);
+
+				cgi_list[extension] = cgi;
+			}
+			else {
+				
+				if (*it == ".py")
+					cgi_list[*it] = "/usr/bin/python3";
+				if (*it == ".php")
+					cgi_list[*it] = "/usr/bin/php";
+				if (*it == ".sh")
+					cgi_list[*it] = "/usr/bin/sh";
+				if (*it == ".pl")
+					cgi_list[*it] = "/usr/bin/perl";
+			}
+		}
+
+		cgiOutputFd = CGI::interpret(scriptPath, Server, cgi_list);
 	
 		// Read the CGI output
 		string cgiOutput;

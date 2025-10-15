@@ -29,47 +29,48 @@ string	CGI::_getExtension(const string &path)
 	size_t pos = path.rfind('.');
 	if (pos == string::npos)
 		return ("");
-	return (path.substr(pos + 1));
+	return (path.substr(pos));
 }
 
 int	CGI::_getType(string ext)
 {
-	if (ext == "py")
+	if (ext == ".py")
 		return (PYTHON);
-	else if (ext == "pl")
+	else if (ext == ".pl")
 		return (PERL);
-	else if (ext == "php")
+	else if (ext == ".php")
 		return (PHP);
-	else if (ext == "sh")
+	else if (ext == ".sh")
 		return (SHELL);
-	else if (ext == "js")
+	else if (ext == ".js")
 		return (JS);
-	else if (ext == "cgi")
+	else if (ext == ".cgi")
 		return (BINARY);
-	else if (ext == "html")
+	else if (ext == ".html")
 		return (HTML);
-	else if (ext == "css")
+	else if (ext == ".css")
 		return (CSS);
-	else if (ext == "mp3")
+	else if (ext == ".mp3")
 		return (MP3);
-	else if (ext == "png")
+	else if (ext == ".png")
 		return (PNG);
-	else if (ext == "jpg")
+	else if (ext == ".jpg")
 		return (JPG);
-	else if (ext == "jpeg")
+	else if (ext == ".jpeg")
 		return (JPEG);
-	else if (ext == "gif")
+	else if (ext == ".gif")
 		return (GIF);
-	else if (ext == "ico")
+	else if (ext == ".ico")
 		return (ICO);
 	else
 		return (UNKNOWN);
 }
 
 
-int	CGI::interpret(const string &path, const Server &Server)
+int	CGI::interpret(const string &path, const Server &Server, map<string, string> &cgi_list)
 {
-	int type = _getType(_getExtension(path));
+	string	extension = _getExtension(path);
+	int type = _getType(extension);
 
 	switch (_checkAccess(path, type))
 	{
@@ -83,17 +84,7 @@ int	CGI::interpret(const string &path, const Server &Server)
 			break;
 	}
 
-	if (path.find("/uploads/") != string::npos)
-	{
-		int fd = open(path.c_str(), O_RDONLY);
-		if (fd == -1)
-			throw CGIException("webserver cannot open file: " + path, false, 500, Server.getUid());
-		return (fd);
-	}
-	if (type == UNKNOWN)
-		throw CGIException("Webserver does not interpret file: " + path, false, 415, Server.getUid());
-
-	if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF || type == ICO || type == JS || type == MP3)
+	if (cgi_list.find(extension) == cgi_list.end())
 	{
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)
@@ -111,31 +102,17 @@ int	CGI::interpret(const string &path, const Server &Server)
 	if (pid == 0)
 	{
 		const char	*cpath = path.c_str();
-		string	interpreter;
+		string	interpreter = cgi_list.find(extension)->second;
 		
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
 		dup2(fd[1], STDERR_FILENO); // Redirect stderr to the pipe as well to get the error output on the client side
 		close(fd[1]);
-		switch (type)
-		{
-			case PYTHON :
-				interpreter = "/usr/bin/python3";
-				break;
-			case PERL :
-				interpreter = "/usr/bin/perl";
-				break;
-			case PHP :
-				interpreter = "/usr/bin/php";
-				break;
-			case SHELL :
-				interpreter = "/usr/bin/sh";
-				break;
-			case BINARY :
-				string tmp = "./" + path;
-				char *arg[2] = {(char *)tmp.c_str(), NULL};
-				execve(tmp.c_str(), arg, Server.getEnvAsArray());
-				throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
+		if (type == BINARY) {
+			string tmp = "./" + path;
+			char *arg[2] = {(char *)tmp.c_str(), NULL};
+			execve(tmp.c_str(), arg, Server.getEnvAsArray());
+			throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
 			
 		}
 		const char *arg[3] = {interpreter.c_str(), cpath, NULL};
