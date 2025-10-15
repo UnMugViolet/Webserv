@@ -21,7 +21,7 @@ private:
 	/*private helper methods*/
 	PathType getPathType(string const &path);
 	int handleDirectory(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl);
-	int handleFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl);
+	int handleFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &cookie);
 	int tryServeIndexFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &indexPages);
 	int serveIndexFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &indexFileName);
 	int handleDirectoryListing(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &pathForConfig);
@@ -37,7 +37,7 @@ public:
 	~GetRequest();
 
 	/*member functions*/
-	int	handleGet(int fd, Server const &server, ConfigParser const *config, string const &fullPath);
+	int	handleGet(int fd, Server const &server, ConfigParser const *config, string const &fullPath, const string &cookie = "");
 
 	/*operator overloads*/
 	GetRequest &operator=(GetRequest& src);

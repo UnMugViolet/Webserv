@@ -1,6 +1,9 @@
 #include "Server.hpp"
 #include "RequestHandler.hpp"
 #include <unistd.h>
+#include <set>
+#include <string>
+#include <sstream>
 
 Server::Server()
 {
@@ -466,3 +469,22 @@ vector<string> Server::getServerNames() const
 {
 	return (_server_names);
 }
+
+size_t	Server::getAvailableSessionId()
+{
+	set<size_t> ids;
+	size_t	currentId = 1;
+	if (!_sessions.empty()) {
+		for (map<size_t, map<string, string> >::iterator it = _sessions.begin(); it != _sessions.end(); it++)
+			ids.insert((*it).first);
+		for (set<size_t>::iterator it = ids.begin(); it != ids.end(); it++)
+		{
+			if (currentId < (*it))
+				break;
+			currentId++;
+		}
+	}
+	return (currentId);
+}
+
+void	Server::createSession(size_t sessionId) {_sessions[sessionId];} //yguinio was here

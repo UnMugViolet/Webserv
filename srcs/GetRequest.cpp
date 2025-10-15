@@ -36,7 +36,7 @@ GetRequest::GetRequest(GetRequest &src) : ARequest(src)
 	return;
 }
 
-int GetRequest::handleGet(int fd, Server const &server, ConfigParser const *config, string const &fullPath)
+int GetRequest::handleGet(int fd, Server const &server, ConfigParser const *config, string const &fullPath, string const &cookie)
 {
 	string decodedUrl = urlDecode(fullPath.c_str());
 	PathType pathType = getPathType(decodedUrl);
@@ -48,7 +48,7 @@ int GetRequest::handleGet(int fd, Server const &server, ConfigParser const *conf
 		return handleDirectory(fd, server, config, decodedUrl);
 
 	if (pathType == PATH_FILE)
-		return handleFile(fd, server, config, decodedUrl);
+		return handleFile(fd, server, config, decodedUrl, cookie);
 
 	return sendErrorResponse(fd, 500, config, server.getUid());
 }
@@ -85,13 +85,13 @@ int GetRequest::handleDirectory(int fd, Server const &server, ConfigParser const
 	return handleDirectoryListing(fd, server, config, decodedUrl, pathForConfig);
 }
 
-int GetRequest::handleFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl)
+int GetRequest::handleFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &cookie)
 {
 	if (access(decodedUrl.c_str(), R_OK) != 0)
 		return sendErrorResponse(fd, 403, config, server.getUid());
 
 	cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << endl;
-	if (sendCGIResponse(fd, decodedUrl, config, server) == -1)
+	if (sendCGIResponse(fd, decodedUrl, config, server, cookie) == -1)
 		cerr << "Failed to send CGI response" << endl;
 
 	return checkKeepAlive();

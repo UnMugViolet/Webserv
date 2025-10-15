@@ -23,6 +23,7 @@ private:
 	/*attributes here*/
 	string							_uid;
 	map<string, string>	_env;
+	map<size_t, map<string, string> > _sessions;
 	vector<string>			_server_names;
 	vector<int>					_socketfds;
 	vector<int>					_clientFds;
@@ -40,6 +41,9 @@ public:
 	vector<sockaddr_in>	setServerNames(const ConfigParser &config, const string &serverUid);
 	vector<int>			checkPorts(const ConfigParser &config, const string &serverUid);
 	void						CreateSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs);
+	size_t			getAvailableSessionId();
+	void			createSession(size_t sessionId);
+
 	// int			addVirtualHost(ConfigParser &config, string serverUid);
 	vector<int>	getSocket() const;
 	string	getUid() const;
@@ -72,5 +76,4 @@ public:
 				}
 				virtual ~ServException() throw() {}
 		};
-};
-
+} ;

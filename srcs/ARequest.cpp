@@ -66,7 +66,7 @@ string generateDirectoryListing(string const &dirPath, string const &requestPath
     return html.str();
 }
 
-int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body, const string& contentType)
+int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body, const string& contentType, const string &cookie)
 {
 	ostringstream response;
 	string statusText;
@@ -82,7 +82,6 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body,
 		case 500: statusText = "Internal Server Error"; break;
 		default: statusText = "Unknown"; break;
 	}
-	
 	// Build HTTP response
 	response << "HTTP/1.1 " << statusCode << " " << statusText << "\r\n";
 	if (statusCode != 204)
@@ -90,9 +89,12 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body,
 		response << "Content-Type: " << contentType << "\r\n";
 		response << "Content-Length: " << body.length() << "\r\n";
 	}
+	if (!cookie.empty())
+		response << cookie + "\r\n";
 	if (!_keep_alive)
 		response << "Connection: close\r\n";
 	response << "\r\n";
+	cout << response.str() << endl;
 	response << body;
 	
 	string responseStr = response.str();
@@ -103,13 +105,13 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body,
 	return 0;
 }
 
-int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const ConfigParser *config, const Server &Server)
+int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const ConfigParser *config, const Server &Server, const string &cookie)
 {
 	int 			cgiOutputFd = -1;
 	vector<string>	location_cgi = config->getLocationVectorforPath(scriptPath, Server.getUid(), "cgi");
 	string			autoindex = config->getLocationValueForPath(scriptPath, Server.getUid(), "autoindex");
     struct stat 	pathStat;
-    
+
     // For location matching add trailing slash if it's a directory
     string pathForConfig = _path;
     if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
@@ -126,10 +128,10 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
     if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
         if (auto_index == "on") {
             string listing = generateDirectoryListing(scriptPath, _path);
-            return sendHTTPResponse(clientFd, 200, listing, "text/html");
+            return sendHTTPResponse(clientFd, 200, listing, "text/html", cookie);
         } else {
             string errorPage = loadErrorPage(403, config, Server.getUid());
-            return sendHTTPResponse(clientFd, 403, errorPage, "text/html");
+            return sendHTTPResponse(clientFd, 403, errorPage, "text/html", cookie);
         }
     }
 
@@ -177,7 +179,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 		
 		// Send successful response with CGI output
 		string contentType = getContentType(scriptPath);
-		return sendHTTPResponse(clientFd, 200, cgiOutput, contentType);
+		return sendHTTPResponse(clientFd, 200, cgiOutput, contentType, cookie);
 		
 	} catch (const CGI::CGIException &e) {
 		// Close the file descriptor if it was opened
@@ -188,7 +190,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 		// Handle true CGI execution errors (file not found, permission denied, etc.)
 		// These are cases where the script couldn't even run
 		string errorPage = loadErrorPage(e.getHttpStatus(), config, Server.getUid());
-		return sendHTTPResponse(clientFd, e.getHttpStatus(), errorPage, "text/html");
+		return sendHTTPResponse(clientFd, e.getHttpStatus(), errorPage, "text/html", cookie);
 	} catch (...) {
 		// Handle any other exceptions
 		if (cgiOutputFd != -1) {
@@ -196,7 +198,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 		}
 		
 		string errorPage = loadErrorPage(500, config, Server.getUid());
-		return sendHTTPResponse(clientFd, 500, errorPage, "text/html");
+		return sendHTTPResponse(clientFd, 500, errorPage, "text/html", cookie);
 	}
 }
 

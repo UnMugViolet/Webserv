@@ -230,6 +230,19 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	try
 	{
 		headermap = parseHeader(header);
+		string cookie;
+
+		// Checks if the client already has a sessionId, if not, sets it to the lowest id available
+		if (headermap.find("Cookie") == headermap.end()) {
+			size_t clientId = server.getAvailableSessionId();
+			ostringstream oss;
+			oss << clientId;
+			cookie = "Set-Cookie: session_id=" + oss.str();
+			server.createSession(clientId);
+			cout << cookie << endl;
+		} else {
+			cout << headermap["Cookie"] << endl;
+		}
 
 		if (headermap.find("Host") == headermap.end())
 		{
@@ -237,7 +250,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 			cerr << "No server_name, bad request" << endl;
 			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-			if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+			if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html", cookie) == -1)
 				cerr << "Failed to send 400 response" << endl;
 			readbody = 0;
 		}
@@ -270,7 +283,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 				cerr << "Invalid Content-Length header" << endl;
 				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html", cookie) == -1)
 					cerr << "Failed to send 400 response" << endl;
 				readbody = 0;
 			}
@@ -282,7 +295,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 				cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << endl;
 				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
-				if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
+				if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html", cookie) == -1)
 					cerr << "Failed to send 413 response" << endl;
 				readbody = 0;
 			}
@@ -345,7 +358,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 				cout << "EARLY 403" << endl;
 				string errorPage = requestObject.loadErrorPage(403, config, serverUid);
-				if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
+				if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html", cookie) == -1)
 					cerr << "Failed to send 403 response" << endl;
 				if (!requestObject.isKeepalive())
 					return (-1);
@@ -357,7 +370,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			GetRequest requestObject;
 
 			string errorPage = requestObject.loadErrorPage(403, config, serverUid);
-			if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
+			if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html", cookie) == -1)
 				cerr << "Failed to send 403 response" << endl;
 			if (!requestObject.isKeepalive())
 				return (-1);
@@ -373,7 +386,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			GetRequest requestObject(headermap);
 			// Process the GET request and send response
 
-			return (requestObject.handleGet(fd, server, config, fullPath));
+			return (requestObject.handleGet(fd, server, config, fullPath, cookie));
 		}
 		else if (headermap["method"] == "POST")
 		{
