@@ -381,6 +381,40 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 	}
 }
 
+void	Server::fillClientBuffer(int clientFd, const string &buff)
+{
+	if (!buff.empty() && clientFd >= 0)
+	{
+		_clientBuffer[clientFd] = buff;
+	}
+}
+const string&	Server::getClientBuffer(int clientFd) const
+{
+	if (clientFd >= 0)
+	{
+		map<int, string>::const_iterator it = _clientBuffer.begin();
+		for (; it != _clientBuffer.end(); it++)
+		{
+			if (it->first == clientFd)
+				return (it->second);
+		}
+	}
+	return ("");
+}
+
+void	Server::clearClientBuffer(int clientFd)
+{
+	if (clientFd >= 0)
+	{
+		map<int, string>::iterator it = _clientBuffer.begin();
+		for (; it != _clientBuffer.end(); it++)
+		{
+			if (it->first == clientFd)
+				_clientBuffer.erase(it);
+		}
+	}
+}
+
 /* 
  * ENV handling for each instance of Server 
 */

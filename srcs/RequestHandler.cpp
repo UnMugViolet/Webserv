@@ -130,65 +130,59 @@ map<string, string> RequestHandler::parseHeader(string header) const
 	return (headers);
 }
 
-int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
+int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 {
-	int readbody = 1;
-	int received;
-	size_t const BUFFER_SIZE = 1;
-	size_t const MAX_HEADER_SIZE = 8192; // 8KB for headers
-	size_t headerlimit;
-	char buff[BUFFER_SIZE];
-	string serverRoot;
-	string serverUid = server.getUid();
-	string body;
-	string header;
-	vector<string> serverNames = server.getServerNames();
-	map<string, string> headermap;
+	string	serverUid = server.getUid();
+	size_t	const BUFFER_SIZE = 1;
+	char	buff[BUFFER_SIZE];
+	int		received;
+	string	body;
+	string	header;
+	string	savestring;
+	size_t	const MAX_HEADER_SIZE = 8192; // 8KB for headers
+	size_t	headerlimit;
+	map<string, string>	headermap;
 
-	// Read initial chunk
-	received = recv(fd, buff, BUFFER_SIZE, 0);
-	if (received <= 0)
-		return -1;
-
-	// Quick exit for HTTPS/TLS handshake
-	if ((unsigned char)buff[0] == 0x16)
+	if (server.getClientBuffer(fd) == "")
 	{
-		Logger::error(serverUid, "Received HTTPS/TLS handshake, closing connection.");
-		cerr << "Received HTTPS/TLS handshake, closing connection." << endl;
-		close(fd);
-		return -1;
-	}
-
-	// Read the complete header
-	while (received > 0)
-	{
-		header.append(buff, received);
-		headerlimit = header.find("\r\n\r\n");
-		if (headerlimit != string::npos)
-			break;
-
-		// Prevent header from being too large
-		if (header.size() > MAX_HEADER_SIZE)
-			return (Logger::error(serverUid, "Header too large"), -1);
-
 		received = recv(fd, buff, BUFFER_SIZE, 0);
 		if (received <= 0)
-			break;
+			return -1;
+
+		// Quick exit for HTTPS/TLS handshake	
+		if ((unsigned char)buff[0] == 0x16)
+		{
+			Logger::error(serverUid, "Received HTTPS/TLS handshake, closing connection.");
+			cerr << "Received HTTPS/TLS handshake, closing connection." << endl;
+			return -1;
+		}
+		savestring.append(buff, received);
+		server.fillClientBuffer(fd, savestring);
+		return (0);
 	}
 
-	// Extract body if present
+	savestring.append(server.getClientBuffer(fd));
+	headerlimit = savestring.find("\r\n\r\n");
 	if (headerlimit == string::npos)
 	{
-		cout << header << endl;
-	}
-	body = header.substr(headerlimit + 4, string::npos);
-	if (headerlimit != string::npos)
+		// Prevent header from being too large
+		if (savestring.size() > MAX_HEADER_SIZE)
+			return (Logger::error(serverUid, "Header too large"), -1);
+		received = recv(fd, buff, BUFFER_SIZE, 0);
+		if (received <= 0)
+		{
+			server.clearClientBuffer(fd);
+			return -1;
+		}
+		
+		savestring.append(buff, received);
+		server.fillClientBuffer(fd, savestring);
+		return (0);
+	} else {
+		body = savestring.substr(headerlimit + 4, string::npos);
+		header = savestring;
 		header.erase(headerlimit, string::npos);
-
-	Logger::access(serverUid, "http request: " + header);
-
-	try
-	{
+		
 		headermap = parseHeader(header);
 
 		if (headermap.find("Host") == headermap.end())
@@ -197,10 +191,113 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 			cerr << "No server_name, bad request" << endl;
 			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-			if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
-				cerr << "Failed to send 400 response" << endl;
-			readbody = 0;
+			// if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+				// cerr << "Failed to send 400 response" << endl;
+			server.clearClientBuffer(fd);
+			return -1;
 		}
+		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
+		if (headermap["Host"].find(':'))
+			server.setEnvValue("SERVER_PORT", headermap["Host"].substr(headermap["Host"].find(':') + 1));
+		else
+			server.setEnvValue("SERVER_PORT", "80");
+		string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
+		if (max_body_size.empty())
+			max_body_size = config->getValue("client_max_body_size");
+		setMaxBodySize(max_body_size);
+		// Check if we need to read more body data
+		// if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chuncked"))
+		// {
+		// 	body = handleChunckedRequest(fd, body);
+		// 	if (body.empty()) {
+		// 		cout << "empty body\n";
+		// 		return (-1);
+		// 	}
+		// }
+		if (headermap.find("Content-Length") != headermap.end())
+		{
+			istringstream iss(headermap["Content-Length"]);
+			size_t contentLength;
+			if (!(iss >> contentLength))
+			{
+				GetRequest requestObject;
+
+				cerr << "Invalid Content-Length header" << endl;
+				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
+				// if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
+				// 	cerr << "Failed to send 400 response" << endl;
+				server.clearClientBuffer(fd);
+				return -1;
+			}
+
+			// Check against max body size
+			if (_maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
+			{
+				GetRequest requestObject;
+
+				cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << endl;
+				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
+				// if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
+				// 	cerr << "Failed to send 413 response" << endl;
+				server.clearClientBuffer(fd);
+				return -1;
+			}
+			// Read remaining body if needed
+			// if (readbody == 0)
+			// {
+			// 	while (true)
+			// 	{
+			// 		received = recv(fd, buff, BUFFER_SIZE, 0);
+			// 		if (received <= 0)
+			// 			break; // TODO - Error or connection closed ?
+			// 	}
+			// 	return (-1);
+			// }
+			if (body.size() < contentLength)
+			{
+				memset(buff, 0, BUFFER_SIZE);
+				received = recv(fd, buff, min(BUFFER_SIZE, contentLength), 0);
+				if (received <= 0)
+				{
+					server.clearClientBuffer(fd);
+					return -1;
+				}
+				body.append(buff, received);
+				savestring.append(body);
+				server.fillClientBuffer(fd, savestring);
+				return (0);
+			}
+			return (1);
+		}
+	}
+}
+
+int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
+{
+	int readbody = 1;
+	size_t const MAX_HEADER_SIZE = 8192; // 8KB for headers
+	size_t headerlimit;
+	string serverRoot;
+	string serverUid = server.getUid();
+	string body;
+	string header;
+	vector<string> serverNames = server.getServerNames();
+	map<string, string> headermap;
+
+
+	
+
+	// Read with recv until request is complete
+	int res = readOnce(fd, server, config);
+	if (res != 1)
+		return (res);
+	
+	Logger::access(serverUid, "http request: " + server.getClientBuffer(fd));
+
+	try
+	{
+		headermap = parseHeader(header);
+
 		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
 		if (headermap["Host"].find(':'))
 			server.setEnvValue("SERVER_PORT", headermap["Host"].substr(headermap["Host"].find(':') + 1));
@@ -212,63 +309,15 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		setMaxBodySize(max_body_size);
 		serverRoot = config->getServerValue(serverUid, "root");
 		// Check if we need to read more body data
-		if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chuncked"))
-		{
-			body = handleChunckedRequest(fd, body);
-			if (body.empty()) {
-				cout << "empty body\n";
-				return (-1);
-			}
-		}
-		if (headermap.find("Content-Length") != headermap.end())
-		{
-			istringstream iss(headermap["Content-Length"]);
-			size_t contentLength;
-			if (!(iss >> contentLength))
-			{
-				GetRequest requestObject;
-
-				cerr << "Invalid Content-Length header" << endl;
-				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
-					cerr << "Failed to send 400 response" << endl;
-				readbody = 0;
-			}
-
-			// Check against max body size
-			if (readbody && _maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
-			{
-				GetRequest requestObject;
-
-				cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << endl;
-				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
-				if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
-					cerr << "Failed to send 413 response" << endl;
-				readbody = 0;
-			}
-			// Read remaining body if needed
-			if (readbody == 0)
-			{
-				while (true)
-				{
-					received = recv(fd, buff, BUFFER_SIZE, 0);
-					if (received <= 0)
-						break; // TODO - Error or connection closed ?
-				}
-				return (-1);
-			}
-			while (body.size() < contentLength)
-			{
-				received = recv(fd, buff, BUFFER_SIZE, 0);
-				if (received <= 0)
-				{
-					cerr << "error while reading body" << endl;
-					return (-1);
-				}
-				body.append(buff, received);
-			}
-		}
-
+		// if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chuncked"))
+		// {
+		// 	body = handleChunckedRequest(fd, body);
+		// 	if (body.empty()) {
+		// 		cout << "empty body\n";
+		// 		return (-1);
+		// 	}
+		// }
+		
 		// get the index full path
 		if (serverRoot[serverRoot.length() - 1] == '/')
 			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);

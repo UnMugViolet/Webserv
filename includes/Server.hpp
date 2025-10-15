@@ -26,6 +26,7 @@ private:
 	vector<string>			_server_names;
 	vector<int>					_socketfds;
 	vector<int>					_clientFds;
+	map<int, string>			_clientBuffer;
 	RequestHandler						*_handler;
 	ConfigParser						*_config;
 
@@ -48,7 +49,9 @@ public:
 	int			setClient(int _socketfd);
 	void		unsetClient(int position);
 	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config);
-
+	void		fillClientBuffer(int clientFd, const string &buff);
+	const string	&getClientBuffer(int clientFd) const;
+	void		clearClientBuffer(int clientFd);
 	// Env handling methods
 	void		initEnv(char **env);
 	void		printEnv() const;
@@ -56,6 +59,7 @@ public:
 	void		setEnvValue(const string &key, const string &value);
 	char		**getEnvAsArray() const;
 	const map<string, string> getEnv() const;
+	
 
 	/*operator overloads*/
 	Server		&operator=(const Server &other);
