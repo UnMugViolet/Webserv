@@ -37,7 +37,7 @@ class RequestHandler
 		string							handleChunckedRequest(int fd, const string &body);
 };
 
-string	trim(const string &str);
-string	urlDecode(const string &src);
-string	getIndex(const string &indexes, const string &root);
+string				trim(const string &str);
+string				urlDecode(const string &src);
+map<string, size_t>	getIndex(const string &indexes, const string &root);
 

@@ -26,10 +26,20 @@ RequestHandler::~RequestHandler()
 	return;
 }
 
+/**
+ * Get the original URL and decode percent-encoded characters.
+ * Also, sanitize the path by removing consecutive slashes.
+ * @param src The percent-encoded URL string.
+ * @return The decoded and sanitized URL string. 
+*/
 string urlDecode(const string &src)
 {
 	ostringstream out;
+
+	cout << "Decoding URL: " << src << endl;
 	for (size_t i = 0; i < src.length(); ++i) {
+		while (src[i] == '/' && src[i + 1] == '/')
+			++i;
 		if (src[i] == '%' && i + 2 < src.length()) {
 			int hex = 0;
 			istringstream iss(src.substr(i + 1, 2));
@@ -48,12 +58,12 @@ string urlDecode(const string &src)
 int RequestHandler::_checkAccess(const string &path)
 {
 	if (access(path.c_str(), F_OK) == -1)
-		return (-1);
+		return 404;
 	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
-		return (0);
+		return 403;
 	if (access(path.c_str(), R_OK) == -1)
-		return (0);
-	return (1);
+		return 403;
+	return 200;
 }
 
 string RequestHandler::getExtension(const string &path)
@@ -64,27 +74,60 @@ string RequestHandler::getExtension(const string &path)
 	return (path.substr(pos + 1));
 }
 
-string getIndex(string const &indexes, string const &root)
+map<string, size_t> getIndex(string const &indexes, string const &root)
 {
-	string fullPath;
-	string goodIndex;
-	size_t space1;
-	size_t space2 = 0;
+    map<string, size_t> result;
+    string fullPath;
+    string goodIndex;
+    string lastIndex;
+    size_t lastStatus = 404;
+    size_t space1;
+    size_t space2 = 0;
 
-	while (true)
-	{
-		space1 = indexes.find_first_not_of(" ", space2);
-		if (space1 == string::npos)
-			break;
-		space2 = indexes.find(' ', space1);
-		goodIndex = indexes.substr(space1, space2);
-		if (goodIndex[0] != '/')
-			goodIndex = "/" + goodIndex;
-		fullPath = root + goodIndex;
-		if (RequestHandler::_checkAccess(fullPath) == 1)
-			return (goodIndex);
-	}
-	return ("");
+    if (indexes.empty())
+        return result;
+
+    while (true)
+    {
+        space1 = indexes.find_first_not_of(" ", space2);
+        if (space1 == string::npos)
+            break;
+        space2 = indexes.find(' ', space1);
+        if (space2 == string::npos)
+            goodIndex = indexes.substr(space1);
+        else
+            goodIndex = indexes.substr(space1, space2 - space1);
+        
+        if (goodIndex[0] != '/' && goodIndex[0] != '.')
+            goodIndex = "/" + goodIndex;
+        
+        fullPath = root + goodIndex;
+        
+        size_t status = RequestHandler::_checkAccess(fullPath);
+        
+        cout << CYAN << BOLD << "Checking index: " << goodIndex << " -> " << fullPath << " (status: " << status << ")" << NEUTRAL << endl;
+        
+        // If we find a 200 (accessible), return it immediately
+        if (status == 200) {
+            result[goodIndex] = status;
+            return result;
+        }
+        
+        // Keep track of the last index and its status
+        lastIndex = goodIndex;
+        lastStatus = status;
+        
+        if (space2 == string::npos)
+            break;
+    }
+    
+    // No 200 found, return the last index with its status
+    if (!lastIndex.empty()) {
+        result[lastIndex] = lastStatus;
+        cout << CYAN << BOLD << "No accessible index found, returning last: " << lastIndex << " (status: " << lastStatus << ")" << NEUTRAL << endl;
+    }
+    
+    return result;
 }
 
 string trim(const string &str)
@@ -273,10 +316,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		if (serverRoot[serverRoot.length() - 1] == '/')
 			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);
 		string fullPath = serverRoot + headermap["path"];
-		string indexFile = getIndex(config->getServerValue(serverUid, "index"), serverRoot);
-
-		if (headermap["path"] == "/")
-			fullPath = serverRoot + indexFile;
 
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);
@@ -307,6 +346,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			{
 				GetRequest requestObject;
 
+				cout << "EARLY 403" << endl;
 				string errorPage = requestObject.loadErrorPage(403, config, serverUid);
 				if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
 					cerr << "Failed to send 403 response" << endl;
