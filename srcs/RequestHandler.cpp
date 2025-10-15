@@ -293,21 +293,16 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			int status = 0;
 			string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods");
-			if (allowed_methods.find(headermap["method"]) != string::npos)
-			{
-				for (size_t i = allowed_methods.find(' '); i != string::npos; i = allowed_methods.find(' ', i))
-				{
-					string one_method = allowed_methods.substr(0, i);
-					if (one_method == headermap["method"])
-					{
-						status = 1;
-						break;
-					}
-					allowed_methods = allowed_methods.substr(i + 1);
-				}
-				if (allowed_methods == headermap["method"])
+			istringstream iss(allowed_methods);
+			string one_method;
+
+			while (iss >> one_method) {
+				if (one_method == headermap["method"]) {
 					status = 1;
+					break;
+				}
 			}
+			// Case no methods allowed for the location
 			if (status == 0)
 			{
 				GetRequest requestObject;

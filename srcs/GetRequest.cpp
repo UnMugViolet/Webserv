@@ -23,7 +23,19 @@ GetRequest::GetRequest(GetRequest &src) : ARequest(src)
 {
 	return ;
 }
-
+/**
+ * Logic:
+ * 1. If directory:
+ *    - Try to find index file first, if found and accessible, serve it.
+ *    - If no index file or not accessible:
+ *      - If autoindex on, serve directory listing.
+ *      - If autoindex off, respond 403.
+ * 2. If file:
+ *    - If accessible, serve it.
+ *    - If not accessible, respond 403.
+ * 3. If neither file nor directory exists, respond 404.
+ * 4. If not keep-alive, return -1 to close connection.
+ */
 int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *config, const string &fullPath)
 {
 	string decodedUrl = urlDecode(fullPath.c_str());
@@ -50,22 +62,12 @@ int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *conf
 	string indexPages = config->getLocationValueForPath(pathForConfig, server.getUid(), "index");
 	string indexFile;
 
+	cout << "Index file " << indexFile << endl;
+
 	// Default autoindex to "on" if not explicitly set
 	if (autoindex.empty())
 		autoindex = "on";
 
-	/**
-	 * Logic:
-	 * 1. If directory:
-	 *    - Try to find index file first, if found and accessible, serve it.
-	 *    - If no index file or not accessible:
-	 *      - If autoindex on, serve directory listing.
-	 *      - If autoindex off, respond 403.
-	 * 2. If file:
-	 *    - If accessible, serve it.
-	 *    - If not accessible, respond 403.
-	 * 3. If neither file nor directory exists, respond 404.
-	 */
 	if (isDirectory) {
 		if (!indexPages.empty())
 			indexFile = getIndex(indexPages, fullPath);

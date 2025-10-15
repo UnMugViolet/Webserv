@@ -12,7 +12,6 @@ int CGI::_checkAccess(const string &path, int type)
 {
 	DIR* dir = opendir(path.c_str());
 
-	cout << "Checking access for: " << path << " of type " << type << endl;
 	if (type == BINARY && access(path.c_str(), X_OK) == -1)
 		return (0);
 	if (access(path.c_str(), R_OK) == -1)
@@ -94,7 +93,7 @@ int	CGI::interpret(const string &path, const Server &Server)
 	if (type == UNKNOWN)
 		throw CGIException("Webserver does not interpret file: " + path, false, 415, Server.getUid());
 
-	if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF || type == ICO || type == JS || type == MP3) // TODO - Parse config file instead to know which files are interpreted
+	if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF || type == ICO || type == JS || type == MP3)
 	{
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)
