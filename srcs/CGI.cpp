@@ -84,7 +84,6 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 			break;
 	}
 
-	cout << "broken\n";
 	if (cgi_list.find(extension) == cgi_list.end())
 	{
 		int fd = open(path.c_str(), O_RDONLY);
@@ -92,24 +91,6 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 			throw CGIException("webserver cannot open file: " + path, false, 500, Server.getUid());
 		return (fd);
 	}
-
-	// if (path.find("/uploads/") != string::npos)
-	// {
-	// 	int fd = open(path.c_str(), O_RDONLY);
-	// 	if (fd == -1)
-	// 		throw CGIException("webserver cannot open file: " + path, false, 500, Server.getUid());
-	// 	return (fd);
-	// }
-	// if (type == UNKNOWN)
-	// 	throw CGIException("Webserver does not interpret file: " + path, false, 415, Server.getUid());
-
-	// if (type == HTML || type == CSS || type == PNG || type == JPG || type == JPEG || type == GIF || type == ICO || type == JS || type == MP3) // TODO - Parse config file instead to know which files are interpreted
-	// {
-	// 	int fd = open(path.c_str(), O_RDONLY);
-	// 	if (fd == -1)
-	// 		throw CGIException("webserver cannot open file: " + path, false, 500, Server.getUid());
-	// 	return (fd);
-	// }
 	
 	int	fd[2];
 	if (pipe(fd) == -1)
@@ -121,12 +102,8 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 	if (pid == 0)
 	{
 		const char	*cpath = path.c_str();
-		if (cgi_list.find(extension) != cgi_list.end())
-			cout << "first: " << cgi_list.find(extension)->first << " second: " << cgi_list.find(extension)->second << endl;
 		string	interpreter = cgi_list.find(extension)->second;
 		
-
-		cout << "what: " << interpreter << endl;
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
 		dup2(fd[1], STDERR_FILENO); // Redirect stderr to the pipe as well to get the error output on the client side
