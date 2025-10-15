@@ -13,11 +13,11 @@
 #pragma once
 
 #include <fstream>
-#include <sstream>
 #include <vector>
 #include <map>
 #include <unistd.h>
 
+#include "utils.hpp"
 #include "dict.hpp"
 
 class ConfigParser {
@@ -29,7 +29,6 @@ class ConfigParser {
 		void	_checkSemicolons(const string &file) const;
 		string _trim(const string &str) const;
 		string _formatLine(const string &str) const;
-		string _intToString(int num) const;
 		void _parseServerBlock(ifstream &file, string const &serverName);
 		void _parseLocationBlock(ifstream &file, string const &serverName, string const &location);
 
@@ -45,9 +44,7 @@ class ConfigParser {
 		string getValue(const string &key) const;
 		string getServerValue(const string &serverName, const string &key) const;
 		string getLocationValue(const string &serverName, const string &location, const string &key) const;
-		bool hasKey(const string &key) const;
 		bool hasServerKey(const string &serverName, const string &key) const;
-		bool hasLocationKey(const string &serverName, const string &location, const string &key) const;
 		vector<string> getServerUids() const;
 		vector<string> getLocationPaths(const string &serverUid) const;
 		string	getLocationValueForPath(const string &path, const string &serverUid, const string &parameter) const;

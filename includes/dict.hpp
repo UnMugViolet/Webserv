@@ -34,15 +34,6 @@ using namespace std;
 #define UNDERLINE "\033[4m"
 #define ITALIC "\033[3m"
 
-#define MAX_INT numeric_limits<int>::max()
-#define MIN_INT numeric_limits<int>::min()
-#define MAX_UINT numeric_limits<unsigned int>::max()
-#define MIN_UINT -numeric_limits<unsigned int>::min()
-#define MAX_FLOAT numeric_limits<float>::max()
-#define MIN_FLOAT -numeric_limits<float>::max()
-#define MAX_DOUBLE numeric_limits<double>::max()
-#define MIN_DOUBLE -numeric_limits<double>::max()
-
 #define DEFAULT_ERROR_PAGES_PATH "error_pages/default/"
 #define LOG_FOLDER_PATH "logs/"
 

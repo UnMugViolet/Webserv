@@ -6,7 +6,7 @@
 /*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/14 16:21:18 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/10/15 09:57:40 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ Webserv::Webserv()
 Webserv::Webserv(ConfigParser &config)
 {
 	string					serverUid;
-	vector<string>	serverUids;
+	vector<string>			serverUids;
 
 	
 	_config = &config;
