@@ -5,17 +5,17 @@
 RequestHandler::RequestHandler()
 {
 	_maxBodySize = 0;
-	return ;
+	return;
 }
 
-RequestHandler::RequestHandler(RequestHandler& src)
+RequestHandler::RequestHandler(RequestHandler &src)
 {
 	/*copy what needs to be here*/
 	this->_maxBodySize = src._maxBodySize;
-	return ;
+	return;
 }
 
-RequestHandler&	RequestHandler::operator=(RequestHandler &src)
+RequestHandler &RequestHandler::operator=(RequestHandler &src)
 {
 	this->_maxBodySize = src._maxBodySize;
 	return (*this);
@@ -23,25 +23,26 @@ RequestHandler&	RequestHandler::operator=(RequestHandler &src)
 
 RequestHandler::~RequestHandler()
 {
-	return ;
+	return;
 }
 
-string urlDecode(const string &src) {
-    ostringstream out;
-    for (size_t i = 0; i < src.length(); ++i) {
-        if (src[i] == '%' && i + 2 < src.length()) {
-            istringstream iss(src.substr(i + 1, 2));
-            int hex = 0;
-            if (iss >> hex >> hex)
-                out << static_cast<char>(hex);
-            i += 2;
-        } else if (src[i] == '+') {
-            out << ' ';
-        } else {
-            out << src[i];
-        }
-    }
-    return out.str();
+string urlDecode(const string &src)
+{
+	ostringstream out;
+	for (size_t i = 0; i < src.length(); ++i) {
+		if (src[i] == '%' && i + 2 < src.length()) {
+			int hex = 0;
+			istringstream iss(src.substr(i + 1, 2));
+			if (iss >> std::hex >> hex)
+				out << static_cast<char>(hex);
+			i += 2;
+		}
+		else if (src[i] == '+')
+			out << ' ';
+		else
+			out << src[i];
+	}
+	return out.str();
 }
 
 int RequestHandler::_checkAccess(const string &path)
@@ -53,10 +54,9 @@ int RequestHandler::_checkAccess(const string &path)
 	if (access(path.c_str(), R_OK) == -1)
 		return (0);
 	return (1);
-	
 }
 
-string	RequestHandler::getExtension(const string &path)
+string RequestHandler::getExtension(const string &path)
 {
 	size_t pos = path.rfind('.');
 	if (pos == string::npos)
@@ -64,32 +64,30 @@ string	RequestHandler::getExtension(const string &path)
 	return (path.substr(pos + 1));
 }
 
-string RequestHandler::getIndex(const string &indexes, const string &root) const
+string getIndex(string const &indexes, string const &root)
 {
-	string	fullPath;
-	string	goodIndex;
-	size_t	space1;
-	size_t	space2 = 0;
+	string fullPath;
+	string goodIndex;
+	size_t space1;
+	size_t space2 = 0;
 
 	while (true)
 	{
 		space1 = indexes.find_first_not_of(" ", space2);
 		if (space1 == string::npos)
-			break ;
+			break;
 		space2 = indexes.find(' ', space1);
 		goodIndex = indexes.substr(space1, space2);
 		if (goodIndex[0] != '/')
 			goodIndex = "/" + goodIndex;
 		fullPath = root + goodIndex;
-		if (_checkAccess(fullPath) == 1) {
-			cout << "Index found: " << fullPath << endl;
+		if (RequestHandler::_checkAccess(fullPath) == 1)
 			return (goodIndex);
-		}
 	}
 	return ("");
 }
 
-string	trim(const string &str)
+string trim(const string &str)
 {
 	size_t first = str.find_first_not_of(" \r\n\t");
 	if (first == string::npos)
@@ -98,23 +96,23 @@ string	trim(const string &str)
 	return (str.substr(first, last - first + 1));
 }
 
-map<string, string>	RequestHandler::parseHeader(string header) const
+map<string, string> RequestHandler::parseHeader(string header) const
 {
 	map<string, string> headers;
-	istringstream	stream(header);
-	string			line;
-	string			method;
-	string			path;
-	size_t	colon;
-	
+	istringstream stream(header);
+	string line;
+	string method;
+	string path;
+	size_t colon;
+
 	getline(stream, line);
 	istringstream requestLine(line);
-	
+
 	// Parse the request line: METHOD PATH HTTP/VERSION
 	requestLine >> method >> path;
 	headers["path"] = path;
 	headers["method"] = method;
-	
+
 	while (getline(stream, line) && line != "\r" && !line.empty())
 	{
 		colon = line.find(':');
@@ -132,20 +130,20 @@ map<string, string>	RequestHandler::parseHeader(string header) const
 	return (headers);
 }
 
-int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
+int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 {
-	int									readbody = 1;
-	int									received;
-	size_t const 						BUFFER_SIZE = 1;
-	size_t const 						MAX_HEADER_SIZE = 8192; // 8KB for headers
-	size_t 								headerlimit;
-	char 								buff[BUFFER_SIZE];
-	string							serverRoot;
-	string 						serverUid = server.getUid();
-	string 						body;
-	string 						header;
-	vector<string> 			serverNames = server.getServerNames();
-	map<string, string> 	headermap;
+	int readbody = 1;
+	int received;
+	size_t const BUFFER_SIZE = 1;
+	size_t const MAX_HEADER_SIZE = 8192; // 8KB for headers
+	size_t headerlimit;
+	char buff[BUFFER_SIZE];
+	string serverRoot;
+	string serverUid = server.getUid();
+	string body;
+	string header;
+	vector<string> serverNames = server.getServerNames();
+	map<string, string> headermap;
 
 	// Read initial chunk
 	received = recv(fd, buff, BUFFER_SIZE, 0);
@@ -153,30 +151,31 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		return -1;
 
 	// Quick exit for HTTPS/TLS handshake
-	if ((unsigned char)buff[0] == 0x16) {
+	if ((unsigned char)buff[0] == 0x16)
+	{
 		Logger::error(serverUid, "Received HTTPS/TLS handshake, closing connection.");
 		cerr << "Received HTTPS/TLS handshake, closing connection." << endl;
 		close(fd);
 		return -1;
 	}
-	
+
 	// Read the complete header
-	while (received > 0) 
+	while (received > 0)
 	{
 		header.append(buff, received);
 		headerlimit = header.find("\r\n\r\n");
 		if (headerlimit != string::npos)
-			break ;
-		
+			break;
+
 		// Prevent header from being too large
 		if (header.size() > MAX_HEADER_SIZE)
 			return (Logger::error(serverUid, "Header too large"), -1);
-		
+
 		received = recv(fd, buff, BUFFER_SIZE, 0);
 		if (received <= 0)
 			break;
 	}
-	
+
 	// Extract body if present
 	if (headerlimit == string::npos)
 	{
@@ -185,18 +184,19 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	body = header.substr(headerlimit + 4, string::npos);
 	if (headerlimit != string::npos)
 		header.erase(headerlimit, string::npos);
-	
+
 	Logger::access(serverUid, "http request: " + header);
-	
-	try {
+
+	try
+	{
 		headermap = parseHeader(header);
-		
+
 		if (headermap.find("Host") == headermap.end())
 		{
 			GetRequest requestObject;
 
 			cerr << "No server_name, bad request" << endl;
-			string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
 			if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
 				cerr << "Failed to send 400 response" << endl;
 			readbody = 0;
@@ -224,23 +224,24 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			istringstream iss(headermap["Content-Length"]);
 			size_t contentLength;
-			if (!(iss >> contentLength)) {
+			if (!(iss >> contentLength))
+			{
 				GetRequest requestObject;
 
 				cerr << "Invalid Content-Length header" << endl;
-				string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 400);
+				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
 				if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
 					cerr << "Failed to send 400 response" << endl;
 				readbody = 0;
 			}
-			
+
 			// Check against max body size
 			if (readbody && _maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
 			{
 				GetRequest requestObject;
 
 				cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << endl;
-				string errorPage = config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, 413);
+				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
 				if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
 					cerr << "Failed to send 413 response" << endl;
 				readbody = 0;
@@ -248,7 +249,8 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			// Read remaining body if needed
 			if (readbody == 0)
 			{
-				while (true) {
+				while (true)
+				{
 					received = recv(fd, buff, BUFFER_SIZE, 0);
 					if (received <= 0)
 						break; // TODO - Error or connection closed ?
@@ -258,18 +260,18 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			while (body.size() < contentLength)
 			{
 				received = recv(fd, buff, BUFFER_SIZE, 0);
-				if (received <= 0) {
+				if (received <= 0)
+				{
 					cerr << "error while reading body" << endl;
 					return (-1);
 				}
 				body.append(buff, received);
 			}
-			
 		}
 
 		// get the index full path
 		if (serverRoot[serverRoot.length() - 1] == '/')
-			serverRoot = serverRoot.substr(0, serverRoot.length() -1);
+			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);
 		string fullPath = serverRoot + headermap["path"];
 		string indexFile = getIndex(config->getServerValue(serverUid, "index"), serverRoot);
 
@@ -282,27 +284,27 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			server.setEnvValue("QUERY_STRING", headermap["path"].substr(headermap["path"].find('?') + 1));
 		else
 			server.setEnvValue("QUERY_STRING", "");
-		
+
 		// Checks if the path is allowed by the location for the requested method
 		string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
-		try {
+		string auto_index = config->getLocationValueForPath(cleanPath, server.getUid(), "autoindex");
+
+		try
+		{
 			int status = 0;
 			string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods");
-			if (allowed_methods.find(headermap["method"]) != string::npos) {
-				for(size_t i = allowed_methods.find(' '); i != string::npos; i = allowed_methods.find(' ', i))
-				{
-					string one_method = allowed_methods.substr(0, i);
-					if (one_method == headermap["method"])
-					{
-						status = 1;
-						break ;
-					}
-					allowed_methods = allowed_methods.substr(i + 1);
-				}
-				if (allowed_methods == headermap["method"])
+			istringstream iss(allowed_methods);
+			string one_method;
+
+			while (iss >> one_method) {
+				if (one_method == headermap["method"]) {
 					status = 1;
+					break;
+				}
 			}
-			if (status == 0) {
+			// Case no methods allowed for the location
+			if (status == 0)
+			{
 				GetRequest requestObject;
 
 				string errorPage = requestObject.loadErrorPage(403, config, serverUid);
@@ -313,7 +315,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 				return 0;
 			}
 		}
-		catch (const exception& e)
+		catch (exception const &e)
 		{
 			GetRequest requestObject;
 
@@ -327,7 +329,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return");
 		if (!redirect.empty())
 		{
-			;// redirect here
+			; // redirect here
 		}
 		if (headermap["method"] == "GET")
 		{
@@ -340,7 +342,7 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			PostRequest requestObject(headermap);
 			// Process the POST request
-			
+
 			return (requestObject.handlePost(fd, server, body, config));
 		}
 		else if (headermap["method"] == "DELETE")
@@ -352,24 +354,26 @@ int	RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		}
 		else
 		{
-			Logger::error(serverUid, "Unknown method in HEADER: " + headermap["method"]); 
+			Logger::error(serverUid, "Unknown method in HEADER: " + headermap["method"]);
 			return (-1);
 		}
 	}
-	catch (const exception& e) {
+	catch (const exception &e)
+	{
 		cerr << "Error parsing request: " << e.what() << endl;
 		return (-1);
 	}
 	return (0);
 }
 
-void	RequestHandler::setMaxBodySize(string size)
+void RequestHandler::setMaxBodySize(string size)
 {
 	istringstream iss(size);
 	int value;
 	string unit;
 
-	if (iss >> value && value >= 0) {
+	if (iss >> value && value >= 0)
+	{
 		_maxBodySize = value;
 		iss >> unit;
 		if (!unit.empty())
@@ -390,13 +394,13 @@ void	RequestHandler::setMaxBodySize(string size)
 		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
 }
 
-string	RequestHandler::handleChunckedRequest(int fd, const string &body)
+string RequestHandler::handleChunckedRequest(int fd, const string &body)
 {
-	string	fullBody;
-	
-	string	tmp = "";
-	char		buff[4096];
-	int			received;
+	string fullBody;
+
+	string tmp = "";
+	char buff[4096];
+	int received;
 	memset(buff, 0, 4096);
 
 	if (!body.empty())
@@ -406,8 +410,8 @@ string	RequestHandler::handleChunckedRequest(int fd, const string &body)
 		if (tmp.find('\r') != string::npos)
 		{
 			cout << "tmp : '" << tmp << "'" << endl;
-			string	chunk;
-			size_t	chunkSize;
+			string chunk;
+			size_t chunkSize;
 
 			size_t br = tmp.find('\r');
 			if (tmp.size() == br)
@@ -415,24 +419,25 @@ string	RequestHandler::handleChunckedRequest(int fd, const string &body)
 				memset(buff, 0, 4096);
 				received = recv(fd, buff, 1, 0);
 				if (received <= 0)
-					return (cout << "error 1\n", "");//error 
+					return (cout << "error 1\n", ""); // error
 				tmp.append(buff);
 			}
-			
+
 			istringstream iss(tmp.substr(0, tmp.find("\r\n")));
 			if (!(iss >> hex >> chunkSize))
 			{
-				return (cout << "error 2\n", "");//error 
+				return (cout << "error 2\n", ""); // error
 			}
-			
+
 			chunk.append(tmp.substr(tmp.find("\r\n") + 2));
 			cout << "chunksize: " << chunkSize << endl;
 			if (chunk.size() > chunkSize)
 			{
 				tmp = chunk.substr(chunkSize + 2);
 				chunk = chunk.substr(0, chunkSize);
-
-			} else {
+			}
+			else
+			{
 				tmp = "";
 			}
 			if (chunkSize == 0)
@@ -446,7 +451,7 @@ string	RequestHandler::handleChunckedRequest(int fd, const string &body)
 				int toRead = chunkSize - chunk.size();
 				received = recv(fd, buff, min(4095, toRead), 0);
 				if (received <= 0)
-					return (cout << "error 3\n", "");//error 
+					return (cout << "error 3\n", ""); // error
 				chunk.append(buff);
 				cout << "chunk after: '" << chunk << "'" << endl;
 			}
@@ -455,14 +460,18 @@ string	RequestHandler::handleChunckedRequest(int fd, const string &body)
 			{
 				received = recv(fd, buff, 2, 0);
 				if (received <= 0)
-					return (cout << "error 4\n", "");//error 
+					return (cout << "error 4\n", ""); // error
 				if (buff[0] != '\r' || buff[1] != '\n')
-					return (cout << "error 5 : \n" << buff << endl, "");//error 
+					return (cout << "error 5 : \n"
+								 << buff << endl,
+							""); // error
 				if (chunkSize == 0)
-					break ;
+					break;
 			}
 			fullBody.append(chunk);
-		} else {
+		}
+		else
+		{
 			memset(buff, 0, 4096);
 			received = recv(fd, buff, 10, 0);
 			cout << "received: " << received << endl;
@@ -470,8 +479,8 @@ string	RequestHandler::handleChunckedRequest(int fd, const string &body)
 				buff[received] = '\0';
 			if (received <= 0)
 			{
-				
-				return (cout << "error 6\n", "");//error
+
+				return (cout << "error 6\n", ""); // error
 			}
 			tmp.append(buff);
 		}

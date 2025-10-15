@@ -1,17 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ConfigParser.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/28 18:44:09 by unmugviolet       #+#    #+#             */
-/*   Updated: 2025/08/28 18:44:49 by unmugviolet      ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "ConfigParser.hpp"
-#include "dict.hpp"
 
 ConfigParser::ConfigParser()
 {
@@ -77,7 +64,7 @@ void ConfigParser::parseFile(const string &filePath)
 		if (line.find("server") == 0 && line.find("{") != string::npos)
 		{
 			// Create a default server name
-			string serverUid = "server_" + _intToString(_serverBlocks.size());
+			string serverUid = "server_" + ft_itos(_serverBlocks.size());
 			_parseServerBlock(file, serverUid);
 		}
 		else
@@ -222,6 +209,13 @@ string ConfigParser::getValue(const string &key) const
 	return "";
 }
 
+/**
+ * Retrieving server-specific configuration values.
+ * @param serverName The unique identifier of the server.
+ * @param key The configuration parameter to retrieve.
+ * @return The value of the specified parameter for the given server,
+ *         or an empty string if the server or parameter is not found.
+ */
 string ConfigParser::getServerValue(const string &serverName, const string &key) const
 {
 	map<string, map<string, string> >::const_iterator serverIt = _serverBlocks.find(serverName);
@@ -234,6 +228,14 @@ string ConfigParser::getServerValue(const string &serverName, const string &key)
 	return "";
 }
 
+/**
+ * Retrieving location-specific configuration values for any given key.
+ * @param serverName The unique identifier of the server.
+ * @param location The path of the location block.
+ * @param key The configuration parameter to retrieve.
+ * @return The value of the specified parameter for the given location block,
+ *         or an empty string if the server, location, or parameter is not found.
+ */
 string ConfigParser::getLocationValue(const string &serverName, const string &location, const string &key) const
 {
 	map<string, map<string, map<string, string> > >::const_iterator serverIt = _locationBlocks.find(serverName);
@@ -250,11 +252,12 @@ string ConfigParser::getLocationValue(const string &serverName, const string &lo
 	return "";
 }
 
-bool ConfigParser::hasKey(const string &key) const
-{
-	return _configMap.find(key) != _configMap.end();
-}
-
+/**
+ * Check if a specific key exists in a given server block.
+ * @param serverName The unique identifier of the server.
+ * @param key The configuration parameter to check.
+ * @return True if the key exists in the specified server block, false otherwise.
+ */
 bool ConfigParser::hasServerKey(const string &serverName, const string &key) const
 {
 	map<string, map<string, string> >::const_iterator serverIt = _serverBlocks.find(serverName);
@@ -265,20 +268,10 @@ bool ConfigParser::hasServerKey(const string &serverName, const string &key) con
 	return false;
 }
 
-bool ConfigParser::hasLocationKey(const string &serverName, const string &location, const string &key) const
-{
-	map<string, map<string, map<string, string> > >::const_iterator serverIt = _locationBlocks.find(serverName);
-	if (serverIt != _locationBlocks.end())
-	{
-		map<string, map<string, string> >::const_iterator locationIt = serverIt->second.find(location);
-		if (locationIt != serverIt->second.end())
-		{
-			return locationIt->second.find(key) != locationIt->second.end();
-		}
-	}
-	return false;
-}
-
+/**
+ * Retrieving the uids of a all of the server blocks.
+ * @return A vector containing all server unique identifiers.
+ */
 vector<string> ConfigParser::getServerUids() const
 {
 	vector<string> names;
@@ -290,6 +283,11 @@ vector<string> ConfigParser::getServerUids() const
 	return names;
 }
 
+/**
+ * Retrieving the paths of all location blocks for a given server.
+ * @param serverUid The unique identifier of the server.
+ * @return A vector containing all location paths for the specified server.
+*/
 vector<string> ConfigParser::getLocationPaths(const string &serverUid) const
 {
 	vector<string> paths;
@@ -354,13 +352,6 @@ string ConfigParser::_trim(const string &str) const
 	
 	size_t end = str.find_last_not_of(" \t\r\n");
 	return str.substr(start, end - start + 1);
-}
-
-string ConfigParser::_intToString(int num) const
-{
-	ostringstream oss;
-	oss << num;
-	return oss.str();
 }
 
 string ConfigParser::getErrorPageContent(ConfigParser &parser, const string &serverUid, unsigned int error_code) const
@@ -466,23 +457,33 @@ void	ConfigParser::_checkSemicolons(const string &filePath) const
 		throw ErrorException("Block error in config file: " + filePath);
 	}
 }
-
+/**
+ * Checks the most specific location block that matches the given path for a server,
+ * and retrieves the value of the specified parameter from that location block.
+ * @param path The request path to match against location blocks.
+ * @param serverUid The unique identifier of the server.
+ * @param parameter The configuration parameter to retrieve from the matched location block.
+ * @return The value of the specified parameter from the most specific matching location block,
+ *         fallback to the server value if nothing is defined in the location. If neither
+ *         location nor server define the parameter, returns empty string.
+*/
 string	ConfigParser::getLocationValueForPath(const string &path, const string &serverUid, const string &parameter) const
 {
 	string currentLocation = "";
+	string values = "";
 	vector<string> temp = getLocationPaths(serverUid);
-	int status = 0;
 	vector<string>::iterator it = temp.begin();
+
 	for (; it != temp.end(); it++) {
 		if (path.find((*it)) != string::npos) {
-			status = 1;
 			if (currentLocation.size() < (*it).size())
 				currentLocation = *it;
 		}
 	}
-	if (status == 0)
-		throw ErrorException("No valid location");
-	return (getLocationValue(serverUid, currentLocation, parameter));
+	values = getLocationValue(serverUid, currentLocation, parameter);
+	if (values.empty())
+		return (getServerValue(serverUid, parameter));
+	return (values);
 }
 
 vector<string> ConfigParser::getLocationVectorforPath(const string &path, const string &serverUid, const string &parameter) const

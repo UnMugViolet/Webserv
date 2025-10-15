@@ -1,19 +1,11 @@
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <limits.h>
-
-#include "dict.hpp"
+#include "utils.hpp"
 
 void	*ft_memset(void *s, int c, unsigned long int n)
 {
 	unsigned long int	i;
 
 	i = 0;
-	while (i < n)
-	{
+	while (i < n) {
 		((unsigned char *)s)[i] = c;
 		i++;
 	}
@@ -78,13 +70,9 @@ int ft_inet_pton4(string &src, struct in_addr *dst) {
     return 1;
 }
 
-void    ft_free_array(char **array)
+string  ft_itos(int n)
 {
-    if (!array)
-        return ;
-    for (int i = 0; array[i]; i++)
-        delete[] array[i];
-    delete[] array;
-    array = NULL;
-    return ;
+    ostringstream oss;
+    oss << n;
+    return oss.str();
 }

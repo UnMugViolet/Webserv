@@ -15,10 +15,6 @@
 #include <stdlib.h>
 #include "Logger.hpp"
 
-void	*ft_memset(void *s, int c, unsigned long int n);
-int 	ft_atoi(const string &str);
-int 	ft_inet_pton4(string &src, struct in_addr *dst);
-
 class RequestHandler;
 
 class Server

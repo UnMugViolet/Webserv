@@ -25,11 +25,11 @@ DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 
 int	DeleteRequest::delete_file(int fd, const Server &serv)
 {
-	string			root = serv.getEnvValue("SERVER_ROOT");
+	string				root = serv.getEnvValue("SERVER_ROOT");
 	string				query = urlDecode(serv.getEnvValue("QUERY_STRING"));
 	map<string, string>	queryMap = parseQuery(query);
-	string			fileName = queryMap["file"];
-	string			uploadName = queryMap["upload"];
+	string				fileName = queryMap["file"];
+	string				uploadName = queryMap["upload"];
 
 	if (root.rfind('/') == root.size() - 1 && fileName[0] == '/')
 		fileName.erase(0, 1);
