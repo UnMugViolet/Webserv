@@ -36,7 +36,6 @@ string urlDecode(const string &src)
 {
 	ostringstream out;
 
-	cout << "Decoding URL: " << src << endl;
 	for (size_t i = 0; i < src.length(); ++i) {
 		while (src[i] == '/' && src[i + 1] == '/')
 			++i;
@@ -97,9 +96,7 @@ map<string, size_t> getIndex(string const &indexes, string const &root)
             goodIndex = indexes.substr(space1);
         else
             goodIndex = indexes.substr(space1, space2 - space1);
-        
-        if (goodIndex[0] != '/' && goodIndex[0] != '.')
-            goodIndex = "/" + goodIndex;
+    
         
         fullPath = root + goodIndex;
         
