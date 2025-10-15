@@ -100,7 +100,7 @@ int	PostRequest::UploadFile(string body, string path)
 	}
 }
 
-int	PostRequest::createPost(int fd, string body, string postpath, string uploadpath)
+int	PostRequest::createPost(string body, string postpath, string uploadpath)
 {
 	string	filename;
 	map<string, string>	content;
@@ -112,7 +112,7 @@ int	PostRequest::createPost(int fd, string body, string postpath, string uploadp
 		if(UploadFile(body, filename) == -1)
 			return (-1);
 		else
-			return (sendHTTPResponse(fd, 204, "", ""));
+			return (0);
 	}
 	if (_Content_type.find("multipart/form-data") != string::npos)
 	{
@@ -186,7 +186,9 @@ int	PostRequest::createPost(int fd, string body, string postpath, string uploadp
 			if (UploadContent(content, filename) == -1)
 				return (-1);
 			else
-				return (sendHTTPResponse(fd, 204, "", ""));
+			{
+				return (0);
+			}
 		}
 		else
 		{
@@ -194,10 +196,10 @@ int	PostRequest::createPost(int fd, string body, string postpath, string uploadp
 		}
 	}
 	cerr << RED BOLD << "[ERROR]" << NEUTRAL RED << "unknown content type: " << _Content_type << NEUTRAL << endl;
-	return (0);
+	return (-1);
 }
 
-int PostRequest::handlePost(int fd, const Server &server, const string &body, const ConfigParser *config)
+int PostRequest::handlePost(int fd, Server &server, const string &body, const ConfigParser *config)
 {
 	string serverRoot = config->getServerValue(server.getUid(), "root");
 	string path = server.getEnvValue("REQUEST_URI");
@@ -216,11 +218,10 @@ int PostRequest::handlePost(int fd, const Server &server, const string &body, co
 	{
 		cerr << "no uploads directory" << endl;//what? no appropriate directory or no permission
 		string errorPage = loadErrorPage(500, config, server.getUid());
-		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-			cerr << "Failed to send 500 response" << endl;
-		if (isKeepalive())
-			return (0);
-		return (-1);
+		string response = writeHTTPResponse(500, errorPage, "text/html");
+		server.keepaliveDefine(fd, isKeepalive());
+		server.fillClientBuffer(fd, response);
+		return (1);
 	}
 	closedir(dir);
 	if (postdir.find('/') == 0 && serverRoot.rfind('/') == serverRoot.size() - 1)
@@ -233,24 +234,25 @@ int PostRequest::handlePost(int fd, const Server &server, const string &body, co
 	{
 		cerr << "no posts directory" << endl;//what? no appropriate directory or no permission
 		string errorPage = loadErrorPage(500, config, server.getUid());
-		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-			cerr << "Failed to send 500 response" << endl;
-		if (isKeepalive())
-			return (0);
-		return (-1);
+		string response = writeHTTPResponse(500, errorPage, "text/html");
+		server.keepaliveDefine(fd, isKeepalive());
+		server.fillClientBuffer(fd, response);
+		return (1);
 	}
 	closedir(dir);
-	int res = createPost(fd, body, postdir, uploadir);
-	cout << "miaou\n" << serverRoot << endl;
+	int res = createPost(body, postdir, uploadir);
 	if (res == -1)
 	{
 		string errorPage = loadErrorPage(500, config, server.getUid());
-		if (sendHTTPResponse(fd, 500, errorPage, "text/html") == -1)
-			cerr << "Failed to send 500 response" << endl;
+		string response = writeHTTPResponse(500, errorPage, "text/html");
+		server.keepaliveDefine(fd, isKeepalive());
+		server.fillClientBuffer(fd, response);
+		return (1);
 	}
-	if (!isKeepalive())
-		return (-1);
-	return (0);
+	string response = writeHTTPResponse(204, "", "");
+	server.fillClientBuffer(fd, response);
+	server.keepaliveDefine(fd, isKeepalive());
+	return (1);
 }
 
 PostRequest::~PostRequest()

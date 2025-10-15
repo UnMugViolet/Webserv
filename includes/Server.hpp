@@ -21,14 +21,15 @@ class Server
 {
 private:
 	/*attributes here*/
-	string							_uid;
-	map<string, string>	_env;
-	vector<string>			_server_names;
+	string						_uid;
+	map<string, string>			_env;
+	vector<string>				_server_names;
 	vector<int>					_socketfds;
 	vector<int>					_clientFds;
 	map<int, string>			_clientBuffer;
-	RequestHandler						*_handler;
-	ConfigParser						*_config;
+	RequestHandler				*_handler;
+	ConfigParser				*_config;
+	map<int, bool>				_keepalive;
 
 public:
 	/*constructors and destructor*/
@@ -48,10 +49,14 @@ public:
 	const ConfigParser&	getConfig() const;
 	int			setClient(int _socketfd);
 	void		unsetClient(int position);
-	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config);
+	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config, fd_set &fullWriteFd);
+	void		sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullReadFd);
 	void		fillClientBuffer(int clientFd, const string &buff);
-	const string	&getClientBuffer(int clientFd) const;
+	string		getClientBuffer(int clientFd) const;
 	void		clearClientBuffer(int clientFd);
+	bool		keepaliveStatus(int fd) const;
+	void		keepaliveDefine(int fd, bool status);
+
 	// Env handling methods
 	void		initEnv(char **env);
 	void		printEnv() const;

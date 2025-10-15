@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/15 09:57:40 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/10/15 16:05:51 by andrean          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,11 @@ void Webserv::serverLoop()
 	int		fd;
 	int		maxFd = 0;
 	fd_set fullReadFd;
+	fd_set fullWriteFd;
+	fd_set writeFd;
 	fd_set readFd;
+	FD_ZERO(&writeFd);
+	FD_ZERO(&fullWriteFd);
 	FD_ZERO(&readFd);
 	FD_ZERO(&fullReadFd);
 
@@ -90,6 +94,7 @@ void Webserv::serverLoop()
 	while (!_shutdown)
 	{
 		readFd = fullReadFd;
+		writeFd = fullWriteFd;
 		
 		// Recalculate maxFd to ensure it's accurate and all FDs are valid
 		maxFd = 0;
@@ -112,7 +117,27 @@ void Webserv::serverLoop()
 			}
 		}
 		
-		if (maxFd == 0)
+		int maxWFd = 0;
+		for (int testFd = 0; testFd < FD_SETSIZE; testFd++)
+		{
+			if (FD_ISSET(testFd, &fullWriteFd))
+			{
+				// Validate the file descriptor before including it
+				int flags = fcntl(testFd, F_GETFL);
+				if (flags == -1)
+				{
+					// Invalid file descriptor, remove it
+					FD_CLR(testFd, &fullWriteFd);
+				}
+				else
+				{
+					if (testFd > maxWFd)
+						maxWFd = testFd;
+				}
+			}
+		}
+		
+		if (maxFd == 0 && maxWFd == 0)
 		{
 			cerr << "No valid file descriptors in set, exiting" << endl;
 			break;
@@ -123,7 +148,7 @@ void Webserv::serverLoop()
 		timeout.tv_sec = 1;  // 1 second timeout
 		timeout.tv_usec = 0;
 		
-		int selectResult = select(maxFd + 1, &readFd, NULL, NULL, &timeout);
+		int selectResult = select(maxFd + 1, &readFd, &writeFd, NULL, &timeout);
 		
 		if (selectResult < 0)
 		{
@@ -153,7 +178,8 @@ void Webserv::serverLoop()
 						}
 					}
 				}
-				_servers[i].getRequests(readFd, fullReadFd, _config);
+				_servers[i].getRequests(readFd, fullReadFd, _config, fullWriteFd);
+				_servers[i].sendResponse(writeFd, fullWriteFd, fullReadFd);
 			}
 		}
 		// If selectResult == 0, it's a timeout, loop continues to check shutdown flag

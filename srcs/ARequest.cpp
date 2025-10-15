@@ -66,7 +66,7 @@ string generateDirectoryListing(string const &dirPath, string const &requestPath
     return html.str();
 }
 
-int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body, const string& contentType)
+string ARequest::writeHTTPResponse(int statusCode, const string &body, const string& contentType)
 {
 	ostringstream response;
 	string statusText;
@@ -96,14 +96,15 @@ int ARequest::sendHTTPResponse(int clientFd, int statusCode, const string &body,
 	response << body;
 	
 	string responseStr = response.str();
-	if (send(clientFd, responseStr.c_str(), responseStr.length(), 0) == -1) {
-		cerr << "Failed to send HTTP response" << endl;
-		return -1;
-	}
-	return 0;
+
+	// if (send(clientFd, responseStr.c_str(), responseStr.length(), 0) == -1) {
+	// 	cerr << "Failed to send HTTP response" << endl;
+	// 	return -1;
+	// }
+	return responseStr;
 }
 
-int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const ConfigParser *config, const Server &Server)
+string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *config, const Server &Server)
 {
 	int 			cgiOutputFd = -1;
 	vector<string>	location_cgi = config->getLocationVectorforPath(scriptPath, Server.getUid(), "cgi");
@@ -126,10 +127,10 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
     if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
         if (auto_index == "on") {
             string listing = generateDirectoryListing(scriptPath, _path);
-            return sendHTTPResponse(clientFd, 200, listing, "text/html");
+            return writeHTTPResponse(200, listing, "text/html");
         } else {
             string errorPage = loadErrorPage(403, config, Server.getUid());
-            return sendHTTPResponse(clientFd, 403, errorPage, "text/html");
+            return writeHTTPResponse(403, errorPage, "text/html");
         }
     }
 
@@ -177,7 +178,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 		
 		// Send successful response with CGI output
 		string contentType = getContentType(scriptPath);
-		return sendHTTPResponse(clientFd, 200, cgiOutput, contentType);
+		return writeHTTPResponse(200, cgiOutput, contentType);
 		
 	} catch (const CGI::CGIException &e) {
 		// Close the file descriptor if it was opened
@@ -188,7 +189,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 		// Handle true CGI execution errors (file not found, permission denied, etc.)
 		// These are cases where the script couldn't even run
 		string errorPage = loadErrorPage(e.getHttpStatus(), config, Server.getUid());
-		return sendHTTPResponse(clientFd, e.getHttpStatus(), errorPage, "text/html");
+		return writeHTTPResponse(e.getHttpStatus(), errorPage, "text/html");
 	} catch (...) {
 		// Handle any other exceptions
 		if (cgiOutputFd != -1) {
@@ -196,7 +197,7 @@ int ARequest::sendCGIResponse(int clientFd, const string &scriptPath, const Conf
 		}
 		
 		string errorPage = loadErrorPage(500, config, Server.getUid());
-		return sendHTTPResponse(clientFd, 500, errorPage, "text/html");
+		return writeHTTPResponse(500, errorPage, "text/html");
 	}
 }
 

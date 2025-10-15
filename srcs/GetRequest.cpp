@@ -36,9 +36,10 @@ GetRequest::GetRequest(GetRequest &src) : ARequest(src)
  * 3. If neither file nor directory exists, respond 404.
  * 4. If not keep-alive, return -1 to close connection.
  */
-int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *config, const string &fullPath)
+int	GetRequest::handleGet(int fd, Server &server, const ConfigParser *config, const string &fullPath)
 {
 	string decodedUrl = urlDecode(fullPath.c_str());
+	string response;
 	struct stat pathStat;
 	bool isDirectory = false;
 	bool isFile = false;
@@ -89,29 +90,24 @@ int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *conf
 				if (access(decodedIndexPath.c_str(), R_OK) == 0) {
 					// Index file accessible - serve it
 					cout << CYAN << BOLD << "Serving index file: " << NEUTRAL << CYAN << decodedIndexPath << NEUTRAL << endl;
-					if (sendCGIResponse(fd, decodedIndexPath, config, server) == -1)
-						cerr << "Failed to send CGI response" << endl;
+					response = sendCGIResponse(decodedIndexPath, config, server);
 				} else {
 					string errorPage = loadErrorPage(403, config, server.getUid());
-					if (sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-						cerr << "Failed to send 403 response" << endl;
+					response = writeHTTPResponse(403, errorPage, "text/html");
 				}
 			} else {
 				string errorPage = loadErrorPage(404, config, server.getUid());
-				if (sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
-					cerr << "Failed to send 404 response" << endl;
+				response = writeHTTPResponse(404, errorPage, "text/html");
 			}
 		} else {
 			// No index file found or none accessible - check autoindex
 			if (autoindex == "on") {
 				// Serve directory listing
 				cout << CYAN << BOLD << "Serving directory listing for: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << endl;
-				if (sendCGIResponse(fd, decodedUrl, config, server) == -1)
-					cerr << "Failed to send CGI response" << endl;
+				string response = sendCGIResponse(decodedUrl, config, server);
 			} else {
 				string errorPage = loadErrorPage(403, config, server.getUid());
-				if (sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-					cerr << "Failed to send 403 response" << endl;
+				response = writeHTTPResponse(403, errorPage, "text/html");
 			}
 		}
 	}
@@ -120,23 +116,19 @@ int	GetRequest::handleGet(int fd, const Server &server, const ConfigParser *conf
 		if (access(decodedUrl.c_str(), R_OK) == 0) {
 			// File accessible - serve it
 			cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << endl;
-			if (sendCGIResponse(fd, decodedUrl, config, server) == -1)
-				cerr << "Failed to send CGI response" << endl;
+			response = sendCGIResponse(decodedUrl, config, server);
 		} else {
 			string errorPage = loadErrorPage(403, config, server.getUid());
-			if (sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-				cerr << "Failed to send 403 response" << endl;
+			response = writeHTTPResponse(403, errorPage, "text/html");
 		}
 	}
 	// Neither file nor directory exists
 	else {
 		string errorPage = loadErrorPage(404, config, server.getUid());
-		if (sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
-			cerr << "Failed to send 404 response" << endl;
+		response = writeHTTPResponse(404, errorPage, "text/html");
 	}
-
-	if (!isKeepalive())
-		return (-1);
+	server.fillClientBuffer(fd, response);
+	server.keepaliveDefine(fd, isKeepalive());
 	return (0);
 }
 

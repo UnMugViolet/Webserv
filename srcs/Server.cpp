@@ -357,7 +357,7 @@ void	Server::unsetClient(int position)
 }
 
 
-void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* config)
+void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* config, fd_set &fullWriteFd)
 {
 	for (size_t i = 0; i < _clientFds.size(); i++)
 	{
@@ -370,12 +370,70 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 		}
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-			if (_handler->handleRequest(_clientFds[i], *this, config) == -1)
+			int res = _handler->handleRequest(_clientFds[i], *this, config);
+			if (res == -1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
 				unsetClient(i);
 				cout << "Client disconnected" << endl;
 				continue;
+			}
+			if (res == 1)
+			{
+				FD_CLR(_clientFds[i], &fullReadFd);
+				FD_SET(_clientFds[i], &fullWriteFd);
+			}
+		}
+	}
+}
+
+bool	Server::keepaliveStatus(int fd) const
+{
+	map<int, bool>::const_iterator it = _keepalive.find(fd);
+	if (it != _keepalive.end())
+		return (it->second);
+	return (1);
+}
+
+void	Server::keepaliveDefine(int fd, bool status)
+{
+	if (fd > 0)
+		_keepalive[fd] = status;
+}
+
+void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullReadFd)
+{
+	for (size_t i = 0; i < _clientFds.size(); i++)
+	{
+		int fd = _clientFds[i];
+		// Check if the file descriptor is valid
+		if (fd < 0)
+		{
+			// Invalid file descriptor, remove it
+			unsetClient(i);
+			continue;
+		}
+		if (FD_ISSET(fd, &writeFd))
+		{
+			string response = getClientBuffer(fd);
+			if (response != "")
+			{
+				int res = send(fd, response.c_str(), response.length(), 0);
+				if (res == -1)
+				{
+					FD_CLR(fd, &fullWriteFd);
+					cerr << "failed to send http response" << endl;
+					unsetClient(i);
+					cout << "Client disconnected" << endl;
+					continue;
+				}
+				FD_CLR(fd, &fullWriteFd);
+				if (!keepaliveStatus(fd))
+				{
+					unsetClient(i);
+				} else {
+					FD_SET(fd, &fullReadFd);
+				}
 			}
 		}
 	}
@@ -388,7 +446,7 @@ void	Server::fillClientBuffer(int clientFd, const string &buff)
 		_clientBuffer[clientFd] = buff;
 	}
 }
-const string&	Server::getClientBuffer(int clientFd) const
+string	Server::getClientBuffer(int clientFd) const
 {
 	if (clientFd >= 0)
 	{

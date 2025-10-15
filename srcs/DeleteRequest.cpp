@@ -23,7 +23,7 @@ DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
 	return ;
 }
 
-int	DeleteRequest::delete_file(int fd, const Server &serv)
+int	DeleteRequest::delete_file(int fd, Server &serv)
 {
 	string				root = serv.getEnvValue("SERVER_ROOT");
 	string				query = urlDecode(serv.getEnvValue("QUERY_STRING"));
@@ -43,14 +43,17 @@ int	DeleteRequest::delete_file(int fd, const Server &serv)
 			cout << "wtf\n";
 	if (remove(filePath.c_str()) == 0)
 	{
-		return (sendHTTPResponse(fd, 204, "", ""));
+		string response = writeHTTPResponse(204, "", "");
+		serv.keepaliveDefine(fd, isKeepalive());
+		serv.fillClientBuffer(fd, response);
+		return (0);
 	}
 	else
 		return (-1);
 }
 
 
-int DeleteRequest::handleDelete(int fd, const Server &server, const ConfigParser *config, const string &path)
+int DeleteRequest::handleDelete(int fd, Server &server, const ConfigParser *config, const string &path)
 {
 
 
@@ -59,8 +62,9 @@ int DeleteRequest::handleDelete(int fd, const Server &server, const ConfigParser
 	else
 	{
 		string errorPage = loadErrorPage(404, config, server.getUid());
-		if (sendHTTPResponse(fd, 404, errorPage, "text/html") == -1)
-			cerr << "Failed to send 404 response" << endl;
+		string response = writeHTTPResponse(404, errorPage, "text/html");
+		server.keepaliveDefine(fd, isKeepalive());
+		server.fillClientBuffer(fd, response);
 	}
 	if (!isKeepalive())
 	{

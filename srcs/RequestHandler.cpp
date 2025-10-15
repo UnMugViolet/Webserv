@@ -201,6 +201,11 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		}
 		savestring.append(buff, received);
 		server.fillClientBuffer(fd, savestring);
+		if (savestring.find("\r\n\r\n") != string::npos)
+		{
+			if (savestring.find("Content-Length") == string::npos || savestring.find("Content-Length") < savestring.find("\r\n\r\n"))
+				return (1);
+		}
 		return (0);
 	}
 
@@ -220,6 +225,11 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		
 		savestring.append(buff, received);
 		server.fillClientBuffer(fd, savestring);
+		if (savestring.find("\r\n\r\n") != string::npos)
+		{
+			if (savestring.find("Content-Length") == string::npos || savestring.find("Content-Length") < savestring.find("\r\n\r\n"))
+				return (1);
+		}
 		return (0);
 	} else {
 		body = savestring.substr(headerlimit + 4, string::npos);
@@ -234,16 +244,11 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 
 			cerr << "No server_name, bad request" << endl;
 			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-			// if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
-				// cerr << "Failed to send 400 response" << endl;
-			server.clearClientBuffer(fd);
-			return -1;
+			string response = requestObject.writeHTTPResponse(400, errorPage, "text/html");
+			server.keepaliveDefine(fd, requestObject.isKeepalive());
+			server.fillClientBuffer(fd, response);
+			return 1;
 		}
-		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
-		if (headermap["Host"].find(':'))
-			server.setEnvValue("SERVER_PORT", headermap["Host"].substr(headermap["Host"].find(':') + 1));
-		else
-			server.setEnvValue("SERVER_PORT", "80");
 		string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");
@@ -267,10 +272,10 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 
 				cerr << "Invalid Content-Length header" << endl;
 				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-				// if (requestObject.sendHTTPResponse(fd, 400, errorPage, "text/html") == -1)
-				// 	cerr << "Failed to send 400 response" << endl;
-				server.clearClientBuffer(fd);
-				return -1;
+				string response = requestObject.writeHTTPResponse(400, errorPage, "text/html");
+				server.keepaliveDefine(fd, requestObject.isKeepalive());
+				server.fillClientBuffer(fd, response);
+				return 1;
 			}
 
 			// Check against max body size
@@ -280,22 +285,11 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 
 				cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << endl;
 				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
-				// if (requestObject.sendHTTPResponse(fd, 413, errorPage, "text/html") == -1)
-				// 	cerr << "Failed to send 413 response" << endl;
-				server.clearClientBuffer(fd);
-				return -1;
+				string response = requestObject.writeHTTPResponse(413, errorPage, "text/html");
+				server.keepaliveDefine(fd, requestObject.isKeepalive());
+				server.fillClientBuffer(fd, response);
+				return 1;
 			}
-			// Read remaining body if needed
-			// if (readbody == 0)
-			// {
-			// 	while (true)
-			// 	{
-			// 		received = recv(fd, buff, BUFFER_SIZE, 0);
-			// 		if (received <= 0)
-			// 			break; // TODO - Error or connection closed ?
-			// 	}
-			// 	return (-1);
-			// }
 			if (body.size() < contentLength)
 			{
 				memset(buff, 0, BUFFER_SIZE);
@@ -308,17 +302,19 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 				body.append(buff, received);
 				savestring.append(body);
 				server.fillClientBuffer(fd, savestring);
+				if (body.size() == contentLength)
+					return (1);
 				return (0);
 			}
 			return (1);
 		}
+		server.fillClientBuffer(fd, savestring);
+		return (1);
 	}
 }
 
 int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 {
-	int readbody = 1;
-	size_t const MAX_HEADER_SIZE = 8192; // 8KB for headers
 	size_t headerlimit;
 	string serverRoot;
 	string serverUid = server.getUid();
@@ -339,6 +335,10 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 	try
 	{
+		header = server.getClientBuffer(fd);
+		headerlimit = header.find("\r\n\r\n");
+		body = header.substr(headerlimit + 4, string::npos);
+		header.erase(headerlimit, string::npos);
 		headermap = parseHeader(header);
 
 		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
@@ -351,15 +351,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			max_body_size = config->getValue("client_max_body_size");
 		setMaxBodySize(max_body_size);
 		serverRoot = config->getServerValue(serverUid, "root");
-		// Check if we need to read more body data
-		// if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chuncked"))
-		// {
-		// 	body = handleChunckedRequest(fd, body);
-		// 	if (body.empty()) {
-		// 		cout << "empty body\n";
-		// 		return (-1);
-		// 	}
-		// }
 		
 		// get the index full path
 		if (serverRoot[serverRoot.length() - 1] == '/')
@@ -397,11 +388,10 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 				cout << "EARLY 403" << endl;
 				string errorPage = requestObject.loadErrorPage(403, config, serverUid);
-				if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-					cerr << "Failed to send 403 response" << endl;
-				if (!requestObject.isKeepalive())
-					return (-1);
-				return 0;
+				string response = requestObject.writeHTTPResponse(403, errorPage, "text/html");
+				server.fillClientBuffer(fd, response);
+				server.keepaliveDefine(fd, requestObject.isKeepalive());
+				return 1;
 			}
 		}
 		catch (exception const &e)
@@ -409,11 +399,10 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			GetRequest requestObject;
 
 			string errorPage = requestObject.loadErrorPage(403, config, serverUid);
-			if (requestObject.sendHTTPResponse(fd, 403, errorPage, "text/html") == -1)
-				cerr << "Failed to send 403 response" << endl;
-			if (!requestObject.isKeepalive())
-				return (-1);
-			return 0;
+			string response = requestObject.writeHTTPResponse(403, errorPage, "text/html");
+			server.fillClientBuffer(fd, response);
+			server.keepaliveDefine(fd, requestObject.isKeepalive());
+			return 1;
 		}
 		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return");
 		if (!redirect.empty())

@@ -18,7 +18,7 @@ public:
 	~GetRequest();
 
 	/*member functions*/
-	int	handleGet(int fd, const Server &server, const ConfigParser *config, const string &fullPath);
+	int	handleGet(int fd, Server &server, const ConfigParser *config, const string &fullPath);
 
 	/*operator overloads*/
 	GetRequest &operator=(GetRequest& src);
