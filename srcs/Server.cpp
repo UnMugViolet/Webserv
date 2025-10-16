@@ -370,7 +370,6 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 		}
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-			cout << "got request for fd: " << _clientFds[i] << endl;
 			int res = _handler->handleRequest(_clientFds[i], *this, config);
 			if (res == -1)
 			{
@@ -416,7 +415,6 @@ void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 		}
 		if (FD_ISSET(fd, &writeFd))
 		{
-			cout << "sending response" << endl;
 			string response = getClientBuffer(fd);
 			clearClientBuffer(fd);
 			if (response != "")

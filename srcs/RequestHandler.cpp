@@ -258,7 +258,6 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		if (received <= 0)
 			return -1;
 
-		cout << "received: " << received << endl;
 		// Quick exit for HTTPS/TLS handshake	
 		if ((unsigned char)buff[0] == 0x16)
 		{
@@ -289,7 +288,6 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 	}
 
 	savestring.append(server.getClientBuffer(fd));
-	cout << "size: " << savestring.size() << endl;
 	headerlimit = savestring.find("\r\n\r\n");
 	if (headerlimit == string::npos)
 	{
@@ -381,7 +379,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		header.erase(headerlimit, string::npos);
 		headermap = parseHeader(header);
 		
-		cout << "body size: " << body.size() << endl;
 		Logger::access(serverUid, "http request: " + header);
 
 		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
@@ -400,6 +397,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);
 		string fullPath = serverRoot + headermap["path"];
 
+		server.setEnvValue("ACCEPT_MIME_TYPE", headermap["Accept"]);
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);
 		if (headermap["path"].find('?') != string::npos)

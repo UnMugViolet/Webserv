@@ -1,5 +1,5 @@
 <?php
-	$postsDir = __DIR__ ."/../var/posts/";
+	$postsDir = "../var/posts/";
 	$posts = glob($postsDir . '*.txt');
 	usort($posts, function($a, $b) {
 		return filemtime($b) - filemtime($a); // newest first
@@ -71,12 +71,12 @@
 			$filename = basename($file);
 
 			$filepath = '../var/uploads/' . $filename;
-			if (file_exists(__DIR__ . '/' . $filepath)){
-				if (strpos(mime_content_type(__DIR__ . '/' . $filepath), 'image/') !== false){
+			if (file_exists($filepath)){
+				if (strpos(mime_content_type($filepath), 'image/') !== false){
 					echo "<img src='$filepath' class='image-file'>";
 				}
 				else{
-					echo "<a href='$filepath' class='download-file'>Download : $filename</a>";
+					echo "<button onclick='downloadFile(\"$filepath\")' class='download-file'>Download : $filename</a>";
 				}
 			}
 			else

@@ -40,6 +40,7 @@ public:
 	string		writeHTTPResponse(int statusCode, const string &body, const string &contentType = "text/html");
 	string		loadErrorPage(int statusCode, const ConfigParser *config, const string &serverUid) const;
 	string		getContentType(const string &filePath) const;
+	string		checkContentType(string &contentType, const Server &server);
 
 	/*operator overloads*/
 	ARequest&	operator=(ARequest& src);

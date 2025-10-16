@@ -70,3 +70,34 @@ function showSubmitMessage() {
 
 	setTimeout(() => {document.getElementById("form").reset()}, 10);
 }
+
+
+function downloadFile(filepath) {
+	fetch(filepath, {
+		method: 'GET',
+		headers: {
+			'Accept': 'application/octet-stream'
+		}
+	})
+	.then(response => {
+		if (!response.ok) {
+			throw new Error('server response not ok');
+		}
+		return response.blob();
+	})
+	.then(blob => {
+		const url = window.URL.createObjectURL(blob);
+
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'filename.bin';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+
+		window.URL.revokeObjectURL(url);
+	})
+	.catch(error => {
+		console.error('Download failed:', error);
+	});
+}

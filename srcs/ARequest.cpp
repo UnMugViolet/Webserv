@@ -178,6 +178,7 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 		
 		// Send successful response with CGI output
 		string contentType = getContentType(scriptPath);
+		contentType = checkContentType(contentType, Server);
 		return writeHTTPResponse(200, cgiOutput, contentType);
 		
 	} catch (const CGI::CGIException &e) {
@@ -206,13 +207,32 @@ string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const
 	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, statusCode);
 }
 
+string ARequest::checkContentType(string &contentType, const Server &server)
+{
+	string accepted = server.getEnvValue("ACCEPT_MIME_TYPE");
+	if (accepted.find(contentType) != string::npos)
+		return (contentType);
+	if (accepted.find("*/*") != string::npos)
+		return (contentType);
+	string generalType = contentType.substr(0, contentType.find('/') + 1);
+	generalType += "*";
+	if (accepted.find(generalType) != string::npos)
+		return (contentType);
+	if (accepted.find("application/octet-stream") != string::npos)
+		return ("application/octet-stream");
+	if (accepted.find("application/*") != string::npos)
+		return ("application/octet-stream");
+
+	throw exception();
+}
+
 string ARequest::getContentType(const string &filePath) const
 {
 	size_t pos = filePath.rfind('.');
 	if (pos == string::npos)
 		return "application/octet-stream";
-	if (filePath.find("/uploads/") != string::npos)
-		return "application/octet-stream";
+	// if (filePath.find("/uploads/") != string::npos)
+	// 	return "application/octet-stream";
 	string ext = filePath.substr(pos + 1);
 	
 	if (ext == "html" || ext == "htm" || ext == "php" || ext == "py")

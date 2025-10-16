@@ -101,7 +101,16 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 		throw CGIException("Internal error: fork failed", false, 500, Server.getUid());
 	if (pid == 0)
 	{
-		const char	*cpath = path.c_str();
+		string basename = path;
+		if (path.rfind('/') != string::npos)
+		{
+			basename = path.substr(path.rfind('/') + 1);
+			string directory = path.substr(0, path.rfind('/'));
+
+			if (chdir(directory.c_str()) == -1)
+				throw CGIException("Error: access denied", true, 403, Server.getUid());
+		}
+		const char	*cpath = basename.c_str();
 		string	interpreter = cgi_list.find(extension)->second;
 		
 		close(fd[0]);
@@ -109,13 +118,15 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 		dup2(fd[1], STDERR_FILENO); // Redirect stderr to the pipe as well to get the error output on the client side
 		close(fd[1]);
 		if (type == BINARY) {
-			string tmp = "./" + path;
+			string tmp = "./" + basename;
 			char *arg[2] = {(char *)tmp.c_str(), NULL};
 			execve(tmp.c_str(), arg, Server.getEnvAsArray());
 			throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
 			
 		}
+		
 		const char *arg[3] = {interpreter.c_str(), cpath, NULL};
+
 		execve(interpreter.c_str(), (char *const *)arg, Server.getEnvAsArray());
         throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
 	}
