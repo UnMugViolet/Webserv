@@ -30,12 +30,13 @@ class RequestHandler
 
 		/*member functions*/
 		static string					getExtension(const string &path);
-		static int							_checkAccess(const string &path);
-		int									handleRequest(int fd, Server &server, ConfigParser *config);
-		void								setMaxBodySize(string size);
-		int									readOnce(int fd, Server &server, ConfigParser *config);
-		int									checkHeader(int fd, Server &server, ConfigParser *config, map<string, string> &headermap, string &body, string &savestring);
-		map<string, string>					parseHeader(string header) const;
+		static int						_checkAccess(const string &path);
+		int								handleRequest(int fd, Server &server, ConfigParser *config);
+		int								handleRedirect(int fd, Server &server, const string &redirect, map<string, string> &headermap);
+		void							setMaxBodySize(string size);
+		int								readOnce(int fd, Server &server, ConfigParser *config);
+		int								checkHeader(int fd, Server &server, ConfigParser *config, map<string, string> &headermap, string &body, string &savestring);
+		map<string, string>				parseHeader(string header) const;
 		string							handleChunckedRequest(int fd, const string &body);
 };
 
