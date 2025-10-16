@@ -397,9 +397,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);
 
 		string fullPath = serverRoot + headermap["path"];
-		// Ensure directory paths end with '/'
-		if (fullPath[fullPath.length() - 1] != '/')
-			fullPath += '/';
+	
 
 		server.setEnvValue("ACCEPT_MIME_TYPE", headermap["Accept"]);
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);

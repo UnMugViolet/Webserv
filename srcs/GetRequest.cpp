@@ -45,11 +45,16 @@ GetRequest::~GetRequest() {return ;}
  */
 int GetRequest::handleGet(int fd, Server &server, ConfigParser const *config, string const &fullPath)
 {
+	cout << "path: " << fullPath << endl;
 	string decodedUrl = urlDecode(fullPath.c_str());
 	PathType pathType = getPathType(decodedUrl);
 
+	cout << "url: " << decodedUrl << endl;
 	if (pathType == PATH_NOT_EXISTS)
+	{
+		cout << "file not found : " << decodedUrl << endl;
 		return sendErrorResponse(fd, 404, config, server);
+	}
 
 	if (pathType == PATH_DIRECTORY)
 		return handleDirectory(fd, server, config, decodedUrl);
@@ -96,19 +101,25 @@ GetRequest::PathType GetRequest::getPathType(const string &path)
  */
 int GetRequest::handleDirectory(int fd, Server &server, ConfigParser const *config, string const &decodedUrl)
 {
-	string pathForConfig = getPathForConfig(decodedUrl);
+	cout << "directory requested : " << decodedUrl << endl;
+	string url = decodedUrl;
+
+	// Ensure directory paths end with '/'
+		if (url[url.length() - 1] != '/')
+			url += '/';
+	string pathForConfig = getPathForConfig(url);
 	string indexPages = config->getLocationValueForPath(pathForConfig, server.getUid(), "index");
 
 	// Try to serve index file first
 	if (!indexPages.empty())
 	{
-		int result = tryServeIndexFile(fd, server, config, decodedUrl, indexPages);
+		int result = tryServeIndexFile(fd, server, config, url, indexPages);
 		if (result != -2) // -2 means no index file found, continue with directory listing
 			return 1;
 	}
 
 	// No index file, try directory listing
-	return handleDirectoryListing(fd, server, config, decodedUrl, pathForConfig);
+	return handleDirectoryListing(fd, server, config, url, pathForConfig);
 }
 
 /**
@@ -122,6 +133,7 @@ int GetRequest::handleDirectory(int fd, Server &server, ConfigParser const *conf
  */
 int GetRequest::handleFile(int fd, Server &server, ConfigParser const *config, string const &decodedUrl)
 {
+	cout << "file requested : " << decodedUrl << endl;
 	if (access(decodedUrl.c_str(), R_OK) != 0)
 		return sendErrorResponse(fd, 403, config, server);
 
