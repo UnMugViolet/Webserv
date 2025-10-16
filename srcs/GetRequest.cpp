@@ -19,6 +19,8 @@ GetRequest::GetRequest(map<string, string> header)
 	return;
 }
 
+GetRequest::GetRequest(GetRequest &src) : ARequest(src) {return ;}
+
 GetRequest &GetRequest::operator=(GetRequest &src)
 {
 	if (this != &src)
@@ -26,15 +28,8 @@ GetRequest &GetRequest::operator=(GetRequest &src)
 	return (*this);
 }
 
-GetRequest::~GetRequest()
-{
-	return;
-}
+GetRequest::~GetRequest() {return ;}
 
-GetRequest::GetRequest(GetRequest &src) : ARequest(src)
-{
-	return;
-}
 
 /**
  * If the decodedUrl is a directory and doesn't end with a slash,
@@ -48,13 +43,13 @@ GetRequest::GetRequest(GetRequest &src) : ARequest(src)
  * @param decodedUrl The decoded URL path from the request
  * @return 0 if keep-alive is enabled, -1 if connection should be closed
  */
-int GetRequest::handleGet(int fd, Server const &server, ConfigParser const *config, string const &fullPath)
+int GetRequest::handleGet(int fd, Server &server, ConfigParser const *config, string const &fullPath)
 {
 	string decodedUrl = urlDecode(fullPath.c_str());
 	PathType pathType = getPathType(decodedUrl);
 
 	if (pathType == PATH_NOT_EXISTS)
-		return sendErrorResponse(fd, 404, config, server.getUid());
+		return sendErrorResponse(fd, 404, config, server);
 
 	if (pathType == PATH_DIRECTORY)
 		return handleDirectory(fd, server, config, decodedUrl);
@@ -62,7 +57,7 @@ int GetRequest::handleGet(int fd, Server const &server, ConfigParser const *conf
 	if (pathType == PATH_FILE)
 		return handleFile(fd, server, config, decodedUrl);
 
-	return sendErrorResponse(fd, 500, config, server.getUid());
+	return sendErrorResponse(fd, 500, config, server);
 }
 
 /**
@@ -99,7 +94,7 @@ GetRequest::PathType GetRequest::getPathType(const string &path)
  * @param decodedUrl The decoded URL path from the request
  * @return 0 if keep-alive is enabled, -1 if connection should be closed
  */
-int GetRequest::handleDirectory(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl)
+int GetRequest::handleDirectory(int fd, Server &server, ConfigParser const *config, string const &decodedUrl)
 {
 	string pathForConfig = getPathForConfig(decodedUrl);
 	string indexPages = config->getLocationValueForPath(pathForConfig, server.getUid(), "index");
@@ -109,7 +104,7 @@ int GetRequest::handleDirectory(int fd, Server const &server, ConfigParser const
 	{
 		int result = tryServeIndexFile(fd, server, config, decodedUrl, indexPages);
 		if (result != -2) // -2 means no index file found, continue with directory listing
-			return result;
+			return 1;
 	}
 
 	// No index file, try directory listing
@@ -125,16 +120,18 @@ int GetRequest::handleDirectory(int fd, Server const &server, ConfigParser const
  * @param decodedUrl The decoded URL path from the request
  * @return 0 if keep-alive is enabled, -1 if connection should be closed
  */
-int GetRequest::handleFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl)
+int GetRequest::handleFile(int fd, Server &server, ConfigParser const *config, string const &decodedUrl)
 {
 	if (access(decodedUrl.c_str(), R_OK) != 0)
-		return sendErrorResponse(fd, 403, config, server.getUid());
+		return sendErrorResponse(fd, 403, config, server);
 
 	cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << endl;
-	if (sendCGIResponse(fd, decodedUrl, config, server) == -1)
-		cerr << "Failed to send CGI response" << endl;
+	string response = sendCGIResponse(decodedUrl, config, server);
 
-	return checkKeepAlive();
+	server.fillClientBuffer(fd, response);	
+	server.keepaliveDefine(fd, isKeepalive());
+
+	return 1;
 }
 
 /**
@@ -146,7 +143,7 @@ int GetRequest::handleFile(int fd, Server const &server, ConfigParser const *con
  * @param indexPages A space-separated list of possible index files (e.g. "index.html index.php")
  * @return 0 if keep-alive is enabled, -1 if connection should be closed, -2 if no index file found
  */
-int GetRequest::tryServeIndexFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &indexPages)
+int GetRequest::tryServeIndexFile(int fd, Server &server, ConfigParser const *config, string const &decodedUrl, string const &indexPages)
 {
 	map<string, size_t> indexFile = getIndex(indexPages, decodedUrl);
 
@@ -156,7 +153,7 @@ int GetRequest::tryServeIndexFile(int fd, Server const &server, ConfigParser con
 	if (indexFile.begin()->second == 200)
 		return serveIndexFile(fd, server, config, decodedUrl, indexFile.begin()->first);
 
-	return sendErrorResponse(fd, indexFile.begin()->second, config, server.getUid());
+	return sendErrorResponse(fd, indexFile.begin()->second, config, server);
 }
 
 /**
@@ -168,16 +165,18 @@ int GetRequest::tryServeIndexFile(int fd, Server const &server, ConfigParser con
  * @param indexFileName The name of the index file to serve
  * @return 0 if keep-alive is enabled, -1 if connection should be closed
  */
-int GetRequest::serveIndexFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &indexFileName)
+int GetRequest::serveIndexFile(int fd, Server &server, ConfigParser const *config, string const &decodedUrl, string const &indexFileName)
 {
 	cout << GREEN << BOLD << "Index files found: " << indexFileName << NEUTRAL << endl;
 	string indexFullPath = decodedUrl + indexFileName;
 	cout << CYAN << BOLD << "Serving index file: " << NEUTRAL << CYAN << indexFullPath << NEUTRAL << endl;
 
-	if (sendCGIResponse(fd, indexFullPath, config, server) == -1)
-		cerr << "Failed to send CGI response" << endl;
+	string response = sendCGIResponse(indexFullPath, config, server);
 
-	return checkKeepAlive();
+	server.fillClientBuffer(fd, response);
+	server.keepaliveDefine(fd, isKeepalive());
+
+	return 1;
 }
 
 /**
@@ -190,7 +189,7 @@ int GetRequest::serveIndexFile(int fd, Server const &server, ConfigParser const 
  * @param pathForConfig The path adjusted for configuration lookup
  * @return 0 if keep-alive is enabled, -1 if connection should be closed
  */
-int GetRequest::handleDirectoryListing(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &pathForConfig)
+int GetRequest::handleDirectoryListing(int fd, Server &server, ConfigParser const *config, string const &decodedUrl, string const &pathForConfig)
 {
 	string autoindex = config->getLocationValueForPath(pathForConfig, server.getUid(), "autoindex");
 	if (autoindex.empty())
@@ -200,13 +199,13 @@ int GetRequest::handleDirectoryListing(int fd, Server const &server, ConfigParse
 
 	if (autoindex == "on") {
 		string listing = generateDirectoryListing(decodedUrl, _path);
-		if (sendHTTPResponse(fd, 200, listing, "text/html") == -1)
-			cerr << "Failed to send directory listing" << endl;
+		string response = writeHTTPResponse(200, listing, "text/html");
+		server.fillClientBuffer(fd, response);
 	}
 	else
-		return sendErrorResponse(fd, 403, config, server.getUid());
-
-	return checkKeepAlive();
+		return sendErrorResponse(fd, 403, config, server);
+	server.keepaliveDefine(fd, isKeepalive());
+	return 1;
 }
 
 /**
@@ -224,21 +223,12 @@ string GetRequest::getPathForConfig(const string &decodedUrl)
 	return pathForConfig;
 }
 
-int GetRequest::sendErrorResponse(int fd, int errorCode, ConfigParser const *config, string const &serverUid)
+int GetRequest::sendErrorResponse(int fd, int errorCode, ConfigParser const *config, Server &server)
 {
-	string errorPage = loadErrorPage(errorCode, config, serverUid);
-
-	if (sendHTTPResponse(fd, errorCode, errorPage, "text/html") == -1) {
-		cerr << "Failed to send " << errorCode << " response" << endl;
-	}
-
-	return checkKeepAlive();
+	string errorPage = loadErrorPage(errorCode, config, server.getUid());
+	string response = writeHTTPResponse(errorCode, errorPage, "text/html");
+	server.fillClientBuffer(fd, response);
+	server.keepaliveDefine(fd, isKeepalive());
+	return 1;
 }
 
-int GetRequest::checkKeepAlive()
-{
-	if (!isKeepalive()) {
-		return -1;
-	}
-	return 0;
-}

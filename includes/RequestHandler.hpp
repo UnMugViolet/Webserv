@@ -33,7 +33,9 @@ class RequestHandler
 		static int							_checkAccess(const string &path);
 		int									handleRequest(int fd, Server &server, ConfigParser *config);
 		void								setMaxBodySize(string size);
-		map<string, string>	parseHeader(string header) const;
+		int									readOnce(int fd, Server &server, ConfigParser *config);
+		int									checkHeader(int fd, Server &server, ConfigParser *config, map<string, string> &headermap, string &body, string &savestring);
+		map<string, string>					parseHeader(string header) const;
 		string							handleChunckedRequest(int fd, const string &body);
 };
 

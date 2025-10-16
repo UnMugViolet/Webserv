@@ -22,8 +22,8 @@ public:
 	/*member functions*/
 	int	UploadFile(string body, string path);
 	int	UploadContent(map<string, string> content, string path);
-	int	createPost(int fd, string body, string postpath, string uploadpath);
-	int	handlePost(int fd, const Server &server, const string &body, const ConfigParser *config);
+	int	createPost(string body, string postpath, string uploadpath);
+	int	handlePost(int fd, Server &server, const string &body, const ConfigParser *config);
 
 	/*operator overloads*/
 	PostRequest	&operator=(PostRequest& src);

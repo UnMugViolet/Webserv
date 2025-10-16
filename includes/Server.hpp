@@ -21,13 +21,15 @@ class Server
 {
 private:
 	/*attributes here*/
-	string							_uid;
-	map<string, string>	_env;
-	vector<string>			_server_names;
+	string						_uid;
+	map<string, string>			_env;
+	vector<string>				_server_names;
 	vector<int>					_socketfds;
 	vector<int>					_clientFds;
-	RequestHandler						*_handler;
-	ConfigParser						*_config;
+	map<int, string>			_clientBuffer;
+	RequestHandler				*_handler;
+	ConfigParser				*_config;
+	map<int, bool>				_keepalive;
 
 public:
 	/*constructors and destructor*/
@@ -47,7 +49,13 @@ public:
 	const ConfigParser&	getConfig() const;
 	int			setClient(int _socketfd);
 	void		unsetClient(int position);
-	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config);
+	void		getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config, fd_set &fullWriteFd);
+	void		sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullReadFd);
+	void		fillClientBuffer(int clientFd, const string &buff);
+	string		getClientBuffer(int clientFd) const;
+	void		clearClientBuffer(int clientFd);
+	bool		keepaliveStatus(int fd) const;
+	void		keepaliveDefine(int fd, bool status);
 
 	// Env handling methods
 	void		initEnv(char **env);
@@ -56,6 +64,7 @@ public:
 	void		setEnvValue(const string &key, const string &value);
 	char		**getEnvAsArray() const;
 	const map<string, string> getEnv() const;
+	
 
 	/*operator overloads*/
 	Server		&operator=(const Server &other);

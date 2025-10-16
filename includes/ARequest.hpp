@@ -23,10 +23,10 @@ class ARequest
 {
 protected:
 	/*attributes here*/
-	int			_method;
+	int		_method;
 	string	_path;
 	string	_host;
-	bool		_keep_alive;
+	bool	_keep_alive;
 	string	_client;
 public:
 	/*constructors and destructor*/
@@ -36,10 +36,10 @@ public:
 
 	/*member functions*/
 	int			isKeepalive() const;
-	int			sendCGIResponse(int clientFd, const string &scriptPath, const ConfigParser *config, const Server &Server);
-	int			sendHTTPResponse(int clientFd, int statusCode, const string &body, const string &contentType = "text/html");
-	string loadErrorPage(int statusCode, const ConfigParser *config, const string &serverUid) const;
-	string getContentType(const string &filePath) const;
+	string		sendCGIResponse(const string &scriptPath, const ConfigParser *config, const Server &Server);
+	string		writeHTTPResponse(int statusCode, const string &body, const string &contentType = "text/html");
+	string		loadErrorPage(int statusCode, const ConfigParser *config, const string &serverUid) const;
+	string		getContentType(const string &filePath) const;
 
 	/*operator overloads*/
 	ARequest&	operator=(ARequest& src);
