@@ -312,7 +312,11 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		// get the index full path
 		if (serverRoot[serverRoot.length() - 1] == '/')
 			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);
+
 		string fullPath = serverRoot + headermap["path"];
+		// Ensure directory paths end with '/'
+		if (fullPath[fullPath.length() - 1] != '/')
+			fullPath += '/';
 
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);

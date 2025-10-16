@@ -36,6 +36,18 @@ GetRequest::GetRequest(GetRequest &src) : ARequest(src)
 	return;
 }
 
+/**
+ * If the decodedUrl is a directory and doesn't end with a slash,
+ * tries to redirect to the same path with a trailing slash.
+ * Then tries to serve an index file if configured.
+ * If no index file is found, checks if autoindex is enabled to serve a directory listing.
+ * If autoindex is off, sends a 403 Forbidden error response.
+ * @param fd The file descriptor to send the response to
+ * @param server The server object containing configuration and state
+ * @param config The configuration parser object
+ * @param decodedUrl The decoded URL path from the request
+ * @return 0 if keep-alive is enabled, -1 if connection should be closed
+ */
 int GetRequest::handleGet(int fd, Server const &server, ConfigParser const *config, string const &fullPath)
 {
 	string decodedUrl = urlDecode(fullPath.c_str());
@@ -53,6 +65,13 @@ int GetRequest::handleGet(int fd, Server const &server, ConfigParser const *conf
 	return sendErrorResponse(fd, 500, config, server.getUid());
 }
 
+/**
+ * Determines the type of the given path: non-existent, directory, or regular file.
+ * @param path The filesystem path to check
+ * @return PATH_NOT_EXISTS if the path does not exist,
+ *         PATH_DIRECTORY if it's a directory,
+ *         PATH_FILE if it's a regular file
+ */
 GetRequest::PathType GetRequest::getPathType(const string &path)
 {
 	struct stat pathStat;
@@ -68,6 +87,18 @@ GetRequest::PathType GetRequest::getPathType(const string &path)
 	return PATH_NOT_EXISTS;
 }
 
+/**
+ * If the decodedUrl is a directory and doesn't end with a slash,
+ * tries to redirect to the same path with a trailing slash.
+ * Then tries to serve an index file if configured.
+ * If no index file is found, checks if autoindex is enabled to serve a directory listing.
+ * If autoindex is off, sends a 403 Forbidden error response.
+ * @param fd The file descriptor to send the response to
+ * @param server The server object containing configuration and state
+ * @param config The configuration parser object
+ * @param decodedUrl The decoded URL path from the request
+ * @return 0 if keep-alive is enabled, -1 if connection should be closed
+ */
 int GetRequest::handleDirectory(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl)
 {
 	string pathForConfig = getPathForConfig(decodedUrl);
@@ -85,6 +116,15 @@ int GetRequest::handleDirectory(int fd, Server const &server, ConfigParser const
 	return handleDirectoryListing(fd, server, config, decodedUrl, pathForConfig);
 }
 
+/**
+ * Handles serving a regular file.
+ * If the file is not readable, sends a 403 Forbidden error response.
+ * @param fd The file descriptor to send the response to
+ * @param server The server object containing configuration and state
+ * @param config The configuration parser object
+ * @param decodedUrl The decoded URL path from the request
+ * @return 0 if keep-alive is enabled, -1 if connection should be closed
+ */
 int GetRequest::handleFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl)
 {
 	if (access(decodedUrl.c_str(), R_OK) != 0)
@@ -97,6 +137,15 @@ int GetRequest::handleFile(int fd, Server const &server, ConfigParser const *con
 	return checkKeepAlive();
 }
 
+/**
+ * Tries to find and serve an index file from the list of possible index files.
+ * @param fd The file descriptor to send the response to
+ * @param server The server object containing configuration and state
+ * @param config The configuration parser object
+ * @param decodedUrl The decoded URL path from the request
+ * @param indexPages A space-separated list of possible index files (e.g. "index.html index.php")
+ * @return 0 if keep-alive is enabled, -1 if connection should be closed, -2 if no index file found
+ */
 int GetRequest::tryServeIndexFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &indexPages)
 {
 	map<string, size_t> indexFile = getIndex(indexPages, decodedUrl);
@@ -110,6 +159,15 @@ int GetRequest::tryServeIndexFile(int fd, Server const &server, ConfigParser con
 	return sendErrorResponse(fd, indexFile.begin()->second, config, server.getUid());
 }
 
+/**
+ * Serves the specified index file with the CGI.
+ * @param fd The file descriptor to send the response to
+ * @param server The server object containing configuration and state
+ * @param config The configuration parser object
+ * @param decodedUrl The decoded URL path from the request
+ * @param indexFileName The name of the index file to serve
+ * @return 0 if keep-alive is enabled, -1 if connection should be closed
+ */
 int GetRequest::serveIndexFile(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &indexFileName)
 {
 	cout << GREEN << BOLD << "Index files found: " << indexFileName << NEUTRAL << endl;
@@ -122,6 +180,16 @@ int GetRequest::serveIndexFile(int fd, Server const &server, ConfigParser const 
 	return checkKeepAlive();
 }
 
+/**
+ * Handles directory listing if autoindex is enabled.
+ * If autoindex is off, sends a 403 Forbidden error response.
+ * @param fd The file descriptor to send the response to
+ * @param server The server object containing configuration and state
+ * @param config The configuration parser object
+ * @param decodedUrl The decoded URL path from the request
+ * @param pathForConfig The path adjusted for configuration lookup
+ * @return 0 if keep-alive is enabled, -1 if connection should be closed
+ */
 int GetRequest::handleDirectoryListing(int fd, Server const &server, ConfigParser const *config, string const &decodedUrl, string const &pathForConfig)
 {
 	string autoindex = config->getLocationValueForPath(pathForConfig, server.getUid(), "autoindex");
@@ -141,15 +209,18 @@ int GetRequest::handleDirectoryListing(int fd, Server const &server, ConfigParse
 	return checkKeepAlive();
 }
 
+/**
+ * If the decodedUrl is a directory and doesn't end with a slash,
+ * we add a trailing slash to the pathForConfig to ensure correct
+ * location matching in the configuration.
+ * @param decodedUrl The decoded URL path from the request
+ * @return The adjusted path for configuration lookup `eg: /path/` instead of `/path`
+ */
 string GetRequest::getPathForConfig(const string &decodedUrl)
 {
 	string pathForConfig = _path;
-	if (getPathType(decodedUrl) == PATH_DIRECTORY &&
-		!_path.empty() &&
-		_path[_path.length() - 1] != '/')
-	{
+	if (getPathType(decodedUrl) == PATH_DIRECTORY && !_path.empty() && _path[_path.length() - 1] != '/')
 		pathForConfig += "/";
-	}
 	return pathForConfig;
 }
 
