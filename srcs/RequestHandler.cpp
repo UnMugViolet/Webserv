@@ -395,7 +395,11 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		// get the index full path
 		if (serverRoot[serverRoot.length() - 1] == '/')
 			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);
+
 		string fullPath = serverRoot + headermap["path"];
+		// Ensure directory paths end with '/'
+		if (fullPath[fullPath.length() - 1] != '/')
+			fullPath += '/';
 
 		server.setEnvValue("ACCEPT_MIME_TYPE", headermap["Accept"]);
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
@@ -408,6 +412,12 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		// Checks if the path is allowed by the location for the requested method
 		string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
 		string auto_index = config->getLocationValueForPath(cleanPath, server.getUid(), "autoindex");
+
+		// Check for redirects before method validation
+		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return");
+		if (!redirect.empty()) {
+			return handleRedirect(fd, server, redirect, headermap);
+		}
 
 		try
 		{
@@ -427,7 +437,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			{
 				GetRequest requestObject;
 
-				cout << "EARLY 403" << endl;
 				string errorPage = requestObject.loadErrorPage(403, config, serverUid);
 				string response = requestObject.writeHTTPResponse(403, errorPage, "text/html");
 				server.fillClientBuffer(fd, response);
@@ -445,29 +454,22 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			server.keepaliveDefine(fd, requestObject.isKeepalive());
 			return 1;
 		}
-		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return");
-		if (!redirect.empty())
-		{
-			; // redirect here
-		}
+
 		if (headermap["method"] == "GET")
 		{
 			GetRequest requestObject(headermap);
-			// Process the GET request and send response
 
 			return (requestObject.handleGet(fd, server, config, fullPath));
 		}
 		else if (headermap["method"] == "POST")
 		{
 			PostRequest requestObject(headermap);
-			// Process the POST request
 
 			return (requestObject.handlePost(fd, server, body, config));
 		}
 		else if (headermap["method"] == "DELETE")
 		{
 			DeleteRequest requestObject(headermap);
-			// Process the DELETE request
 
 			return (requestObject.handleDelete(fd, server, config, fullPath));
 		}
@@ -483,6 +485,51 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		return (-1);
 	}
 	return (0);
+}
+
+/**
+ * Handles HTTP redirections (301, 302) based on configuration.
+ * @param fd The file descriptor to send the response to
+ * @param server The server object containing configuration and state
+ * @param redirect The redirect string from config (e.g., "301 https://example.com")
+ * @param headermap The parsed request headers
+ * @return 1 on success, -1 on error
+ */
+int RequestHandler::handleRedirect(int fd, Server &server, const string &redirect, map<string, string> &headermap)
+{
+	istringstream 	iss(redirect);
+	int 			code;
+	string 			url;
+	
+	if (!(iss >> code >> url)) {
+		return -1; // Invalid redirect format
+	}
+	
+	string statusText;
+	switch (code) {
+		case 301: statusText = "Moved Permanently"; break;
+		case 302: statusText = "Found"; break;
+		case 307: statusText = "Temporary Redirect"; break;
+		case 308: statusText = "Permanent Redirect"; break;
+		default: return -1; // Unsupported redirect code
+	}
+	
+	stringstream ss;
+	ss << code;
+	string response = "HTTP/1.1 " + ss.str() + " " + statusText + "\r\n";
+	response += "Location: " + url + "\r\n";
+	response += "Content-Length: 0\r\n";
+	
+	// Determine keep-alive status from headers
+	bool keepAlive = !(headermap.find("Connection") != headermap.end() && 
+	                   headermap["Connection"] == "close");
+	response += "Connection: " + (keepAlive ? string("keep-alive") : string("close")) + "\r\n";
+	response += "\r\n";
+	
+	server.fillClientBuffer(fd, response);
+	server.keepaliveDefine(fd, keepAlive);
+	
+	return 1;
 }
 
 void RequestHandler::setMaxBodySize(string size)
