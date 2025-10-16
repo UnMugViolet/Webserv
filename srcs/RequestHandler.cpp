@@ -499,15 +499,13 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
  */
 int RequestHandler::handleRedirect(int fd, Server &server, const string &redirect, map<string, string> &headermap)
 {
-	istringstream iss(redirect);
-	int code;
-	string url;
+	istringstream 	iss(redirect);
+	int 			code;
+	string 			url;
 	
 	if (!(iss >> code >> url)) {
 		return -1; // Invalid redirect format
 	}
-	
-	cout << YELLOW << BOLD << "Redirecting to: " << url << " (code: " << code << ")" << NEUTRAL << endl;
 	
 	string statusText;
 	switch (code) {
