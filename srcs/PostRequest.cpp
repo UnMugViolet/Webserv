@@ -204,8 +204,8 @@ int PostRequest::handlePost(int fd, Server &server, const string &body, const Co
 	string path = server.getEnvValue("REQUEST_URI");
 	string cleanPath = path.substr(0, path.find('?'));
 	
-	string uploadir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_uploads");
-	string postdir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_posts");
+	string uploadir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_uploads", true);
+	string postdir = config->getLocationValueForPath(cleanPath, server.getUid(), "put_posts", true);
 	// define target directory
 	if (uploadir.find('/') == 0 && serverRoot.rfind('/') == serverRoot.size() - 1)
 		uploadir.erase(0, 1);

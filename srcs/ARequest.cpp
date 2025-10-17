@@ -108,7 +108,7 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 {
 	int 			cgiOutputFd = -1;
 	vector<string>	location_cgi = config->getLocationVectorforPath(scriptPath, Server.getUid(), "cgi");
-	string			autoindex = config->getLocationValueForPath(scriptPath, Server.getUid(), "autoindex");
+	string			autoindex = config->getLocationValueForPath(scriptPath, Server.getUid(), "autoindex", true);
     struct stat 	pathStat;
     
     // For location matching add trailing slash if it's a directory
@@ -119,7 +119,7 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
         }
     }
     
-	string 	auto_index = config->getLocationValueForPath(pathForConfig, Server.getUid(), "autoindex");
+	string 	auto_index = config->getLocationValueForPath(pathForConfig, Server.getUid(), "autoindex", true);
 
 	if (auto_index.empty())
 		auto_index = "on";
