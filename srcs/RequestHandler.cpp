@@ -96,10 +96,9 @@ map<string, size_t> getIndex(string const &indexes, string const &root)
             goodIndex = indexes.substr(space1);
         else
             goodIndex = indexes.substr(space1, space2 - space1);
-    
-        
+
         fullPath = root + goodIndex;
-        
+
         size_t status = RequestHandler::_checkAccess(fullPath);
         
         cout << CYAN << BOLD << "Checking index: " << goodIndex << " -> " << fullPath << " (status: " << status << ")" << NEUTRAL << endl;
@@ -109,7 +108,7 @@ map<string, size_t> getIndex(string const &indexes, string const &root)
             result[goodIndex] = status;
             return result;
         }
-        
+
         // Keep track of the last index and its status
         lastIndex = goodIndex;
         lastStatus = status;
@@ -184,7 +183,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 		string response = requestObject.writeHTTPResponse(400, errorPage, "text/html");
 		server.keepaliveDefine(fd, false);
 		server.fillClientBuffer(fd, response);
-		return 1;
+		return 2;
 	}
 	string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 	if (max_body_size.empty())
@@ -194,7 +193,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 
 	// Check if request is chunked
 	if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chunked"))
-		return (0);
+		return (handleChunkedRequest(fd, savestring, body, server, 0));
 
 	if (headermap.find("Content-Length") != headermap.end())
 	{
@@ -209,7 +208,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 			string response = requestObject.writeHTTPResponse(400, errorPage, "text/html");
 			server.keepaliveDefine(fd, false);
 			server.fillClientBuffer(fd, response);
-			return 1;
+			return 2;
 		}
 
 		// Check against max body size
@@ -222,7 +221,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 			string response = requestObject.writeHTTPResponse(413, errorPage, "text/html");
 			server.keepaliveDefine(fd, false);
 			server.fillClientBuffer(fd, response);
-			return 1;
+			return 2;
 		}
 		if (body.size() == contentLength)
 		{
@@ -237,7 +236,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 {
 	string	serverUid = server.getUid();
-	size_t	const BUFFER_SIZE = 51;
+	size_t	const BUFFER_SIZE = 512;
 	char	buff[BUFFER_SIZE];
 	int		received;
 	string	body = "";
@@ -267,9 +266,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		if (savestring.find("\r\n\r\n") != string::npos)
 		{
 			if (savestring.find("Content-Length") == string::npos && savestring.find("Transfer-Encoding: chunked") == string::npos)
-			{
 				return (1);
-			}
 			else {
 				headerlimit = savestring.find("\r\n\r\n");
 				body = savestring.substr(headerlimit + 4, string::npos);
@@ -289,7 +286,15 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 	{
 		// Prevent header from being too large
 		if (savestring.size() > MAX_HEADER_SIZE)
-			return (Logger::error(serverUid, "Header too large"), -1);
+		{
+			GetRequest requestObject;
+
+			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
+			string response = requestObject.writeHTTPResponse(413, errorPage, "text/html");
+			server.keepaliveDefine(fd, false);
+			server.fillClientBuffer(fd, response);
+			return (Logger::error(serverUid, "Header too large"), 2);
+		}
 		memset(buff, 0, BUFFER_SIZE);
 
 		received = recv(fd, buff, BUFFER_SIZE - 1, 0);
@@ -327,7 +332,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 
 		if (headermap["Transfer-Encoding"].find("chunked") != string::npos)
 		{
-			return (handleChunkedRequest(fd, savestring, body, server));
+			return (handleChunkedRequest(fd, savestring, body, server, 1));
 		}
 		istringstream iss(headermap["Content-Length"]);
 		size_t contentLength;
@@ -369,7 +374,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 	// Read with recv until request is complete
 	int res = readOnce(fd, server, config);
-	if (res == 0)
+	if (res != 1)
 		return (res);
 	try
 	{
@@ -560,9 +565,8 @@ void RequestHandler::setMaxBodySize(string size)
 		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
 }
 
-int	RequestHandler::handleChunkedRequest(int fd, string &savestring, string &body, Server &server)
+int	RequestHandler::handleChunkedRequest(int fd, string &savestring, string &body, Server &server, int can_read)
 {
-	int					can_read = 1;
 	static string		fullbody;
 	size_t				hexlen;
 	size_t				totallen = 0;
@@ -604,6 +608,7 @@ int	RequestHandler::handleChunkedRequest(int fd, string &savestring, string &bod
 				savestring.erase(savestring.find("\r\n\r\n") + 4);
 				savestring.append(fullbody);
 				server.fillClientBuffer(fd, savestring);
+				fullbody = "";
 				return (1);
 			}
 			if (totallen <= fullbody.size())

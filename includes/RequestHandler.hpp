@@ -37,7 +37,7 @@ class RequestHandler
 		int								readOnce(int fd, Server &server, ConfigParser *config);
 		int								checkHeader(int fd, Server &server, ConfigParser *config, map<string, string> &headermap, string &body, string &savestring);
 		map<string, string>				parseHeader(string header) const;
-		int								handleChunkedRequest(int fd, string &savestring, string &body, Server &server);
+		int								handleChunkedRequest(int fd, string &savestring, string &body, Server &server, int can_read);
 };
 
 string				trim(const string &str);

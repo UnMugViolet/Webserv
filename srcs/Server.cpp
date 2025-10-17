@@ -378,7 +378,7 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 				cout << "Client disconnected" << endl;
 				continue;
 			}
-			if (res == 1)
+			if (res >= 1)
 			{
 				FD_CLR(_clientFds[i], &fullReadFd);
 				FD_SET(_clientFds[i], &fullWriteFd);
@@ -422,6 +422,7 @@ void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 				int res = send(fd, response.c_str(), response.length(), 0);
 				if (res == -1)
 				{
+					perror("");
 					FD_CLR(fd, &fullWriteFd);
 					cerr << "failed to send http response" << endl;
 					unsetClient(i);
