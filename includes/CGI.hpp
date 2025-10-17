@@ -1,12 +1,12 @@
 #pragma once
 
-
-
 #include "unistd.h"
 #include "fcntl.h"
 #include "stdlib.h"
 #include "sys/wait.h"
 #include "sys/types.h"
+#include "signal.h"
+#include "time.h"
 #include "dict.hpp"
 #include "Logger.hpp"
 #include "Server.hpp"
@@ -32,7 +32,7 @@ public:
 
 	/*member functions*/
 	
-	static int	interpret(const string &path, const Server &Server, map<string, string> &cgi_list);
+	static int	interpret(const string &path, const Server &Server, map<string, string> &cgi_list, size_t timeout_seconds);
 
 	/*operator overloads*/
 

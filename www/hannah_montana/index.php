@@ -26,6 +26,7 @@
 		["Redirect internal", "redirect-internal"],
 		["Redirect external", "redirect-external"],
 		"Errors",
+		["Infinite Loop (Warning: May crash your browser)", "infloop"]
 	]
 ?>
 

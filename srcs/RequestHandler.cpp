@@ -597,8 +597,8 @@ int	RequestHandler::handleChunkedRequest(int fd, string &savestring, string &bod
 			pos = body.find('\r', pos);
 			if (pos != string::npos)
 				pos += 2;
-			else
-				;//bad request?
+			// else
+			// 	;//bad request?
 			if (hexlen == 0)
 			{
 				

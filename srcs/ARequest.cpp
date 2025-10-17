@@ -80,6 +80,7 @@ string ARequest::writeHTTPResponse(int statusCode, const string &body, const str
 		case 413: statusText = "Body too large"; break;
 		case 415: statusText = "Unsupported Media Type"; break;
 		case 500: statusText = "Internal Server Error"; break;
+		case 503: statusText = "Gateway timeout"; break;
 		default: statusText = "Unknown"; break;
 	}
 	
@@ -90,18 +91,20 @@ string ARequest::writeHTTPResponse(int statusCode, const string &body, const str
 		response << "Content-Type: " << contentType << "\r\n";
 		response << "Content-Length: " << body.length() << "\r\n";
 	}
-	if (!_keep_alive)
+	if (!_keep_alive) {
 		response << "Connection: close\r\n";
+		// Additional headers to prevent browser caching and retries on timeout
+		if (statusCode == 504) {
+			response << "Cache-Control: no-cache, no-store, must-revalidate\r\n";
+			response << "Pragma: no-cache\r\n";
+			response << "Expires: 0\r\n";
+			response << "Retry-After: 60\r\n";  // Tell browser to wait 60 seconds before retry
+		}
+	}
 	response << "\r\n";
 	response << body;
-	
-	string responseStr = response.str();
 
-	// if (send(clientFd, responseStr.c_str(), responseStr.length(), 0) == -1) {
-	// 	cerr << "Failed to send HTTP response" << endl;
-	// 	return -1;
-	// }
-	return responseStr;
+	return response.str();
 }
 
 string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *config, const Server &Server)
@@ -136,8 +139,15 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 
 	try {
 		// Execute CGI script
-		
 		map<string, string> cgi_list;
+		string timeout_str = config->getLocationValueForPath(pathForConfig, Server.getUid(), "cgi_timeout", true);
+		size_t timeout_seconds = timeout_str.empty() ? 5 : ft_atoi(timeout_str); // Default timeout 5 seconds if not set
+
+		if (timeout_seconds == 0 || timeout_seconds > 5) {
+			cout << RED << BOLD << "Warning: Invalid CGI timeout value. Using default of 5 seconds." << NEUTRAL << endl;
+			timeout_seconds = 5;
+		}
+
 		for (vector<string>::iterator it = location_cgi.begin(); it != location_cgi.end(); it++)
 		{
 			if (it->find(' ') != string::npos)
@@ -160,8 +170,17 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 			}
 		}
 
-		cgiOutputFd = CGI::interpret(scriptPath, Server, cgi_list);
-	
+		cgiOutputFd = CGI::interpret(scriptPath, Server, cgi_list, timeout_seconds);
+
+		// Check for timeout error avoid reading from fd (-2) in that case
+		if (cgiOutputFd == -2) {
+			cout << RED << BOLD << "CGI execution timed out after " << timeout_seconds << " seconds." << NEUTRAL << endl;
+			// Force connection close on timeout to prevent browsers from hanging
+			_keep_alive = false;
+			string errorPage = loadErrorPage(504, config, Server.getUid());
+			return writeHTTPResponse(504, errorPage, "text/html");
+		}
+		
 		// Read the CGI output
 		string cgiOutput;
 		char buffer[4096];
