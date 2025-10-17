@@ -375,17 +375,24 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	{
 		header = server.getClientBuffer(fd);
 		headerlimit = header.find("\r\n\r\n");
-		body = header.substr(headerlimit + 4, string::npos);
-		header.erase(headerlimit, string::npos);
+		if (headerlimit != string::npos && headerlimit + 4 <= header.length()) {
+			body = header.substr(headerlimit + 4, string::npos);
+			header.erase(headerlimit, string::npos);
+		} else {
+			body = "";
+		}
 		headermap = parseHeader(header);
 		
 		Logger::access(serverUid, "http request: " + header);
 
-		server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, headermap["Host"].find(':')));
-		if (headermap["Host"].find(':'))
-			server.setEnvValue("SERVER_PORT", headermap["Host"].substr(headermap["Host"].find(':') + 1));
-		else
+		size_t colonPos = headermap["Host"].find(':');
+		if (colonPos != string::npos) {
+			server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, colonPos));
+			server.setEnvValue("SERVER_PORT", headermap["Host"].substr(colonPos + 1));
+		} else {
+			server.setEnvValue("SERVER_NAME", headermap["Host"]);
 			server.setEnvValue("SERVER_PORT", "80");
+		}
 		string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");
@@ -393,7 +400,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		serverRoot = config->getServerValue(serverUid, "root");
 		
 		// get the index full path
-		if (serverRoot[serverRoot.length() - 1] == '/')
+		if (!serverRoot.empty() && serverRoot[serverRoot.length() - 1] == '/')
 			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);
 
 		string fullPath = serverRoot + headermap["path"];
@@ -402,13 +409,18 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		server.setEnvValue("ACCEPT_MIME_TYPE", headermap["Accept"]);
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);
-		if (headermap["path"].find('?') != string::npos)
-			server.setEnvValue("QUERY_STRING", headermap["path"].substr(headermap["path"].find('?') + 1));
+		size_t questionPos = headermap["path"].find('?');
+		if (questionPos != string::npos && questionPos + 1 < headermap["path"].length())
+			server.setEnvValue("QUERY_STRING", headermap["path"].substr(questionPos + 1));
 		else
 			server.setEnvValue("QUERY_STRING", "");
 
 		// Checks if the path is allowed by the location for the requested method
-		string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
+		string cleanPath = headermap["path"];
+		size_t queryPos = headermap["path"].find('?');
+		if (queryPos != string::npos) {
+			cleanPath = headermap["path"].substr(0, queryPos);
+		}
 		string auto_index = config->getLocationValueForPath(cleanPath, server.getUid(), "autoindex", true);
 
 		// Check for redirects before method validation
