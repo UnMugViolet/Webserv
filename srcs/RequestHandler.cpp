@@ -411,10 +411,10 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 		// Checks if the path is allowed by the location for the requested method
 		string cleanPath = headermap["path"].substr(0, headermap["path"].find('?'));
-		string auto_index = config->getLocationValueForPath(cleanPath, server.getUid(), "autoindex");
+		string auto_index = config->getLocationValueForPath(cleanPath, server.getUid(), "autoindex", true);
 
 		// Check for redirects before method validation
-		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return");
+		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return", false);
 		if (!redirect.empty()) {
 			return handleRedirect(fd, server, redirect, headermap);
 		}
@@ -422,7 +422,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		try
 		{
 			int status = 0;
-			string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods");
+			string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods", true);
 			istringstream iss(allowed_methods);
 			string one_method;
 

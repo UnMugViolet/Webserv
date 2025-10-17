@@ -463,11 +463,12 @@ void	ConfigParser::_checkSemicolons(const string &filePath) const
  * @param path The request path to match against location blocks.
  * @param serverUid The unique identifier of the server.
  * @param parameter The configuration parameter to retrieve from the matched location block.
+ * @param must_check_server If true, will also check the server block if the parameter is not found in the location.
  * @return The value of the specified parameter from the most specific matching location block,
  *         fallback to the server value if nothing is defined in the location. If neither
  *         location nor server define the parameter, returns empty string.
 */
-string	ConfigParser::getLocationValueForPath(const string &path, const string &serverUid, const string &parameter) const
+string	ConfigParser::getLocationValueForPath(const string &path, const string &serverUid, const string &parameter, bool must_check_server) const
 {
 	string currentLocation = "";
 	string values = "";
@@ -481,7 +482,7 @@ string	ConfigParser::getLocationValueForPath(const string &path, const string &s
 		}
 	}
 	values = getLocationValue(serverUid, currentLocation, parameter);
-	if (values.empty())
+	if (values.empty() && must_check_server)
 		values = getServerValue(serverUid, parameter);
 	if (values.empty())
 		cout << YELLOW << "Parameter '" << parameter << "' not found in location '" << currentLocation << "' or server '" << serverUid << "'" << NEUTRAL << endl;

@@ -47,7 +47,7 @@ class ConfigParser {
 		bool hasServerKey(const string &serverName, const string &key) const;
 		vector<string> getServerUids() const;
 		vector<string> getLocationPaths(const string &serverUid) const;
-		string	getLocationValueForPath(const string &path, const string &serverUid, const string &parameter) const;
+		string	getLocationValueForPath(const string &path, const string &serverUid, const string &parameter, bool must_check_server) const;
 		vector<string> getLocationVectorforPath(const string &path, const string &serverUid, const string &parameter) const;
 
 

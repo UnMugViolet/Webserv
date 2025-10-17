@@ -102,7 +102,7 @@ int GetRequest::handleDirectory(int fd, Server &server, ConfigParser const *conf
 		if (url[url.length() - 1] != '/')
 			url += '/';
 	string pathForConfig = getPathForConfig(url);
-	string indexPages = config->getLocationValueForPath(pathForConfig, server.getUid(), "index");
+	string indexPages = config->getLocationValueForPath(pathForConfig, server.getUid(), "index", true);
 
 	// Try to serve index file first
 	if (!indexPages.empty())
@@ -196,7 +196,7 @@ int GetRequest::serveIndexFile(int fd, Server &server, ConfigParser const *confi
  */
 int GetRequest::handleDirectoryListing(int fd, Server &server, ConfigParser const *config, string const &decodedUrl, string const &pathForConfig)
 {
-	string autoindex = config->getLocationValueForPath(pathForConfig, server.getUid(), "autoindex");
+	string autoindex = config->getLocationValueForPath(pathForConfig, server.getUid(), "autoindex", true);
 	if (autoindex.empty())
 		autoindex = "on";
 
