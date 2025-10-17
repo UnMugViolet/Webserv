@@ -65,8 +65,6 @@ int	PostRequest::UploadFile(string body, string path)
 	string filename;
 	string extension = "";
 
-	cout << "path: " << path << endl;
-
 	if (path.rfind('.') != string::npos)
 	{
 		extension = path.substr(path.rfind('.'));
@@ -107,7 +105,7 @@ int	PostRequest::createPost(string body, string postpath, string uploadpath)
 
 	if (_Content_type.compare("text/plain") == 0)
 	{
-		filename = postpath + "/post.txt";
+		filename = postpath + "post.txt";
 		
 		if(UploadFile(body, filename) == -1)
 			return (-1);

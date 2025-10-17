@@ -190,15 +190,12 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 	if (max_body_size.empty())
 		max_body_size = config->getValue("client_max_body_size");
 	setMaxBodySize(max_body_size);
-	// Check if we need to read more body data
-	// if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chuncked"))
-	// {
-	// 	body = handleChunckedRequest(fd, body);
-	// 	if (body.empty()) {
-	// 		cout << "empty body\n";
-	// 		return (-1);
-	// 	}
-	// }
+
+
+	// Check if request is chunked
+	if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chunked"))
+		return (0);
+
 	if (headermap.find("Content-Length") != headermap.end())
 	{
 		istringstream iss(headermap["Content-Length"]);
@@ -269,8 +266,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		server.fillClientBuffer(fd, savestring);
 		if (savestring.find("\r\n\r\n") != string::npos)
 		{
-			
-			if (savestring.find("Content-Length") == string::npos)
+			if (savestring.find("Content-Length") == string::npos && savestring.find("Transfer-Encoding: chunked") == string::npos)
 			{
 				return (1);
 			}
@@ -307,7 +303,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		server.fillClientBuffer(fd, savestring);
 		if (savestring.find("\r\n\r\n") != string::npos)
 		{
-			if (savestring.find("Content-Length") == string::npos)
+			if (savestring.find("Content-Length") == string::npos && savestring.find("Transfer-Encoding: chunked") == string::npos)
 				return (1);
 			else {
 				headerlimit = savestring.find("\r\n\r\n");
@@ -322,12 +318,17 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		return (0);
 	} else {
 
+
 		body = savestring.substr(headerlimit + 4, string::npos);
 		header = savestring;
 		header.erase(headerlimit, string::npos);
 		
 		headermap = parseHeader(header);
 
+		if (headermap["Transfer-Encoding"].find("chunked") != string::npos)
+		{
+			return (handleChunkedRequest(fd, savestring, body, server));
+		}
 		istringstream iss(headermap["Content-Length"]);
 		size_t contentLength;
 		iss >> contentLength;
@@ -336,15 +337,14 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		{
 			memset(buff, 0, BUFFER_SIZE);
 
-			received = recv(fd, buff, min(BUFFER_SIZE - 1, contentLength), 0);
+			received = recv(fd, buff, min(BUFFER_SIZE - 1, contentLength - body.size()), 0);
 			if (received <= 0)
 			{
 				server.clearClientBuffer(fd);
 				return -1;
 			}
 			body.append(buff, received);
-			savestring.erase(headerlimit + 4, string::npos);
-			savestring.append(body);
+			savestring.append(buff, received);
 			server.fillClientBuffer(fd, savestring);
 			if (body.size() == contentLength)
 				return (1);
@@ -374,6 +374,8 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	try
 	{
 		header = server.getClientBuffer(fd);
+		if (header.size() <= 0)
+			return (-1);
 		headerlimit = header.find("\r\n\r\n");
 		body = header.substr(headerlimit + 4, string::npos);
 		header.erase(headerlimit, string::npos);
@@ -557,4 +559,92 @@ void RequestHandler::setMaxBodySize(string size)
 	else
 		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
 }
+
+int	RequestHandler::handleChunkedRequest(int fd, string &savestring, string &body, Server &server)
+{
+	int					can_read = 1;
+	static string		fullbody;
+	size_t				hexlen;
+	size_t				totallen = 0;
+	size_t				pos = 0;
+	size_t const		BUFFER_SIZE = 51;
+	char				buff[BUFFER_SIZE];
+
+	while (true)
+	{
+		if (body.find('\r', pos) != string::npos)
+		{
+			istringstream iss(body.substr(pos, body.find("\r\n")));
+			if (!(iss >> hex >> hexlen))
+			{
+				//probably bad request
+				return (-1); // error
+			}
+			
+			totallen += hexlen;
+			pos = body.find('\r', pos);
+			if (pos != string::npos)
+				pos += 2;
+			else
+				;//bad request?
+			if (hexlen == 0)
+			{
+				
+				if (body.size() < pos + 2)
+				{
+					if (!can_read)
+						return (0);
+					int received = recv(fd, buff, pos + 2 - body.size(), 0);
+					if (received <= 0)
+					{
+						server.clearClientBuffer(fd);
+						return (-1);
+					}
+				}
+				savestring.erase(savestring.find("\r\n\r\n") + 4);
+				savestring.append(fullbody);
+				server.fillClientBuffer(fd, savestring);
+				return (1);
+			}
+			if (totallen <= fullbody.size())
+			{
+				pos += hexlen + 2;
+				continue;
+			}
+			if (body.size() > pos)
+				fullbody.append(body, pos, totallen - fullbody.size());
+			if (totallen > fullbody.size())
+			{
+				if (!can_read)
+					return (0);
+				memset(buff, 0, BUFFER_SIZE);
+				int received = recv(fd, buff, min(BUFFER_SIZE - 1, totallen - fullbody.size()), 0);
+				if (received <= 0)
+				{
+					server.clearClientBuffer(fd);
+					return (-1);
+				}
+				fullbody.append(buff, received);
+				savestring.append(buff, received);
+				server.fillClientBuffer(fd, savestring);
+				return (0);
+			}
+			pos += hexlen + 2;
+		} else {
+			memset(buff, 0, BUFFER_SIZE);
+			int received = recv(fd, buff, BUFFER_SIZE - 1, 0);
+			if (received <= 0)
+			{
+				server.clearClientBuffer(fd);
+				return (-1);
+			}
+			savestring.append(buff, received);
+			body.append(buff, received);
+			server.fillClientBuffer(fd, savestring);
+			can_read = 0;
+		}
+	}
+}
+
+
 
