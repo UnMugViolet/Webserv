@@ -67,7 +67,7 @@ int	CGI::_getType(string ext)
 }
 
 
-int	CGI::interpret(const string &path, const Server &Server, map<string, string> &cgi_list)
+int	CGI::interpret(const string &path, const Server &Server, map<string, string> &cgi_list, size_t timeout_seconds)
 {
 	string	extension = _getExtension(path);
 	int type = _getType(extension);
@@ -131,10 +131,37 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
         throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
 	}
 	close(fd[1]);
+	
+	// Timeout mechanism using select() with waitpid()
 	int status;
-    if (waitpid(pid, &status, 0) == -1)
-       throw CGIException("Internal error: waitpid failed", true, 500, Server.getUid());
-    if (WIFEXITED(status))
+	time_t startTime = time(NULL);
+	
+	while (true) {
+		pid_t result = waitpid(pid, &status, WNOHANG);
+		
+		if (result == pid) {
+			// Child process finished
+			break;
+		} else if (result == -1) {
+			throw CGIException("Internal error: waitpid failed", true, 500, Server.getUid());
+		} else if (result == 0) {
+			// Child still running, check timeout
+			if (static_cast<size_t>(time(NULL) - startTime) > timeout_seconds) {
+				kill(pid, SIGTERM);
+				usleep(500000);
+				if (waitpid(pid, &status, WNOHANG) == 0) {
+					kill(pid, SIGKILL);
+					waitpid(pid, &status, 0);
+				}
+				
+				// Close original pipe and return -2 to indicate timeout
+				return (close(fd[0]), -2);
+			}
+			usleep(100000);  // Sleep 100ms
+		}
+	}
+	
+	if (WIFEXITED(status))
 	{
 		int exitStatus = WEXITSTATUS(status);
 		if (exitStatus == 0)
