@@ -2,14 +2,11 @@
 #include "RequestHandler.hpp"
 #include <unistd.h>
 
-Server::Server()
-{
-}
+Server::Server() {}
 
 Server::Server(const Server &other)
 {
-	if (this != &other)
-	{
+	if (this != &other) {
 		this->_socketfds = other._socketfds;
 		this->_clientFds = other._clientFds;
 		this->_uid = other._uid;  // Lost 2 hours of my life because of this
@@ -20,12 +17,9 @@ Server::Server(const Server &other)
 
 		// Transfer ownership of the socket to avoid double-close
 
-		for (vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
-		{
+		for (vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++) {
 			if (*it > -1)
-			{
 				*it = -1;
-			}
 		}
 	}
 
@@ -43,13 +37,11 @@ Server::Server(ConfigParser &config, string serverUid)
 	this->_uid = serverUid;
 	
 
-	try 
-	{
+	try {
 		this->_handler = new RequestHandler;
 
 		// check if servername is present;
-		if (!config.hasServerKey(serverUid, "server_name"))
-		{
+		if (!config.hasServerKey(serverUid, "server_name")) {
 			Logger::error(serverUid, "No server_name found in the config file for this server not starting up the services");
 			throw ServException(serverUid + " no server name found");
 		}
@@ -70,24 +62,21 @@ Server::Server(ConfigParser &config, string serverUid)
 		// Setup env
 		initEnv(environ);
 	}
-	catch (const ServException &e) 
-	{
+	catch (const ServException &e) {
 		// Clean up allocated resources before re-throwing
 		if (_handler) {
 			delete _handler;
 			_handler = NULL;
 		}
 		if (!_socketfds.empty()) {
-			for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
-			{
-				if (*it > -1)
-				{
+			for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++) {
+				if (*it > -1){
 					close(*it);
 					*it = -1;
 				}
 			}
 		}
-		throw; // Re-throw the original exception to parent Webserv
+		throw ; // Re-throw the original exception to parent Webserv
 	}
 }
 
@@ -97,23 +86,17 @@ Server::~Server()
 		delete _handler;
 		_handler = NULL;
 	}
-	if (!_clientFds.empty())
-	{
-		for (vector<int>::iterator it = _clientFds.begin(); it != _clientFds.end(); it++)
-		{
-			if (*it > -1)
-			{
+	if (!_clientFds.empty()) {
+		for (vector<int>::iterator it = _clientFds.begin(); it != _clientFds.end(); it++) {
+			if (*it > -1) {
 				close(*it);
 				*it = -1;
 			}
 		}
 	}
-	if (_socketfds.empty()) 
-	{
-		for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
-		{
-			if (*it > -1)
-			{
+	if (_socketfds.empty()) {
+		for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++) {
+			if (*it > -1) {
 				close(*it);
 				*it = -1;
 			}
@@ -124,18 +107,15 @@ Server::~Server()
 
 Server &Server::operator=(const Server &other)
 {
-	if (this != &other)
-	{
+	if (this != &other) {
 		// Close current socket if we have one
 		if (_socketfds.empty()) {
-		for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
-		{
-			if (*it > -1)
-			{
-				close(*it);
-				*it = -1;
+			for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++) {
+				if (*it > -1) {
+					close(*it);
+					*it = -1;
+				}
 			}
-		}
 		}
 		
 		this->_socketfds = other._socketfds;
@@ -147,27 +127,22 @@ Server &Server::operator=(const Server &other)
 		this->_handler = new RequestHandler();
 		
 		// Transfer ownership of the socket to avoid double-close
-		for (vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++)
-		{
+		for (vector<int>::iterator it = const_cast<Server&>(other)._socketfds.begin(); it != const_cast<Server&>(other)._socketfds.end(); it++) {
 			if (*it > -1)
-			{
 				*it = -1;
-			}
 		}
 	}
-	return *this;
+	return (*this);
 }
 
 void	Server::CreateSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs)
 {
 	ostringstream oss;
 
-	for (vector<sockaddr_in>::iterator it = sockaddrs.begin(); it != sockaddrs.end(); it++)
-	{
+	for (vector<sockaddr_in>::iterator it = sockaddrs.begin(); it != sockaddrs.end(); it++) {
 		sockaddr_in sockaddr = *it;
 
-		for (vector<int>::iterator port_it = ports.begin(); port_it != ports.end(); port_it++)
-		{
+		for (vector<int>::iterator port_it = ports.begin(); port_it != ports.end(); port_it++) {
 			int portnbr = *port_it;
 
 			//create listening socket with port number
@@ -175,28 +150,25 @@ void	Server::CreateSockets(const string &serverUid, vector<int> &ports, vector<s
 			int _socketfd = socket(AF_INET, SOCK_STREAM, 0);
 			int opt = 1;
 			if (_socketfd == -1)
-				throw ServException("socket failed");
-			if (setsockopt(_socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-			{
+				throw (ServException("socket failed"));
+			if (setsockopt(_socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
 				close(_socketfd);
 				Logger::error(serverUid, "Unexpected error setsockopt failed");
-				throw ServException("setsockopt failed");
+				throw (ServException("setsockopt failed"));
 			}
-			if (bind(_socketfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == -1)
-			{
+			if (bind(_socketfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) == -1) {
 				close(_socketfd);
 				oss.str("");
 				oss << portnbr;
 				Logger::error(serverUid, "Bind failed on port " + oss.str() + ", possibly already in use check with 'ss -tuln | grep " + oss.str() + "'");
-				throw ServException("bind failed for server: " + _uid + " on port " + oss.str());
+				throw (ServException("bind failed for server: " + _uid + " on port " + oss.str()));
 			}
-			if (listen(_socketfd, 10) == -1)
-			{
+			if (listen(_socketfd, 10) == -1) {
 				close(_socketfd);
 				oss.str(""); // Clear the stringstream
 				oss << portnbr;
 				Logger::error(serverUid, "Listen failed on port " + oss.str());
-				throw ServException("listen failed for server: " + _uid + " on port " + oss.str());
+				throw (ServException("listen failed for server: " + _uid + " on port " + oss.str()));
 			}
 			_socketfds.push_back(_socketfd);
 		}
@@ -208,8 +180,7 @@ vector<sockaddr_in>	Server::setServerNames(const ConfigParser &config, const str
 	vector<sockaddr_in>	sockvector;
 	string _names = config.getServerValue(serverUid, "server_name");
 
-	while (true)
-	{
+	while (true) {
 		sockaddr_in sockaddr;
 		sockaddr.sin_family = AF_INET;
 		int	gotit = 0;
@@ -231,13 +202,10 @@ vector<sockaddr_in>	Server::setServerNames(const ConfigParser &config, const str
 		ft_memset(&hints, 0, sizeof(hints));
 		int status = getaddrinfo(c_name, 0, &hints, &res);
 		
-		if (status == 0)
-		{
+		if (status == 0) {
 			r = res;
-			while (r != NULL)
-			{
-				if (r->ai_family == AF_INET)
-				{
+			while (r != NULL) {
+				if (r->ai_family == AF_INET) {
 					gotit = 1;
 					struct sockaddr_in *ipv4 = (struct sockaddr_in *)r->ai_addr;
 					sockaddr.sin_addr = ipv4->sin_addr;
@@ -248,12 +216,12 @@ vector<sockaddr_in>	Server::setServerNames(const ConfigParser &config, const str
 		}
 		if (gotit == 0) {
 			Logger::error(serverUid, "Invalid server_name in the config file");
-			throw ServException(serverUid + " has an invalid server_name");
+			throw (ServException(serverUid + " has an invalid server_name"));
 		}
 		sockvector.push_back(sockaddr);
 		_server_names.push_back(_one_name);
 		if (_names.find(' ') == string::npos)
-			break;
+			break ;
 		_names = _names.substr(_names.find(' ') + 1);
 	}
 	return (sockvector);
@@ -261,36 +229,32 @@ vector<sockaddr_in>	Server::setServerNames(const ConfigParser &config, const str
 
 vector<int>	Server::checkPorts(const ConfigParser &config, const string &serverUid)
 {
-	if (!config.hasServerKey(serverUid,  "listen"))
-	{
+	if (!config.hasServerKey(serverUid,  "listen")) {
 		Logger::error(serverUid, "No port number found in the config file for this server not starting up the services");
-		throw ServException(serverUid + " has no port number");
+		throw (ServException(serverUid + " has no port number"));
 	}
 	string ports = config.getServerValue(serverUid, "listen");
 	string _one_port;
 	int portnbr;
 	vector<int>	portvector;
 
-	while (true)
-	{
+	while (true) {
 		_one_port = ports.substr(0, ports.find(' '));
 
-		for (string::iterator pos = _one_port.begin(); pos != _one_port.end(); pos++)
-		{
-			if (*pos > '9' || *pos < '0')
-			{
+		for (string::iterator pos = _one_port.begin(); pos != _one_port.end(); pos++) {
+			if (*pos > '9' || *pos < '0') {
 				Logger::error(serverUid, "The port value is invalid");
-				throw ServException(serverUid + " has invalid port number");
+				throw (ServException(serverUid + " has invalid port number"));
 			}
 		}
 		portnbr = ft_atoi(_one_port.c_str());
 		if (portnbr <= 0 || portnbr > 65535) {
 			Logger::error(serverUid, "The port is out of range in config file (1-65535)");
-			throw ServException(serverUid + " has invalid port number");
+			throw (ServException(serverUid + " has invalid port number"));
 		}
 		portvector.push_back(portnbr);
 		if (ports.find(' ') == string::npos)
-			break;
+			break ;
 		ports = ports.substr(ports.find(' ') + 1);
 	}
 	return (portvector);
@@ -308,7 +272,7 @@ vector<int>	Server::getSocket() const
 
 string Server::getUid() const
 {
-	return _uid;
+	return (_uid);
 }
 
 static string get_connection_info(const sockaddr_in& client, const sockaddr_in& server) {
@@ -325,7 +289,7 @@ static string get_connection_info(const sockaddr_in& client, const sockaddr_in& 
         << inet_ntoa(server.sin_addr) << ":"
         << ntohs(server.sin_port);
 
-    return oss.str();
+    return (oss.str());
 }
 
 int	Server::setClient(int _socketfd)
@@ -335,14 +299,17 @@ int	Server::setClient(int _socketfd)
 
 	int cfd = accept(_socketfd, (struct sockaddr *)&peeraddr, &peer_addr_size);
 	if (cfd == -1)
-		throw ServException("accept error");
+		throw (ServException("accept error"));
 
 	// Log the connection info with server details
 	sockaddr_in serveraddr;
 	socklen_t serveraddr_len = sizeof(serveraddr);
+
 	getsockname(_socketfd, (struct sockaddr*)&serveraddr, &serveraddr_len);
+
 	string connexion = get_connection_info(peeraddr, serveraddr);
 	string logInfo = connexion + " [Server: " + _uid + ", Root: " + _config->getServerValue(_uid, "root") + "]";
+
 	Logger::access(this->_uid, logInfo);
 	cout << logInfo << endl;
 
@@ -359,27 +326,22 @@ void	Server::unsetClient(int position)
 
 void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* config, fd_set &fullWriteFd)
 {
-	for (size_t i = 0; i < _clientFds.size(); i++)
-	{
+	for (size_t i = 0; i < _clientFds.size(); i++) {
 		// Check if the file descriptor is valid
-		if (_clientFds[i] < 0)
-		{
+		if (_clientFds[i] < 0) {
 			// Invalid file descriptor, remove it
 			unsetClient(i);
-			continue;
+			continue ;
 		}
-		if (FD_ISSET(_clientFds[i], &readFd))
-		{
+		if (FD_ISSET(_clientFds[i], &readFd)) {
 			int res = _handler->handleRequest(_clientFds[i], *this, config);
-			if (res == -1)
-			{
+			if (res == -1) {
 				FD_CLR(_clientFds[i], &fullReadFd);
 				unsetClient(i);
 				cout << "Client disconnected" << endl;
-				continue;
+				continue ;
 			}
-			if (res >= 1)
-			{
+			if (res >= 1) {
 				FD_CLR(_clientFds[i], &fullReadFd);
 				FD_SET(_clientFds[i], &fullWriteFd);
 			}
@@ -390,8 +352,10 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 bool	Server::keepaliveStatus(int fd) const
 {
 	map<int, bool>::const_iterator it = _keepalive.find(fd);
+
 	if (it != _keepalive.end())
 		return (it->second);
+	
 	return (1);
 }
 
@@ -403,39 +367,33 @@ void	Server::keepaliveDefine(int fd, bool status)
 
 void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullReadFd)
 {
-	for (size_t i = 0; i < _clientFds.size(); i++)
-	{
+	for (size_t i = 0; i < _clientFds.size(); i++) {
 		int fd = _clientFds[i];
 		// Check if the file descriptor is valid
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			// Invalid file descriptor, remove it
 			unsetClient(i);
-			continue;
+			continue ;
 		}
-		if (FD_ISSET(fd, &writeFd))
-		{
+		if (FD_ISSET(fd, &writeFd)) {
 			string response = getClientBuffer(fd);
+
 			clearClientBuffer(fd);
-			if (response != "")
-			{
+			if (response != "") {
 				int res = send(fd, response.c_str(), response.length(), 0);
-				if (res == -1)
-				{
+				if (res == -1) {
 					perror("");
 					FD_CLR(fd, &fullWriteFd);
 					cerr << "failed to send http response" << endl;
 					unsetClient(i);
 					cout << "Client disconnected" << endl;
-					continue;
+					continue ;
 				}
 				FD_CLR(fd, &fullWriteFd);
 				if (!keepaliveStatus(fd))
-				{
 					unsetClient(i);
-				} else {
+				else
 					FD_SET(fd, &fullReadFd);
-				}
 			}
 		}
 	}
@@ -444,17 +402,15 @@ void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 void	Server::fillClientBuffer(int clientFd, const string &buff)
 {
 	if (!buff.empty() && clientFd >= 0)
-	{
 		_clientBuffer[clientFd] = buff;
-	}
 }
+
 string	Server::getClientBuffer(int clientFd) const
 {
-	if (clientFd >= 0)
-	{
+	if (clientFd >= 0) {
 		map<int, string>::const_iterator it = _clientBuffer.begin();
-		for (; it != _clientBuffer.end(); it++)
-		{
+
+		for (; it != _clientBuffer.end(); it++) {
 			if (it->first == clientFd)
 				return (it->second);
 		}
@@ -464,8 +420,7 @@ string	Server::getClientBuffer(int clientFd) const
 
 void	Server::clearClientBuffer(int clientFd)
 {
-	if (clientFd >= 0)
-	{
+	if (clientFd >= 0) {
 		map<int, string>::iterator it = _clientBuffer.find(clientFd);
 		if (it != _clientBuffer.end())
 			_clientBuffer.erase(it);
@@ -477,20 +432,19 @@ void	Server::clearClientBuffer(int clientFd)
 */
 void	Server::initEnv(char **env)
 {
-	if (!env[0])
-	{
+	if (!env[0]) {
 		Logger::error(_uid, "No environment variables found shutting down server");
-		throw ServException("No environment variables found");
+		throw (ServException("No environment variables found"));
 		return ;
 	}
-	for (int i = 0; env[i]; i++)
-	{
+	for (int i = 0; env[i]; i++) {
 		string var(env[i]);
 		size_t pos = var.find('=');
-		if (pos != string::npos)
-		{
+
+		if (pos != string::npos) {
 			string key = var.substr(0, pos);
 			string value = var.substr(pos + 1);
+
 			_env[key] = value;
 		}
 	}
@@ -509,15 +463,17 @@ void	Server::initEnv(char **env)
 string	Server::getEnvValue(string const &key) const
 {
 	map<string, string>::const_iterator it = _env.find(key);
+
 	if (it != _env.end())
-		return it->second;
+		return (it->second);
 	else
-		return "";
+		return ("");
 }
 
 void Server::setEnvValue(string const &key, string const &value)
 {
 	map<string, string>::iterator it = _env.find(key);
+
 	if (it != _env.end()) 
 		it->second = value;
 	else if (!key.empty())
@@ -527,17 +483,20 @@ void Server::setEnvValue(string const &key, string const &value)
 char	**Server::getEnvAsArray() const {
 	char	**env = new char*[_env.size() + 1];
 	int	j = 0;
+
 	for (map<string, string>::const_iterator i = _env.begin(); i != _env.end(); i++) {
 		string	element = i->first + "=" + i->second;
+
 		env[j] = new char[element.size() + 1];
 		env[j] = strcpy(env[j], (const char*)element.c_str());
 		j++;
 	}
 	env[j] = NULL;
-	return env;
+	return (env);
 }
 
-const map<string, string> Server::getEnv() const {
+const map<string, string> Server::getEnv() const 
+{
 	return (_env);
 }
 
@@ -548,9 +507,7 @@ void	Server::printEnv() const
 	<< "=== Environment Variables ==="
 	<< NEUTRAL << endl;
 	for (map<string, string>::const_iterator it = _env.begin(); it != _env.end(); ++it)
-	{
 		cout << it->first << "=" << it->second << endl;
-	}
 }
 
 vector<string> Server::getServerNames() const
@@ -561,15 +518,14 @@ vector<string> Server::getServerNames() const
 string Server::getCookieValue(const string &session_id, const string &key) const
 {
 	map<string, map<string, string> >::const_iterator session_it = _cookies.find(session_id);
-	if (session_it != _cookies.end())
-	{
+
+	if (session_it != _cookies.end()) {
 		map<string, string>::const_iterator key_it = session_it->second.find(key);
+
 		if (key_it != session_it->second.end())
-		{
-			return key_it->second;
-		}
+			return (key_it->second);
 	}
-	return "";
+	return ("");
 }
 
 void Server::setCookie(const string &session_id, const string &key, const string &value)
@@ -581,7 +537,7 @@ void Server::setCookie(const string &session_id, const string &key, const string
 string Server::getCookieHeader() const
 {
 	if (_cookie_header.empty())
-		return "";
+		return ("");
 	return (_cookie_header);
 }
 
@@ -593,11 +549,9 @@ string Server::generateSessionId() const
 	srand(time(0) + rand());
 
 	for (size_t i = 0; i < 16; i++)
-	{
 		oss << charset[rand() % max_index];
-	}
 	cout << GREEN << BOLD << "Generated session ID: " << oss.str() << NEUTRAL << endl;
-	return oss.str();
+	return (oss.str());
 }
 
 void Server::clearCookies()
@@ -609,10 +563,9 @@ void Server::clearCookies()
 void Server::clearCookieSession(const string &session_id)
 {
 	map<string, map<string, string> >::iterator it = _cookies.find(session_id);
+
 	if (it != _cookies.end())
-	{
 		_cookies.erase(it);
-	}
 }
 
 void Server::clearCookieHeader()

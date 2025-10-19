@@ -1,12 +1,8 @@
 #include "CGI.hpp"
 
-CGI::CGI()
-{
-}
+CGI::CGI() {}
 
-CGI::~CGI()
-{
-}
+CGI::~CGI() {}
 
 int CGI::_checkAccess(const string &path, int type)
 {
@@ -72,43 +68,39 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 	string	extension = _getExtension(path);
 	int type = _getType(extension);
 
-	switch (_checkAccess(path, type))
-	{
+	switch (_checkAccess(path, type)) {
 		case -1:
-			throw CGIException("file " + path + " does not exist", false, 404, Server.getUid());
+			throw (CGIException("file " + path + " does not exist", false, 404, Server.getUid()));
 		case 0:
-			throw CGIException("Do not have permission to access :" + path + " on this server", false, 403, Server.getUid());
+			throw (CGIException("Do not have permission to access :" + path + " on this server", false, 403, Server.getUid()));
 		case 1:
-			break;
+			break ;
 		case 2:
-			break;
+			break ;
 	}
 
-	if (cgi_list.find(extension) == cgi_list.end())
-	{
+	if (cgi_list.find(extension) == cgi_list.end()) {
 		int fd = open(path.c_str(), O_RDONLY);
 		if (fd == -1)
-			throw CGIException("webserver cannot open file: " + path, false, 500, Server.getUid());
+			throw (CGIException("webserver cannot open file: " + path, false, 500, Server.getUid()));
 		return (fd);
 	}
 	
 	int	fd[2];
 	if (pipe(fd) == -1)
-		throw CGIException("Internal error: pipe failed", false, 500, Server.getUid());
+		throw (CGIException("Internal error: pipe failed", false, 500, Server.getUid()));
 	pid_t	pid;
 	pid = fork();
 	if (pid == -1)
-		throw CGIException("Internal error: fork failed", false, 500, Server.getUid());
-	if (pid == 0)
-	{
+		throw (CGIException("Internal error: fork failed", false, 500, Server.getUid()));
+	if (pid == 0) {
 		string basename = path;
-		if (path.rfind('/') != string::npos)
-		{
+		if (path.rfind('/') != string::npos) {
 			basename = path.substr(path.rfind('/') + 1);
 			string directory = path.substr(0, path.rfind('/'));
 
 			if (chdir(directory.c_str()) == -1)
-				throw CGIException("Error: access denied", true, 403, Server.getUid());
+				throw (CGIException("Error: access denied", true, 403, Server.getUid()));
 		}
 		const char	*cpath = basename.c_str();
 		string	interpreter = cgi_list.find(extension)->second;
@@ -121,14 +113,13 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 			string tmp = "./" + basename;
 			char *arg[2] = {(char *)tmp.c_str(), NULL};
 			execve(tmp.c_str(), arg, Server.getEnvAsArray());
-			throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
-			
+			throw (CGIException("Internal error: execve failed", true, 500, Server.getUid()));
 		}
 		
 		const char *arg[3] = {interpreter.c_str(), cpath, NULL};
 
 		execve(interpreter.c_str(), (char *const *)arg, Server.getEnvAsArray());
-        throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
+        throw (CGIException("Internal error: execve failed", true, 500, Server.getUid()));
 	}
 	close(fd[1]);
 	
@@ -141,9 +132,9 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 		
 		if (result == pid) {
 			// Child process finished
-			break;
+			break ;
 		} else if (result == -1) {
-			throw CGIException("Internal error: waitpid failed", true, 500, Server.getUid());
+			throw (CGIException("Internal error: waitpid failed", true, 500, Server.getUid()));
 		} else if (result == 0) {
 			// Child still running, check timeout
 			if (static_cast<size_t>(time(NULL) - startTime) > timeout_seconds) {
@@ -161,19 +152,16 @@ int	CGI::interpret(const string &path, const Server &Server, map<string, string>
 		}
 	}
 	
-	if (WIFEXITED(status))
-	{
+	if (WIFEXITED(status)) {
 		int exitStatus = WEXITSTATUS(status);
 		if (exitStatus == 0)
-			return fd[0];
-		else
-		{
+			return (fd[0]);
+		else 
 			// For script errors (like PHP syntax/runtime errors), 
 			// still return the file descriptor so we can read any error output
 			// The caller will decide what to do with the content
-			return fd[0];
-		}
+			return (fd[0]);
 	}
     else
-        throw CGIException("Internal error: exit failed", true, 500, Server.getUid());
+        throw (CGIException("Internal error: exit failed", true, 500, Server.getUid()));
 }

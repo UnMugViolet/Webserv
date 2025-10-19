@@ -1,8 +1,6 @@
 #include "DeleteRequest.hpp"
 
-DeleteRequest::DeleteRequest()
-{
-}
+DeleteRequest::DeleteRequest() {}
 
 DeleteRequest::DeleteRequest(map<string, string> header)
 {
@@ -18,10 +16,7 @@ DeleteRequest::DeleteRequest(map<string, string> header)
 	return ;
 }
 
-DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
-{
-	return ;
-}
+DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src) {}
 
 int	DeleteRequest::delete_file(int fd, Server &serv)
 {
@@ -75,10 +70,7 @@ int DeleteRequest::handleDelete(int fd, Server &server, const ConfigParser *conf
 	return (0);
 }
 
-DeleteRequest::~DeleteRequest()
-{
-	return ;
-}
+DeleteRequest::~DeleteRequest() {}
 
 DeleteRequest	&DeleteRequest::operator=(DeleteRequest &src)
 {
@@ -86,4 +78,3 @@ DeleteRequest	&DeleteRequest::operator=(DeleteRequest &src)
 		ARequest::operator=(src);
 	return (*this);
 }
-
