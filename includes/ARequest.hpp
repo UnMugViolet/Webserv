@@ -37,7 +37,7 @@ public:
 	/*member functions*/
 	int			isKeepalive() const;
 	string		sendCGIResponse(const string &scriptPath, const ConfigParser *config, const Server &Server);
-	string		writeHTTPResponse(int statusCode, const string &body, const string &contentType = "text/html");
+	string		writeHTTPResponse(const Server &server, int statusCode, const string &body, const string &contentType = "text/html");
 	string		loadErrorPage(int statusCode, const ConfigParser *config, const string &serverUid) const;
 	string		getContentType(const string &filePath) const;
 	string		checkContentType(string &contentType, const Server &server);

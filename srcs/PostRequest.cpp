@@ -215,7 +215,7 @@ int PostRequest::handlePost(int fd, Server &server, const string &body, const Co
 	{
 		cerr << "no uploads directory" << endl;//what? no appropriate directory or no permission
 		string errorPage = loadErrorPage(500, config, server.getUid());
-		string response = writeHTTPResponse(500, errorPage, "text/html");
+		string response = writeHTTPResponse(server, 500, errorPage, "text/html");
 		server.keepaliveDefine(fd, isKeepalive());
 		server.fillClientBuffer(fd, response);
 		return (1);
@@ -231,7 +231,7 @@ int PostRequest::handlePost(int fd, Server &server, const string &body, const Co
 	{
 		cerr << "no posts directory" << endl;//what? no appropriate directory or no permission
 		string errorPage = loadErrorPage(500, config, server.getUid());
-		string response = writeHTTPResponse(500, errorPage, "text/html");
+		string response = writeHTTPResponse(server, 500, errorPage, "text/html");
 		server.keepaliveDefine(fd, isKeepalive());
 		server.fillClientBuffer(fd, response);
 		return (1);
@@ -241,12 +241,12 @@ int PostRequest::handlePost(int fd, Server &server, const string &body, const Co
 	if (res == -1)
 	{
 		string errorPage = loadErrorPage(500, config, server.getUid());
-		string response = writeHTTPResponse(500, errorPage, "text/html");
+		string response = writeHTTPResponse(server, 500, errorPage, "text/html");
 		server.keepaliveDefine(fd, isKeepalive());
 		server.fillClientBuffer(fd, response);
 		return (1);
 	}
-	string response = writeHTTPResponse(204, "", "");
+	string response = writeHTTPResponse(server, 204, "", "");
 	server.fillClientBuffer(fd, response);
 	server.keepaliveDefine(fd, isKeepalive());
 	return (1);

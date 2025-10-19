@@ -557,3 +557,65 @@ vector<string> Server::getServerNames() const
 {
 	return (_server_names);
 }
+
+string Server::getCookieValue(const string &session_id, const string &key) const
+{
+	map<string, map<string, string> >::const_iterator session_it = _cookies.find(session_id);
+	if (session_it != _cookies.end())
+	{
+		map<string, string>::const_iterator key_it = session_it->second.find(key);
+		if (key_it != session_it->second.end())
+		{
+			return key_it->second;
+		}
+	}
+	return "";
+}
+
+void Server::setCookie(const string &session_id, const string &key, const string &value)
+{
+	_cookies[session_id][key] = value;
+	_cookie_header = _cookie_header + "Set-Cookie: " + key + "=" + value + " Path=/" + "\r\n";
+}
+
+string Server::getCookieHeader() const
+{
+	if (_cookie_header.empty())
+		return "";
+	return (_cookie_header);
+}
+
+string Server::generateSessionId() const
+{
+	const char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	const size_t max_index = (sizeof(charset) - 1);
+	ostringstream oss;
+	srand(time(0) + rand());
+
+	for (size_t i = 0; i < 16; i++)
+	{
+		oss << charset[rand() % max_index];
+	}
+	cout << GREEN << BOLD << "Generated session ID: " << oss.str() << NEUTRAL << endl;
+	return oss.str();
+}
+
+void Server::clearCookies()
+{
+	_cookies.clear();
+	_cookie_header.clear();
+}
+
+void Server::clearCookieSession(const string &session_id)
+{
+	map<string, map<string, string> >::iterator it = _cookies.find(session_id);
+	if (it != _cookies.end())
+	{
+		_cookies.erase(it);
+	}
+}
+
+void Server::clearCookieHeader()
+{
+	_cookie_header.clear();
+}

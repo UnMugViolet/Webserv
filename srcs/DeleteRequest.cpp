@@ -45,7 +45,7 @@ int	DeleteRequest::delete_file(int fd, Server &serv)
 	}
 	if (remove(filePath.c_str()) == 0)
 	{
-		string response = writeHTTPResponse(204, "", "");
+		string response = writeHTTPResponse(serv, 204, "", "");
 		serv.keepaliveDefine(fd, isKeepalive());
 		serv.fillClientBuffer(fd, response);
 		return (0);
@@ -64,7 +64,7 @@ int DeleteRequest::handleDelete(int fd, Server &server, const ConfigParser *conf
 	else
 	{
 		string errorPage = loadErrorPage(404, config, server.getUid());
-		string response = writeHTTPResponse(404, errorPage, "text/html");
+		string response = writeHTTPResponse(server, 404, errorPage, "text/html");
 		server.keepaliveDefine(fd, isKeepalive());
 		server.fillClientBuffer(fd, response);
 	}

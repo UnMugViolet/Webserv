@@ -21,15 +21,17 @@ class Server
 {
 private:
 	/*attributes here*/
-	string						_uid;
-	map<string, string>			_env;
-	vector<string>				_server_names;
-	vector<int>					_socketfds;
-	vector<int>					_clientFds;
-	map<int, string>			_clientBuffer;
-	RequestHandler				*_handler;
-	ConfigParser				*_config;
-	map<int, bool>				_keepalive;
+	string								_uid;
+	map<string, string>					_env;
+	vector<string>						_server_names;
+	vector<int>							_socketfds;
+	vector<int>							_clientFds;
+	map<int, string>					_clientBuffer;
+	RequestHandler						*_handler;
+	ConfigParser						*_config;
+	map<int, bool>						_keepalive;
+	string								_cookie_header;
+	map<string, map<string, string> >	_cookies;
 
 public:
 	/*constructors and destructor*/
@@ -56,6 +58,15 @@ public:
 	void		clearClientBuffer(int clientFd);
 	bool		keepaliveStatus(int fd) const;
 	void		keepaliveDefine(int fd, bool status);
+
+	// Cookie handling methods
+	void		setCookie(const string &sesion_id, const string &key, const string &value);
+	string		getCookieHeader() const;
+	string		getCookieValue(const string &session_id, const string &key) const;
+	string		generateSessionId() const;
+	void		clearCookies();
+	void		clearCookieSession(const string &session_id);
+	void		clearCookieHeader();
 
 	// Env handling methods
 	void		initEnv(char **env);

@@ -66,7 +66,7 @@ string generateDirectoryListing(string const &dirPath, string const &requestPath
     return html.str();
 }
 
-string ARequest::writeHTTPResponse(int statusCode, const string &body, const string& contentType)
+string ARequest::writeHTTPResponse(const Server &server, int statusCode, const string &body, const string& contentType)
 {
 	ostringstream response;
 	string statusText;
@@ -83,6 +83,7 @@ string ARequest::writeHTTPResponse(int statusCode, const string &body, const str
 		case 503: statusText = "Gateway timeout"; break;
 		default: statusText = "Unknown"; break;
 	}
+
 	
 	// Build HTTP response
 	response << "HTTP/1.1 " << statusCode << " " << statusText << "\r\n";
@@ -101,6 +102,11 @@ string ARequest::writeHTTPResponse(int statusCode, const string &body, const str
 			response << "Retry-After: 60\r\n";  // Tell browser to wait 60 seconds before retry
 		}
 	}
+	
+	// Add cookies if any
+	if (!server.getCookieHeader().empty())
+		response << server.getCookieHeader();
+	
 	response << "\r\n";
 	response << body;
 
@@ -130,10 +136,10 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
     if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
         if (auto_index == "on") {
             string listing = generateDirectoryListing(scriptPath, _path);
-            return writeHTTPResponse(200, listing, "text/html");
+            return writeHTTPResponse(Server, 200, listing, "text/html");
         } else {
             string errorPage = loadErrorPage(403, config, Server.getUid());
-            return writeHTTPResponse(403, errorPage, "text/html");
+            return writeHTTPResponse(Server, 403, errorPage, "text/html");
         }
     }
 
@@ -178,7 +184,7 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 			// Force connection close on timeout to prevent browsers from hanging
 			_keep_alive = false;
 			string errorPage = loadErrorPage(504, config, Server.getUid());
-			return writeHTTPResponse(504, errorPage, "text/html");
+			return writeHTTPResponse(Server, 504, errorPage, "text/html");
 		}
 		
 		// Read the CGI output
@@ -198,7 +204,7 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 		// Send successful response with CGI output
 		string contentType = getContentType(scriptPath);
 		contentType = checkContentType(contentType, Server);
-		return writeHTTPResponse(200, cgiOutput, contentType);
+		return writeHTTPResponse(Server, 200, cgiOutput, contentType);
 		
 	} catch (const CGI::CGIException &e) {
 		// Close the file descriptor if it was opened
@@ -209,7 +215,7 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 		// Handle true CGI execution errors (file not found, permission denied, etc.)
 		// These are cases where the script couldn't even run
 		string errorPage = loadErrorPage(e.getHttpStatus(), config, Server.getUid());
-		return writeHTTPResponse(e.getHttpStatus(), errorPage, "text/html");
+		return writeHTTPResponse(Server, e.getHttpStatus(), errorPage, "text/html");
 	} catch (...) {
 		// Handle any other exceptions
 		if (cgiOutputFd != -1) {
@@ -217,7 +223,7 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 		}
 		
 		string errorPage = loadErrorPage(500, config, Server.getUid());
-		return writeHTTPResponse(500, errorPage, "text/html");
+		return writeHTTPResponse(Server, 500, errorPage, "text/html");
 	}
 }
 

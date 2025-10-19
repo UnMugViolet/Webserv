@@ -180,7 +180,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 
 		cerr << "No server_name, bad request" << endl;
 		string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-		string response = requestObject.writeHTTPResponse(400, errorPage, "text/html");
+		string response = requestObject.writeHTTPResponse(server, 400, errorPage, "text/html");
 		server.keepaliveDefine(fd, false);
 		server.fillClientBuffer(fd, response);
 		return 2;
@@ -205,7 +205,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 
 			cerr << "Invalid Content-Length header" << endl;
 			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-			string response = requestObject.writeHTTPResponse(400, errorPage, "text/html");
+			string response = requestObject.writeHTTPResponse(server, 400, errorPage, "text/html");
 			server.keepaliveDefine(fd, false);
 			server.fillClientBuffer(fd, response);
 			return 2;
@@ -218,7 +218,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 
 			cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << endl;
 			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
-			string response = requestObject.writeHTTPResponse(413, errorPage, "text/html");
+			string response = requestObject.writeHTTPResponse(server, 413, errorPage, "text/html");
 			server.keepaliveDefine(fd, false);
 			server.fillClientBuffer(fd, response);
 			return 2;
@@ -290,7 +290,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 			GetRequest requestObject;
 
 			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
-			string response = requestObject.writeHTTPResponse(413, errorPage, "text/html");
+			string response = requestObject.writeHTTPResponse(server, 413, errorPage, "text/html");
 			server.keepaliveDefine(fd, false);
 			server.fillClientBuffer(fd, response);
 			return (Logger::error(serverUid, "Header too large"), 2);
@@ -390,6 +390,12 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		}
 		headermap = parseHeader(header);
 		
+		if (headermap.find("Cookie") == headermap.end()) {
+			server.clearCookieHeader();
+			string server_id = server.generateSessionId();
+			server.setCookie(server_id, "session_id", server_id);
+		}
+
 		Logger::access(serverUid, "http request: " + header);
 
 		size_t colonPos = headermap["Host"].find(':');
@@ -455,7 +461,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 				GetRequest requestObject;
 
 				string errorPage = requestObject.loadErrorPage(403, config, serverUid);
-				string response = requestObject.writeHTTPResponse(403, errorPage, "text/html");
+				string response = requestObject.writeHTTPResponse(server, 403, errorPage, "text/html");
 				server.fillClientBuffer(fd, response);
 				server.keepaliveDefine(fd, requestObject.isKeepalive());
 				return 1;
@@ -466,7 +472,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			GetRequest requestObject;
 
 			string errorPage = requestObject.loadErrorPage(403, config, serverUid);
-			string response = requestObject.writeHTTPResponse(403, errorPage, "text/html");
+			string response = requestObject.writeHTTPResponse(server, 403, errorPage, "text/html");
 			server.fillClientBuffer(fd, response);
 			server.keepaliveDefine(fd, requestObject.isKeepalive());
 			return 1;

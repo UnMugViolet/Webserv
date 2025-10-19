@@ -204,7 +204,7 @@ int GetRequest::handleDirectoryListing(int fd, Server &server, ConfigParser cons
 
 	if (autoindex == "on") {
 		string listing = generateDirectoryListing(decodedUrl, _path);
-		string response = writeHTTPResponse(200, listing, "text/html");
+		string response = writeHTTPResponse(server, 200, listing, "text/html");
 		server.fillClientBuffer(fd, response);
 	}
 	else
@@ -231,7 +231,7 @@ string GetRequest::getPathForConfig(const string &decodedUrl)
 int GetRequest::sendErrorResponse(int fd, int errorCode, ConfigParser const *config, Server &server)
 {
 	string errorPage = loadErrorPage(errorCode, config, server.getUid());
-	string response = writeHTTPResponse(errorCode, errorPage, "text/html");
+	string response = writeHTTPResponse(server, errorCode, errorPage, "text/html");
 	server.fillClientBuffer(fd, response);
 	server.keepaliveDefine(fd, isKeepalive());
 	return 1;
