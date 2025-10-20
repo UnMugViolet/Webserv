@@ -174,14 +174,14 @@ int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigPars
 		if (auto_index == "on")
 		{
 			string listing = generateDirectoryListing(scriptPath, _path);
-			string response = writeHTTPResponse(200, listing, "text/html");
+			string response = writeHTTPResponse(Server, 200, listing, "text/html");
 			Server.fillClientBuffer(fd, response);
 			Server.keepaliveDefine(fd, isKeepalive());
 		}
 		else
 		{
 			string errorPage = loadErrorPage(403, config, Server.getUid());
-			string response = writeHTTPResponse(403, errorPage, "text/html");
+			string response = writeHTTPResponse(Server, 403, errorPage, "text/html");
 			Server.fillClientBuffer(fd, response);
 			Server.keepaliveDefine(fd, isKeepalive());
 		}
@@ -234,7 +234,7 @@ int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigPars
 			// Force connection close on timeout to prevent browsers from hanging
 			_keep_alive = false;
 			string errorPage = loadErrorPage(504, config, Server.getUid());
-			string response = writeHTTPResponse(504, errorPage, "text/html");
+			string response = writeHTTPResponse(Server, 504, errorPage, "text/html");
 			Server.fillClientBuffer(fd, response);
 			Server.keepaliveDefine(fd, isKeepalive());
 			return (1);
@@ -258,7 +258,7 @@ int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigPars
 		// Handle true CGI execution errors (file not found, permission denied, etc.)
 		// These are cases where the script couldn't even run
 		string errorPage = loadErrorPage(e.getHttpStatus(), config, Server.getUid());
-		string response = writeHTTPResponse(e.getHttpStatus(), errorPage, "text/html");
+		string response = writeHTTPResponse(Server, e.getHttpStatus(), errorPage, "text/html");
 		Server.fillClientBuffer(fd, response);
 		Server.keepaliveDefine(fd, isKeepalive());
 		return (1);
@@ -272,7 +272,7 @@ int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigPars
 		}
 
 		string errorPage = loadErrorPage(500, config, Server.getUid());
-		string response = writeHTTPResponse(500, errorPage, "text/html");
+		string response = writeHTTPResponse(Server, 500, errorPage, "text/html");
 		Server.fillClientBuffer(fd, response);
 		Server.keepaliveDefine(fd, isKeepalive());
 		return (1);

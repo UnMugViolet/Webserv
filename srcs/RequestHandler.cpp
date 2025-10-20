@@ -293,7 +293,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 					GetRequest requestObject;
 
 					string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
-					string response = requestObject.writeHTTPResponse(413, errorPage, "text/html");
+					string response = requestObject.writeHTTPResponse(server, 413, errorPage, "text/html");
 					server.keepaliveDefine(fd, false);
 					server.fillClientBuffer(fd, response);
 					return (Logger::error(serverUid, "Header too large"), 2);

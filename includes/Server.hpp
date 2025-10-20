@@ -37,7 +37,7 @@ private:
 	map<int, pid_t> _pid_for_cgi;
 	map<int, ARequest *> _cgi_request;
 	string _cookie_header;
-	map<string, map<string, string>> _cookies;
+	map<string, map<string, string> > _cookies;
 
 public:
 	/*constructors and destructor*/
@@ -69,11 +69,11 @@ public:
 	int hasCgiforClient(int clientFd) const;
 	int getCgiforClient(int clientFd) const;
 	void eraseCgiFd(int clientFd, int cgiFd);
-	int storeCgiReturn(int clientFd, int cgiFd);
+	int storeCgiReturn(int cgiFd);
 	void setCgiRequest(int cgiFd, ARequest &request);
 	void setPidforCgi(int cgiFd, pid_t pid);
 	int getPidForCgi(int cgiFd) const;
-	
+
 	// Cookie handling methods
 	void setCookie(const string &sesion_id, const string &key, const string &value);
 	string getCookieHeader() const;

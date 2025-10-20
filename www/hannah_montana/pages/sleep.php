@@ -18,5 +18,6 @@
 	<?php
 	sleep(5);
 	?>
+	<h2>Pompiche</h2>
 </body>
 </html>
