@@ -24,8 +24,8 @@ class ConfigParser
 {
 private:
 	map<string, string> _configMap;
-	map<string, map<string, string>> _serverBlocks;
-	map<string, map<string, map<string, string>>> _locationBlocks;
+	map<string, map<string, string> > _serverBlocks;
+	map<string, map<string, map<string, string> > > _locationBlocks;
 
 	void _checkSemicolons(const string &file) const;
 	string _trim(const string &str) const;

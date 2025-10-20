@@ -53,7 +53,7 @@ string urlDecode(const string &src)
 
 int RequestHandler::_checkAccess(const string &path)
 {
-	if (access(path.c_str(), F_OK) == -1) 
+	if (access(path.c_str(), F_OK) == -1)
 		return (404);
 
 	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
@@ -467,41 +467,40 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		string cleanPath = headermap["path"];
 		size_t queryPos = headermap["path"].find('?');
 		if (queryPos != string::npos)
-		{
 			cleanPath = headermap["path"].substr(0, queryPos);
-			string auto_index = config->getLocationValueForPath(cleanPath, server.getUid(), "autoindex", true);
 
-			// Check for redirects before method validation
-			string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return", false);
-			if (!redirect.empty())
-				return handleRedirect(fd, server, redirect, headermap);
+		// Check for redirects before method validation
+		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return", false);
 
-			// Check for path too long before proceeding
-			if (cleanPath.length() >= PATH_MAX)
-				return (loadErrorPage(fd, 414, server, config, "Request URI too long", false), 1);
+		if (!redirect.empty())
+			return handleRedirect(fd, server, redirect, headermap);
 
-			try
+		// Check for path too long before proceeding
+		if (cleanPath.length() >= PATH_MAX)
+			return (loadErrorPage(fd, 414, server, config, "Request URI too long", false), 1);
+
+		try
+		{
+			int status = 0;
+			string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods", true);
+			istringstream iss(allowed_methods);
+			string one_method;
+
+			while (iss >> one_method)
 			{
-				int status = 0;
-				string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods", true);
-				istringstream iss(allowed_methods);
-				string one_method;
-
-				while (iss >> one_method)
+				if (one_method == headermap["method"])
 				{
-					if (one_method == headermap["method"])
-					{
-						status = 1;
-						break;
-					}
+					status = 1;
+					break;
 				}
-				// Case no methods allowed for the location
-				if (status == 0)
-					return (loadErrorPage(fd, 403, server, config), 1);
 			}
-			catch (exception const &e) {
+			// Case no methods allowed for the location
+			if (status == 0)
 				return (loadErrorPage(fd, 403, server, config), 1);
-			}
+		}
+		catch (exception const &e)
+		{
+			return (loadErrorPage(fd, 403, server, config), 1);
 		}
 
 		if (headermap["method"] == "GET")
@@ -584,7 +583,7 @@ int RequestHandler::handleRedirect(int fd, Server &server, const string &redirec
 
 	server.fillClientBuffer(fd, response);
 	server.keepaliveDefine(fd, keepAlive);
-	
+
 	return (1);
 }
 
@@ -625,77 +624,81 @@ int RequestHandler::handleChunkedRequest(int fd, string &savestring, string &bod
 	size_t const BUFFER_SIZE = 51;
 	char buff[BUFFER_SIZE];
 
-       while (true)
-       {
-	       size_t rn_pos = body.find("\r\n", pos);
-	       if (rn_pos != string::npos) {
-		       // We have a full chunk size line
-		       std::string chunk_size_line = body.substr(pos, rn_pos - pos);
-		       if (chunk_size_line.empty())
-			       return (loadErrorPage(fd, 400, server, config, "Empty chunk size line", false), -1);
-		       istringstream iss(chunk_size_line);
-		       if (!(iss >> std::hex >> hexlen)) {
-			       return (loadErrorPage(fd, 400, server, config, "Malformed chunk size line", false), -1);
-		       }
-		       totallen += hexlen;
-		       pos = rn_pos + 2;
-		       if (hexlen == 0)
-		       {
-			       if (body.size() < pos + 2)
-			       {
-				       if (!can_read)
-					       return (0);
-				       int received = recv(fd, buff, pos + 2 - body.size(), 0);
-				       if (received <= 0)
-				       {
-					       server.clearClientBuffer(fd);
-					       return (-1);
-				       }
-			       }
-			       savestring.erase(savestring.find("\r\n\r\n") + 4);
-			       savestring.append(fullbody);
-			       server.fillClientBuffer(fd, savestring);
-			       return (1);
-		       }
-		       if (totallen <= fullbody.size())
-		       {
-			       pos += hexlen + 2;
-			       continue;
-		       }
-		       if (body.size() > pos)
-			       fullbody.append(body, pos, totallen - fullbody.size());
-		       if (totallen > fullbody.size())
-		       {
-			       if (!can_read)
-				       return (0);
-			       memset(buff, 0, BUFFER_SIZE);
-			       int received = recv(fd, buff, min(BUFFER_SIZE - 1, totallen - fullbody.size()), 0);
-			       if (received <= 0)
-			       {
-				       server.clearClientBuffer(fd);
-				       return (-1);
-			       }
-			       fullbody.append(buff, received);
-			       savestring.append(buff, received);
-			       server.fillClientBuffer(fd, savestring);
-			       return (0);
-		       }
-		       pos += hexlen + 2;
-	       } else {
-		       // Not enough data for a full chunk size line, wait for more
-		       if (!can_read)
-			       return (0);
-		       memset(buff, 0, BUFFER_SIZE);
-		       int received = recv(fd, buff, BUFFER_SIZE - 1, 0);
-		       if (received <= 0)
-		       {
-			       server.clearClientBuffer(fd);
-			       return (-1);
-		       }
-		       savestring.append(buff, received);
-		       body.append(buff, received);
-		       server.fillClientBuffer(fd, savestring);
-		       can_read = 0;
-	       }
-       }
+	while (true)
+	{
+		size_t rn_pos = body.find("\r\n", pos);
+		if (rn_pos != string::npos)
+		{
+			// We have a full chunk size line
+			std::string chunk_size_line = body.substr(pos, rn_pos - pos);
+			if (chunk_size_line.empty())
+				return (loadErrorPage(fd, 400, server, config, "Empty chunk size line", false), -1);
+			istringstream iss(chunk_size_line);
+			if (!(iss >> std::hex >> hexlen))
+			{
+				return (loadErrorPage(fd, 400, server, config, "Malformed chunk size line", false), -1);
+			}
+			totallen += hexlen;
+			pos = rn_pos + 2;
+			if (hexlen == 0)
+			{
+				if (body.size() < pos + 2)
+				{
+					if (!can_read)
+						return (0);
+					int received = recv(fd, buff, pos + 2 - body.size(), 0);
+					if (received <= 0)
+					{
+						server.clearClientBuffer(fd);
+						return (-1);
+					}
+				}
+				savestring.erase(savestring.find("\r\n\r\n") + 4);
+				savestring.append(fullbody);
+				server.fillClientBuffer(fd, savestring);
+				return (1);
+			}
+			if (totallen <= fullbody.size())
+			{
+				pos += hexlen + 2;
+				continue;
+			}
+			if (body.size() > pos)
+				fullbody.append(body, pos, totallen - fullbody.size());
+			if (totallen > fullbody.size())
+			{
+				if (!can_read)
+					return (0);
+				memset(buff, 0, BUFFER_SIZE);
+				int received = recv(fd, buff, min(BUFFER_SIZE - 1, totallen - fullbody.size()), 0);
+				if (received <= 0)
+				{
+					server.clearClientBuffer(fd);
+					return (-1);
+				}
+				fullbody.append(buff, received);
+				savestring.append(buff, received);
+				server.fillClientBuffer(fd, savestring);
+				return (0);
+			}
+			pos += hexlen + 2;
+		}
+		else
+		{
+			// Not enough data for a full chunk size line, wait for more
+			if (!can_read)
+				return (0);
+			memset(buff, 0, BUFFER_SIZE);
+			int received = recv(fd, buff, BUFFER_SIZE - 1, 0);
+			if (received <= 0)
+			{
+				server.clearClientBuffer(fd);
+				return (-1);
+			}
+			savestring.append(buff, received);
+			body.append(buff, received);
+			server.fillClientBuffer(fd, savestring);
+			can_read = 0;
+		}
+	}
 }

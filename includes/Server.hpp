@@ -32,7 +32,7 @@ private:
 	ConfigParser *_config;
 	map<int, bool> _keepalive;
 	string _cookie_header;
-	map<string, map<string, string>> _cookies;
+	map<string, map<string, string> > _cookies;
 
 public:
 	/*constructors and destructor*/

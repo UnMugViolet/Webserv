@@ -52,21 +52,21 @@ int	DeleteRequest::delete_file(int fd, Server &serv)
 
 int DeleteRequest::handleDelete(int fd, Server &server, const ConfigParser *config, const string &path)
 {
-
-
-	if (access(path.c_str(), F_OK))
+	if (access(path.c_str(), F_OK)) 
+	{
 		delete_file(fd, server);
-	else
+	} 
+	else 
 	{
 		string errorPage = loadErrorPage(404, config, server.getUid());
 		string response = writeHTTPResponse(server, 404, errorPage, "text/html");
 		server.keepaliveDefine(fd, isKeepalive());
 		server.fillClientBuffer(fd, response);
 	}
+
+
 	if (!isKeepalive())
-	{
 		return (-1);
-	}
 	return (0);
 }
 
