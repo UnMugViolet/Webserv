@@ -53,7 +53,7 @@ string urlDecode(const string &src)
 
 int RequestHandler::_checkAccess(const string &path)
 {
-	if (access(path.c_str(), F_OK) == -1)
+	if (access(path.c_str(), F_OK) == -1) 
 		return (404);
 
 	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
@@ -548,9 +548,7 @@ int RequestHandler::handleRedirect(int fd, Server &server, const string &redirec
 	string url;
 
 	if (!(iss >> code >> url))
-	{
 		return -1; // Invalid redirect format
-	}
 
 	string statusText;
 	switch (code)
