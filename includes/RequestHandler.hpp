@@ -37,7 +37,8 @@ class RequestHandler
 		int								readOnce(int fd, Server &server, ConfigParser *config);
 		int								checkHeader(int fd, Server &server, ConfigParser *config, map<string, string> &headermap, string &body, string &savestring);
 		map<string, string>				parseHeader(string header) const;
-		int								handleChunkedRequest(int fd, string &savestring, string &body, Server &server);
+		int								handleChunkedRequest(int fd, string &savestring, string &body, Server &server, ConfigParser *config);
+		void							loadErrorPage(int fd, int errorCode, Server &server, ConfigParser *config, string errorMessage="", bool keepAlive=true);
 };
 
 string				trim(const string &str);

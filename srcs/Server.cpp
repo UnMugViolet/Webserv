@@ -362,24 +362,23 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 	for (size_t i = 0; i < _clientFds.size(); i++)
 	{
 		// Check if the file descriptor is valid
-		if (_clientFds[i] < 0)
-		{
+		if (_clientFds[i] < 0) {
 			// Invalid file descriptor, remove it
 			unsetClient(i);
 			continue;
 		}
-		if (FD_ISSET(_clientFds[i], &readFd))
-		{
+		if (FD_ISSET(_clientFds[i], &readFd)) {
+
 			int res = _handler->handleRequest(_clientFds[i], *this, config);
-			if (res == -1)
-			{
+
+			if (res == -1) {
 				FD_CLR(_clientFds[i], &fullReadFd);
 				unsetClient(i);
 				cout << "Client disconnected" << endl;
 				continue;
 			}
-			if (res == 1)
-			{
+			
+			if (res == 1) {
 				FD_CLR(_clientFds[i], &fullReadFd);
 				FD_SET(_clientFds[i], &fullWriteFd);
 			}
@@ -407,8 +406,7 @@ void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 	{
 		int fd = _clientFds[i];
 		// Check if the file descriptor is valid
-		if (fd < 0)
-		{
+		if (fd < 0) {
 			// Invalid file descriptor, remove it
 			unsetClient(i);
 			continue;
@@ -420,17 +418,17 @@ void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 			if (response != "")
 			{
 				int res = send(fd, response.c_str(), response.length(), 0);
-				if (res == -1)
-				{
+				if (res == -1) {
 					FD_CLR(fd, &fullWriteFd);
 					cerr << "failed to send http response" << endl;
 					unsetClient(i);
 					cout << "Client disconnected" << endl;
 					continue;
 				}
+
 				FD_CLR(fd, &fullWriteFd);
-				if (!keepaliveStatus(fd))
-				{
+
+				if (!keepaliveStatus(fd)) {
 					unsetClient(i);
 				} else {
 					FD_SET(fd, &fullReadFd);

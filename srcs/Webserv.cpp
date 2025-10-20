@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: andrean <andrean@student.42.fr>            +#+  +:+       +#+        */
+/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:50 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/15 17:38:46 by andrean          ###   ########.fr       */
+/*   Updated: 2025/10/20 10:29:46 by unmugviolet      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,13 +104,11 @@ void Webserv::serverLoop()
 			{
 				// Validate the file descriptor before including it
 				int flags = fcntl(testFd, F_GETFL);
-				if (flags == -1)
-				{
+				if (flags == -1) {
 					// Invalid file descriptor, remove it
 					FD_CLR(testFd, &fullReadFd);
 				}
-				else
-				{
+				else {
 					if (testFd > maxFd)
 						maxFd = testFd;
 				}
@@ -119,21 +117,18 @@ void Webserv::serverLoop()
 			{
 				// Validate the file descriptor before including it
 				int flags = fcntl(testFd, F_GETFL);
-				if (flags == -1)
-				{
+				if (flags == -1) {
 					// Invalid file descriptor, remove it
 					FD_CLR(testFd, &fullWriteFd);
 				}
-				else
-				{
+				else {
 					if (testFd > maxFd)
 						maxFd = testFd;
 				}
 			}
 		}
 		
-		if (maxFd == 0)
-		{
+		if (maxFd == 0) {
 			cerr << "No valid file descriptors in set, exiting" << endl;
 			break;
 		}
@@ -148,10 +143,7 @@ void Webserv::serverLoop()
 		if (selectResult < 0)
 		{
 			if (errno == EINTR)
-			{
-				// Interrupted by signal, check shutdown flag
-				continue;
-			}
+				continue; // Interrupted by signal, check shutdown flag
 			cerr << "Select error: " << strerror(errno) << endl;
 			continue;
 		}
