@@ -22,15 +22,15 @@
 
 class ConfigParser {
 	private:
-		map<string, string> _configMap;
-		map<string, map<string, string> > _serverBlocks;
+		map<string, string> 							_configMap;
+		map<string, map<string, string> > 				_serverBlocks;
 		map<string, map<string, map<string, string> > > _locationBlocks;
 
 		void	_checkSemicolons(const string &file) const;
-		string _trim(const string &str) const;
-		string _formatLine(const string &str) const;
-		void _parseServerBlock(ifstream &file, string const &serverName);
-		void _parseLocationBlock(ifstream &file, string const &serverName, string const &location);
+		string	_trim(const string &str) const;
+		string	_formatLine(const string &str) const;
+		void	_parseServerBlock(ifstream &file, string const &serverName);
+		void	_parseLocationBlock(ifstream &file, string const &serverName, string const &location);
 
 	public:
 		ConfigParser();
@@ -39,24 +39,24 @@ class ConfigParser {
 		ConfigParser &operator=(const ConfigParser &other);
 		~ConfigParser();
 
-		void parseFile(const string &filePath);
-		string getErrorPageContent(ConfigParser &parser, const string &serverUid, unsigned int error_code) const;
-		string getValue(const string &key) const;
-		string getServerValue(const string &serverName, const string &key) const;
-		string getLocationValue(const string &serverName, const string &location, const string &key) const;
-		bool hasServerKey(const string &serverName, const string &key) const;
-		vector<string> getServerUids() const;
-		vector<string> getLocationPaths(const string &serverUid) const;
-		string	getLocationValueForPath(const string &path, const string &serverUid, const string &parameter, bool must_check_server) const;
-		vector<string> getLocationVectorforPath(const string &path, const string &serverUid, const string &parameter) const;
+		void			parseFile(const string &filePath);
+		string			getErrorPageContent(ConfigParser &parser, const string &serverUid, unsigned int error_code) const;
+		string			getValue(const string &key) const;
+		string			getServerValue(const string &serverName, const string &key) const;
+		string			getLocationValue(const string &serverName, const string &location, const string &key) const;
+		bool			hasServerKey(const string &serverName, const string &key) const;
+		vector<string>	getServerUids() const;
+		vector<string>	getLocationPaths(const string &serverUid) const;
+		string			getLocationValueForPath(const string &path, const string &serverUid, const string &parameter, bool must_check_server) const;
+		vector<string>	getLocationVectorforPath(const string &path, const string &serverUid, const string &parameter) const;
 
 
 		void printConfig() const;
 		
-		class ErrorException : public exception
-		{
+		class ErrorException : public exception {
 			private:
 				string _message;
+				
 			public:
 				ErrorException(string message) throw() {
 					_message = "ConfigParser error: " + message;

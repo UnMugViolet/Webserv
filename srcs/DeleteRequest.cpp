@@ -1,8 +1,6 @@
 #include "DeleteRequest.hpp"
 
-DeleteRequest::DeleteRequest()
-{
-}
+DeleteRequest::DeleteRequest() {}
 
 DeleteRequest::DeleteRequest(map<string, string> header)
 {
@@ -18,10 +16,7 @@ DeleteRequest::DeleteRequest(map<string, string> header)
 	return ;
 }
 
-DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
-{
-	return ;
-}
+DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src) {}
 
 int	DeleteRequest::delete_file(int fd, Server &serv)
 {
@@ -45,7 +40,7 @@ int	DeleteRequest::delete_file(int fd, Server &serv)
 	}
 	if (remove(filePath.c_str()) == 0)
 	{
-		string response = writeHTTPResponse(204, "", "");
+		string response = writeHTTPResponse(serv, 204, "", "");
 		serv.keepaliveDefine(fd, isKeepalive());
 		serv.fillClientBuffer(fd, response);
 		return (0);
@@ -64,7 +59,7 @@ int DeleteRequest::handleDelete(int fd, Server &server, const ConfigParser *conf
 	else
 	{
 		string errorPage = loadErrorPage(404, config, server.getUid());
-		string response = writeHTTPResponse(404, errorPage, "text/html");
+		string response = writeHTTPResponse(server, 404, errorPage, "text/html");
 		server.keepaliveDefine(fd, isKeepalive());
 		server.fillClientBuffer(fd, response);
 	}
@@ -75,10 +70,7 @@ int DeleteRequest::handleDelete(int fd, Server &server, const ConfigParser *conf
 	return (0);
 }
 
-DeleteRequest::~DeleteRequest()
-{
-	return ;
-}
+DeleteRequest::~DeleteRequest() {}
 
 DeleteRequest	&DeleteRequest::operator=(DeleteRequest &src)
 {
@@ -86,4 +78,3 @@ DeleteRequest	&DeleteRequest::operator=(DeleteRequest &src)
 		ARequest::operator=(src);
 	return (*this);
 }
-

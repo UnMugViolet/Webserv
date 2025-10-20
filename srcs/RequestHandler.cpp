@@ -5,14 +5,12 @@
 RequestHandler::RequestHandler()
 {
 	_maxBodySize = 0;
-	return;
 }
 
 RequestHandler::RequestHandler(RequestHandler &src)
 {
 	/*copy what needs to be here*/
 	this->_maxBodySize = src._maxBodySize;
-	return;
 }
 
 RequestHandler &RequestHandler::operator=(RequestHandler &src)
@@ -21,10 +19,7 @@ RequestHandler &RequestHandler::operator=(RequestHandler &src)
 	return (*this);
 }
 
-RequestHandler::~RequestHandler()
-{
-	return;
-}
+RequestHandler::~RequestHandler() {}
 
 /**
  * Get the original URL and decode percent-encoded characters.
@@ -53,18 +48,21 @@ string urlDecode(const string &src)
 		else
 			out << src[i];
 	}
-	return out.str();
+	return (out.str());
 }
 
 int RequestHandler::_checkAccess(const string &path)
 {
 	if (access(path.c_str(), F_OK) == -1)
-		return 404;
+		return (404);
+
 	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
-		return 403;
+		return (403);
+
 	if (access(path.c_str(), R_OK) == -1)
-		return 403;
-	return 200;
+		return (403);
+
+	return (200);
 }
 
 string RequestHandler::getExtension(const string &path)
@@ -72,6 +70,7 @@ string RequestHandler::getExtension(const string &path)
 	size_t pos = path.rfind('.');
 	if (pos == string::npos)
 		return ("");
+
 	return (path.substr(pos + 1));
 }
 
@@ -85,8 +84,8 @@ map<string, size_t> getIndex(string const &indexes, string const &root)
 	size_t space1;
 	size_t space2 = 0;
 
-	if (indexes.empty())
-		return result;
+    if (indexes.empty())
+        return (result);
 
 	while (true)
 	{
@@ -135,6 +134,7 @@ string trim(const string &str)
 	size_t first = str.find_first_not_of(" \r\n\t");
 	if (first == string::npos)
 		return ("");
+
 	size_t last = str.find_last_not_of(" \n\r\t");
 	return (str.substr(first, last - first + 1));
 }
@@ -180,17 +180,19 @@ map<string, string> RequestHandler::parseHeader(string header) const
 	headers["path"] = path;
 	headers["method"] = method;
 
-	while (getline(stream, line) && line != "\r" && !line.empty())
-	{
+	while (getline(stream, line) && line != "\r" && !line.empty()) {
 		colon = line.find(':');
-		if (colon != string::npos)
-		{
+		if (colon != string::npos) {
 			string key = line.substr(0, colon);
+			
 			if (key.find(' ') != string::npos)
-				throw runtime_error("Bad Request: Invalid header key");
+				throw (runtime_error("Bad Request: Invalid header key"));
+
 			string value = trim(line.substr(colon + 1));
+
 			if (value.empty())
-				throw runtime_error("Bad Request: Empty header value");
+				throw (runtime_error("Bad Request: Empty header value"));
+
 			headers[key] = value;
 		}
 	}
@@ -202,28 +204,29 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 	string serverUid = server.getUid();
 	string header;
 
-	if (headermap.find("Host") == headermap.end())
-	{
+	if (headermap.find("Host") == headermap.end()) {
 		GetRequest requestObject;
 
 		cerr << "No server_name, bad request" << endl;
+		
 		string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-		string response = requestObject.writeHTTPResponse(400, errorPage, "text/html");
+		string response = requestObject.writeHTTPResponse(server, 400, errorPage, "text/html");
+
 		server.keepaliveDefine(fd, false);
 		server.fillClientBuffer(fd, response);
-		return 1;
+		return (2);
 	}
 	string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
+
 	if (max_body_size.empty())
 		max_body_size = config->getValue("client_max_body_size");
 	setMaxBodySize(max_body_size);
 
 	// Check if request is chunked
 	if (headermap.find("Transfer-Encoding") != headermap.end() && headermap["Transfer-Encoding"].find("chunked"))
-		return (0);
+		return (handleChunkedRequest(fd, savestring, body, server, 0));
 
-	if (headermap.find("Content-Length") != headermap.end())
-	{
+	if (headermap.find("Content-Length") != headermap.end()) {
 		istringstream iss(headermap["Content-Length"]);
 		size_t contentLength;
 		if (!(iss >> contentLength))
@@ -235,8 +238,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 			string errormsg = "Content-Length " + ft_itos(contentLength) + " exceeds max body size of " + ft_itos(_maxBodySize);
 			return (loadErrorPage(fd, 413, server, config, errormsg, false), 1);
 		}
-		if (body.size() == contentLength)
-		{
+		if (body.size() == contentLength) {
 			server.fillClientBuffer(fd, savestring);
 			return (1);
 		}
@@ -247,36 +249,33 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 
 int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 {
-	string serverUid = server.getUid();
-	size_t const BUFFER_SIZE = 51;
-	char buff[BUFFER_SIZE];
-	int received;
-	string body = "";
-	string header;
-	string savestring = "";
-	size_t const MAX_HEADER_SIZE = 8192; // 8KB for headers
-	size_t headerlimit;
-	map<string, string> headermap;
+	string	serverUid = server.getUid();
+	size_t	const BUFFER_SIZE = 512;
+	char	buff[BUFFER_SIZE];
+	int		received;
+	string	body = "";
+	string	header;
+	string	savestring = "";
+	size_t	const MAX_HEADER_SIZE = 8192; // 8KB for headers
+	size_t	headerlimit;
+	map<string, string>	headermap;
 
-	if (server.getClientBuffer(fd) == "")
-	{
+	if (server.getClientBuffer(fd) == "") {
 		memset(buff, 0, BUFFER_SIZE);
 
 		received = recv(fd, buff, BUFFER_SIZE - 1, 0);
 		if (received <= 0)
-			return -1;
+			return (-1);
 
-		// Quick exit for HTTPS/TLS handshake
-		if ((unsigned char)buff[0] == 0x16)
-		{
+		// Quick exit for HTTPS/TLS handshake	
+		if ((unsigned char)buff[0] == 0x16) {
 			Logger::error(serverUid, "Received HTTPS/TLS handshake, closing connection.");
 			cerr << "Received HTTPS/TLS handshake, closing connection." << endl;
-			return -1;
+			return (-1);
 		}
 		savestring.append(buff, received);
 		server.fillClientBuffer(fd, savestring);
-		if (savestring.find("\r\n\r\n") != string::npos)
-		{
+		if (savestring.find("\r\n\r\n") != string::npos) {
 			if (savestring.find("Content-Length") == string::npos && savestring.find("Transfer-Encoding: chunked") == string::npos)
 				return (1);
 			else
@@ -295,24 +294,29 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 
 	savestring.append(server.getClientBuffer(fd));
 	headerlimit = savestring.find("\r\n\r\n");
-	if (headerlimit == string::npos)
-	{
+	if (headerlimit == string::npos) {
 		// Prevent header from being too large
-		if (savestring.size() > MAX_HEADER_SIZE)
-			return (Logger::error(serverUid, "Header too large"), -1);
+		if (savestring.size() > MAX_HEADER_SIZE) {
+			GetRequest requestObject;
+
+			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
+			string response = requestObject.writeHTTPResponse(server, 413, errorPage, "text/html");
+
+			server.keepaliveDefine(fd, false);
+			server.fillClientBuffer(fd, response);
+			return (Logger::error(serverUid, "Header too large"), 2);
+		}
 		memset(buff, 0, BUFFER_SIZE);
 
 		received = recv(fd, buff, BUFFER_SIZE - 1, 0);
-		if (received <= 0)
-		{
+		if (received <= 0) {
 			server.clearClientBuffer(fd);
-			return -1;
+			return (-1);
 		}
 
 		savestring.append(buff, received);
 		server.fillClientBuffer(fd, savestring);
-		if (savestring.find("\r\n\r\n") != string::npos)
-		{
+		if (savestring.find("\r\n\r\n") != string::npos) {
 			if (savestring.find("Content-Length") == string::npos && savestring.find("Transfer-Encoding: chunked") == string::npos)
 				return (1);
 			else
@@ -321,8 +325,9 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 				body = savestring.substr(headerlimit + 4, string::npos);
 				header = savestring;
 				header.erase(headerlimit, string::npos);
-
+		
 				headermap = parseHeader(header);
+
 				return (checkHeader(fd, server, config, headermap, body, savestring));
 			}
 		}
@@ -345,21 +350,20 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		size_t contentLength;
 		iss >> contentLength;
 
-		if (body.size() < contentLength)
-		{
+		if (body.size() < contentLength) {
 			memset(buff, 0, BUFFER_SIZE);
 
 			received = recv(fd, buff, min(BUFFER_SIZE - 1, contentLength - body.size()), 0);
-			if (received <= 0)
-			{
+			if (received <= 0) {
 				server.clearClientBuffer(fd);
-				return -1;
+				return (-1);
 			}
 			body.append(buff, received);
 			savestring.append(buff, received);
 			server.fillClientBuffer(fd, savestring);
 			if (body.size() == contentLength)
 				return (1);
+			
 			return (0);
 		}
 		return (1);
@@ -378,24 +382,33 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 	// Read with recv until request is complete
 	int res = readOnce(fd, server, config);
-	if (res == 0)
+	if (res != 1)
 		return (res);
-	try
-	{
+
+	try {
 		header = server.getClientBuffer(fd);
 		if (header.size() <= 0)
 			return (-1);
+
 		headerlimit = header.find("\r\n\r\n");
 		if (headerlimit != string::npos && headerlimit + 4 <= header.length())
 		{
 			body = header.substr(headerlimit + 4, string::npos);
 			header.erase(headerlimit, string::npos);
-		}
-		else
-		{
+
+		} else {
 			body = "";
 		}
+
 		headermap = parseHeader(header);
+
+		// Handle cookies
+		if (headermap.find("Cookie") == headermap.end() || headermap["Cookie"].find("session_id=") == string::npos) {
+			server.clearCookieHeader();
+			string server_id = server.generateSessionId();
+			server.setCookie(server_id, "session_id", server_id);
+		}
+
 
 		Logger::access(serverUid, "http request: " + header);
 
@@ -404,13 +417,12 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			server.setEnvValue("SERVER_NAME", headermap["Host"].substr(0, colonPos));
 			server.setEnvValue("SERVER_PORT", headermap["Host"].substr(colonPos + 1));
-		}
-		else
-		{
+		} else {
 			server.setEnvValue("SERVER_NAME", headermap["Host"]);
 			server.setEnvValue("SERVER_PORT", "80");
 		}
 		string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
+
 		if (max_body_size.empty())
 			max_body_size = config->getValue("client_max_body_size");
 		setMaxBodySize(max_body_size);
@@ -426,6 +438,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);
 		size_t questionPos = headermap["path"].find('?');
+
 		if (questionPos != string::npos && questionPos + 1 < headermap["path"].length())
 			server.setEnvValue("QUERY_STRING", headermap["path"].substr(questionPos + 1));
 		else
@@ -437,7 +450,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		if (queryPos != string::npos)
 		{
 			cleanPath = headermap["path"].substr(0, queryPos);
-		}
 		string auto_index = config->getLocationValueForPath(cleanPath, server.getUid(), "autoindex", true);
 
 		// Check for redirects before method validation
@@ -449,8 +461,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		if (cleanPath.length() >= PATH_MAX)
 			return (loadErrorPage(fd, 414, server, config, "Request URI too long", false), 1);
 
-		try
-		{
+		try {
 			int status = 0;
 			string allowed_methods = config->getLocationValueForPath(cleanPath, server.getUid(), "allow_methods", true);
 			istringstream iss(allowed_methods);
@@ -461,43 +472,45 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 				if (one_method == headermap["method"])
 				{
 					status = 1;
-					break;
+					break ;
 				}
 			}
 			// Case no methods allowed for the location
 			if (status == 0)
 				return (loadErrorPage(fd, 403, server, config), 1);
 		}
-		catch (exception const &e) {
-			return (loadErrorPage(fd, 403, server, config, e.what()), 1);
+		catch (exception const &e)
+		{
+			GetRequest requestObject;
+
+			string errorPage = requestObject.loadErrorPage(403, config, serverUid);
+			string response = requestObject.writeHTTPResponse(403, errorPage, "text/html");
+			server.fillClientBuffer(fd, response);
+			server.keepaliveDefine(fd, requestObject.isKeepalive());
+			return 1;
 		}
 
-		if (headermap["method"] == "GET")
-		{
+		if (headermap["method"] == "GET") {
 			GetRequest requestObject(headermap);
 
 			return (requestObject.handleGet(fd, server, config, fullPath));
-		}
-		else if (headermap["method"] == "POST")
-		{
+
+		} else if (headermap["method"] == "POST") {
 			PostRequest requestObject(headermap);
 
 			return (requestObject.handlePost(fd, server, body, config));
-		}
-		else if (headermap["method"] == "DELETE")
-		{
+
+		} else if (headermap["method"] == "DELETE") {
 			DeleteRequest requestObject(headermap);
 
 			return (requestObject.handleDelete(fd, server, config, fullPath));
-		}
-		else
-		{
+
+		} else {
 			Logger::error(serverUid, "Unknown method in HEADER: " + headermap["method"]);
 			return (-1);
 		}
 	}
-	catch (const exception &e)
-	{
+	catch (const exception &e) {
 		cerr << "Error parsing request: " << e.what() << endl;
 		return (-1);
 	}
@@ -514,35 +527,27 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
  */
 int RequestHandler::handleRedirect(int fd, Server &server, const string &redirect, map<string, string> &headermap)
 {
-	istringstream iss(redirect);
-	int code;
-	string url;
-
-	if (!(iss >> code >> url))
+	istringstream 	iss(redirect);
+	int 			code;
+	string 			url;
+	
+	if (!(iss >> code >> url)) {
 		return -1; // Invalid redirect format
-
+	}
+	
 	string statusText;
-	switch (code)
-	{
-	case 301:
-		statusText = "Moved Permanently";
-		break;
-	case 302:
-		statusText = "Found";
-		break;
-	case 307:
-		statusText = "Temporary Redirect";
-		break;
-	case 308:
-		statusText = "Permanent Redirect";
-		break;
-	default:
-		return -1; // Unsupported redirect code
+	switch (code) {
+		case 301: statusText = "Moved Permanently"; break;
+		case 302: statusText = "Found"; break;
+		case 307: statusText = "Temporary Redirect"; break;
+		case 308: statusText = "Permanent Redirect"; break;
+		default: return -1; // Unsupported redirect code
 	}
 
 	stringstream ss;
 	ss << code;
 	string response = "HTTP/1.1 " + ss.str() + " " + statusText + "\r\n";
+
 	response += "Location: " + url + "\r\n";
 	response += "Content-Length: 0\r\n";
 
@@ -554,7 +559,7 @@ int RequestHandler::handleRedirect(int fd, Server &server, const string &redirec
 
 	server.fillClientBuffer(fd, response);
 	server.keepaliveDefine(fd, keepAlive);
-
+	
 	return 1;
 }
 
@@ -564,18 +569,15 @@ void RequestHandler::setMaxBodySize(string size)
 	int value;
 	string unit;
 
-	if (iss >> value && value >= 0)
-	{
+	if (iss >> value && value >= 0) {
 		_maxBodySize = value;
 		iss >> unit;
-		if (!unit.empty())
-		{
+		if (!unit.empty()){
 			if (unit == "K" || unit == "k" || unit == "KB" || unit == "kb")
 				_maxBodySize *= 1024;
 			else if (unit == "M" || unit == "m" || unit == "MB" || unit == "mb")
 				_maxBodySize *= 1024 * 1024;
-			else
-			{
+			else {
 				cerr << "unsupported unit" << endl;
 				_maxBodySize = 0;
 			}
@@ -586,85 +588,88 @@ void RequestHandler::setMaxBodySize(string size)
 		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
 }
 
-int RequestHandler::handleChunkedRequest(int fd, string &savestring, string &body, Server &server, ConfigParser *config)
+int	RequestHandler::handleChunkedRequest(int fd, string &savestring, string &body, Server &server)
 {
-	int can_read = 1;
-	static string fullbody;
-	size_t hexlen;
-	size_t totallen = 0;
-	size_t pos = 0;
-	size_t const BUFFER_SIZE = 51;
-	char buff[BUFFER_SIZE];
+	int					can_read = 1;
+	static string		fullbody;
+	size_t				hexlen;
+	size_t				totallen = 0;
+	size_t				pos = 0;
+	size_t const		BUFFER_SIZE = 51;
+	char				buff[BUFFER_SIZE];
 
-       while (true)
-       {
-	       size_t rn_pos = body.find("\r\n", pos);
-	       if (rn_pos != string::npos) {
-		       // We have a full chunk size line
-		       std::string chunk_size_line = body.substr(pos, rn_pos - pos);
-		       if (chunk_size_line.empty())
-			       return (loadErrorPage(fd, 400, server, config, "Empty chunk size line", false), -1);
-		       istringstream iss(chunk_size_line);
-		       if (!(iss >> std::hex >> hexlen)) {
-			       return (loadErrorPage(fd, 400, server, config, "Malformed chunk size line", false), -1);
-		       }
-		       totallen += hexlen;
-		       pos = rn_pos + 2;
-		       if (hexlen == 0)
-		       {
-			       if (body.size() < pos + 2)
-			       {
-				       if (!can_read)
-					       return (0);
-				       int received = recv(fd, buff, pos + 2 - body.size(), 0);
-				       if (received <= 0)
-				       {
-					       server.clearClientBuffer(fd);
-					       return (-1);
-				       }
-			       }
-			       savestring.erase(savestring.find("\r\n\r\n") + 4);
-			       savestring.append(fullbody);
-			       server.fillClientBuffer(fd, savestring);
-			       return (1);
-		       }
-		       if (totallen <= fullbody.size())
-		       {
-			       pos += hexlen + 2;
-			       continue;
-		       }
-		       if (body.size() > pos)
-			       fullbody.append(body, pos, totallen - fullbody.size());
-		       if (totallen > fullbody.size())
-		       {
-			       if (!can_read)
-				       return (0);
-			       memset(buff, 0, BUFFER_SIZE);
-			       int received = recv(fd, buff, min(BUFFER_SIZE - 1, totallen - fullbody.size()), 0);
-			       if (received <= 0)
-			       {
-				       server.clearClientBuffer(fd);
-				       return (-1);
-			       }
-			       fullbody.append(buff, received);
-			       savestring.append(buff, received);
-			       server.fillClientBuffer(fd, savestring);
-			       return (0);
-		       }
-		       pos += hexlen + 2;
-	       } else {
-		       // Not enough data for a full chunk size line, wait for more
-		       memset(buff, 0, BUFFER_SIZE);
-		       int received = recv(fd, buff, BUFFER_SIZE - 1, 0);
-		       if (received <= 0)
-		       {
-			       server.clearClientBuffer(fd);
-			       return (-1);
-		       }
-		       savestring.append(buff, received);
-		       body.append(buff, received);
-		       server.fillClientBuffer(fd, savestring);
-		       can_read = 0;
-	       }
-       }
+	while (true)
+	{
+		if (body.find('\r', pos) != string::npos)
+		{
+			istringstream iss(body.substr(pos, body.find("\r\n")));
+			if (!(iss >> hex >> hexlen))
+			{
+				//probably bad request
+				return (-1); // error
+			}
+			
+			totallen += hexlen;
+			pos = body.find('\r', pos);
+			if (pos != string::npos)
+				pos += 2;
+			// else
+			// 	;//bad request?
+			if (hexlen == 0)
+			{
+				
+				if (body.size() < pos + 2)
+				{
+					if (!can_read)
+						return (0);
+					int received = recv(fd, buff, pos + 2 - body.size(), 0);
+					if (received <= 0)
+					{
+						server.clearClientBuffer(fd);
+						return (-1);
+					}
+				}
+				savestring.erase(savestring.find("\r\n\r\n") + 4);
+				savestring.append(fullbody);
+				server.fillClientBuffer(fd, savestring);
+				return (1);
+			}
+			if (totallen <= fullbody.size())
+			{
+				pos += hexlen + 2;
+				continue;
+			}
+			if (body.size() > pos)
+				fullbody.append(body, pos, totallen - fullbody.size());
+			if (totallen > fullbody.size())
+			{
+				if (!can_read)
+					return (0);
+				memset(buff, 0, BUFFER_SIZE);
+				int received = recv(fd, buff, min(BUFFER_SIZE - 1, totallen - fullbody.size()), 0);
+				if (received <= 0)
+				{
+					server.clearClientBuffer(fd);
+					return (-1);
+				}
+				fullbody.append(buff, received);
+				savestring.append(buff, received);
+				server.fillClientBuffer(fd, savestring);
+				return (0);
+			}
+			pos += hexlen + 2;
+		} else {
+			memset(buff, 0, BUFFER_SIZE);
+			int received = recv(fd, buff, BUFFER_SIZE - 1, 0);
+			if (received <= 0)
+			{
+				server.clearClientBuffer(fd);
+				return (-1);
+			}
+			savestring.append(buff, received);
+			body.append(buff, received);
+			server.fillClientBuffer(fd, savestring);
+			can_read = 0;
+		}
+	}
 }

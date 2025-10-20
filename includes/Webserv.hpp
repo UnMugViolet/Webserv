@@ -3,16 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: fureimu <fureimu@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 15:28:31 by pjaguin           #+#    #+#             */
-/*   Updated: 2025/10/14 16:21:18 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/10/19 19:31:49 by fureimu          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "ConfigParser.hpp"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -26,14 +25,16 @@
 #include <csignal>
 #include <errno.h>
 #include <sys/time.h>
+
+#include "ConfigParser.hpp"
 #include "Server.hpp"
 
-class Webserv
-{
+class Webserv {
 	private:
-		vector<Server>					_servers;
-		ConfigParser 						*_config;
-		static bool							_shutdown;
+		vector<Server>	_servers;
+		ConfigParser 	*_config;
+		static bool		_shutdown;
+		
 	public:
 		Webserv();
 		Webserv(ConfigParser &config);
@@ -43,10 +44,10 @@ class Webserv
 		void 		stopServer();	
 		static void signalHandler(int signal);
 		
-		class WebservException : public exception
-		{
+		class WebservException : public exception {
 			private:
 				string _message;
+				
 			public:
 				WebservException(string message) throw() {
 					_message = string(RED) + string(BOLD) + "[ERROR] " + string(NEUTRAL) + string(RED) + "Webserv: " + message;

@@ -4,24 +4,25 @@
 #include <string>
 #include <iostream>
 #include <sys/socket.h>
-#include "Logger.hpp"
 #include <unistd.h>
+#include <fstream>
 #include <string.h>
+#include <sstream>
+
 #include "PostRequest.hpp"
 #include "DeleteRequest.hpp"
 #include "GetRequest.hpp"
-#include <sstream>
 #include "dict.hpp"
-#include <fstream>
+#include "Logger.hpp"
 
 // Forward declaration to avoid circular dependency
 class ConfigParser;
 class Server;
 
-class RequestHandler
-{
+class RequestHandler {
 	private:
 		int _maxBodySize;
+
 	public:
 		RequestHandler();
 		RequestHandler(RequestHandler& src);
@@ -37,7 +38,7 @@ class RequestHandler
 		int								readOnce(int fd, Server &server, ConfigParser *config);
 		int								checkHeader(int fd, Server &server, ConfigParser *config, map<string, string> &headermap, string &body, string &savestring);
 		map<string, string>				parseHeader(string header) const;
-		int								handleChunkedRequest(int fd, string &savestring, string &body, Server &server, ConfigParser *config);
+		int								handleChunkedRequest(int fd, string &savestring, string &body, Server &server, ConfigParser *config, int can_read);
 		void							loadErrorPage(int fd, int errorCode, Server &server, ConfigParser *config, string errorMessage="", bool keepAlive=true);
 };
 

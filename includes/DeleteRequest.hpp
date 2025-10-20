@@ -7,8 +7,7 @@
 #include "ARequest.hpp"
 #include "RequestHandler.hpp"
 
-class DeleteRequest: public ARequest
-{
+class DeleteRequest: public ARequest {
 	private:
 		/*attributes here*/
 	public:

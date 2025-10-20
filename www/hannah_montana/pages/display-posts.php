@@ -62,7 +62,7 @@
 		echo	"</div>";
 		echo "<div class='post' id=\"$safePostFile\">";
 
-		echo "	<button onclick='showBox(\"messageBox_$safePostFile\")' class='cross'>X</button>"; //TODO - delete post + file by pressing the X
+		echo "	<button onclick='showBox(\"messageBox_$safePostFile\")' class='cross'>X</button>";
 
 		echo "<h3> $name </h3>";
 		echo "<h4> $message </h4>";
