@@ -13,9 +13,10 @@ ARequest::ARequest()
 	_host = "";
 	_keep_alive = true;
 	_client = "";
+	_accepted_mime = "*/*";
 }
 
-ARequest::ARequest(ARequest &src)
+ARequest::ARequest(const ARequest &src)
 {
 	if (this != &src)
 		*this = src;
@@ -32,7 +33,7 @@ int	ARequest::isKeepalive() const
 	return (_keep_alive);
 }
 
-ARequest&	ARequest::operator=(ARequest &src)
+ARequest&	ARequest::operator=(const ARequest &src)
 {
 	if (this != &src)
 	{
@@ -41,6 +42,7 @@ ARequest&	ARequest::operator=(ARequest &src)
 		this->_host = src._host;
 		this->_keep_alive = src._keep_alive;
 		this->_client = src._client;
+		this->_accepted_mime = src._accepted_mime;
 	}
 	return (*this);
 }
@@ -107,7 +109,7 @@ string ARequest::writeHTTPResponse(int statusCode, const string &body, const str
 	return response.str();
 }
 
-string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *config, const Server &Server)
+int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigParser *config, Server &Server)
 {
 	int 			cgiOutputFd = -1;
 	vector<string>	location_cgi = config->getLocationVectorforPath(scriptPath, Server.getUid(), "cgi");
@@ -130,11 +132,16 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
     if (stat(scriptPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode)) {
         if (auto_index == "on") {
             string listing = generateDirectoryListing(scriptPath, _path);
-            return writeHTTPResponse(200, listing, "text/html");
+            string response = writeHTTPResponse(200, listing, "text/html");
+			Server.fillClientBuffer(fd, response);
+			Server.keepaliveDefine(fd, isKeepalive());
         } else {
             string errorPage = loadErrorPage(403, config, Server.getUid());
-            return writeHTTPResponse(403, errorPage, "text/html");
+            string response = writeHTTPResponse(403, errorPage, "text/html");
+			Server.fillClientBuffer(fd, response);
+			Server.keepaliveDefine(fd, isKeepalive());
         }
+		return (1);
     }
 
 	try {
@@ -172,33 +179,25 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 
 		cgiOutputFd = CGI::interpret(scriptPath, Server, cgi_list, timeout_seconds);
 
+		cout << "fd for " << scriptPath << ": " << cgiOutputFd << endl;
 		// Check for timeout error avoid reading from fd (-2) in that case
 		if (cgiOutputFd == -2) {
 			cout << RED << BOLD << "CGI execution timed out after " << timeout_seconds << " seconds." << NEUTRAL << endl;
 			// Force connection close on timeout to prevent browsers from hanging
 			_keep_alive = false;
 			string errorPage = loadErrorPage(504, config, Server.getUid());
-			return writeHTTPResponse(504, errorPage, "text/html");
+			string response = writeHTTPResponse(504, errorPage, "text/html");
+			Server.fillClientBuffer(fd, response);
+			Server.keepaliveDefine(fd, isKeepalive());
+			return (1);
 		}
 		
-		// Read the CGI output
-		string cgiOutput;
-		char buffer[4096];
-		ssize_t bytesRead;
-		
-		while ((bytesRead = read(cgiOutputFd, buffer, sizeof(buffer))) > 0) {
-			cgiOutput.append(buffer, bytesRead);
-		}
-		
-		if (cgiOutputFd != -1) {
-			close(cgiOutputFd);
-			cgiOutputFd = -1;
-		}
-		
+		Server.setCgiFdforClient(fd, cgiOutputFd);
+		_path = scriptPath;
+		Server.setCgiRequest(cgiOutputFd, *this);
 		// Send successful response with CGI output
-		string contentType = getContentType(scriptPath);
-		contentType = checkContentType(contentType, Server);
-		return writeHTTPResponse(200, cgiOutput, contentType);
+		
+		return (1);
 		
 	} catch (const CGI::CGIException &e) {
 		// Close the file descriptor if it was opened
@@ -209,7 +208,11 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 		// Handle true CGI execution errors (file not found, permission denied, etc.)
 		// These are cases where the script couldn't even run
 		string errorPage = loadErrorPage(e.getHttpStatus(), config, Server.getUid());
-		return writeHTTPResponse(e.getHttpStatus(), errorPage, "text/html");
+		string response = writeHTTPResponse(e.getHttpStatus(), errorPage, "text/html");
+		Server.fillClientBuffer(fd, response);
+		Server.keepaliveDefine(fd, isKeepalive());
+		return (1);
+
 	} catch (...) {
 		// Handle any other exceptions
 		if (cgiOutputFd != -1) {
@@ -217,7 +220,10 @@ string ARequest::sendCGIResponse(const string &scriptPath, const ConfigParser *c
 		}
 		
 		string errorPage = loadErrorPage(500, config, Server.getUid());
-		return writeHTTPResponse(500, errorPage, "text/html");
+		string response = writeHTTPResponse(500, errorPage, "text/html");
+		Server.fillClientBuffer(fd, response);
+		Server.keepaliveDefine(fd, isKeepalive());
+		return (1);
 	}
 }
 
@@ -226,9 +232,9 @@ string ARequest::loadErrorPage(int statusCode, const ConfigParser *config, const
 	return config->getErrorPageContent(const_cast<ConfigParser&>(*config), serverUid, statusCode);
 }
 
-string ARequest::checkContentType(string &contentType, const Server &server)
+string ARequest::checkContentType(string &contentType)
 {
-	string accepted = server.getEnvValue("ACCEPT_MIME_TYPE");
+	string accepted = _accepted_mime;
 	if (accepted.find(contentType) != string::npos)
 		return (contentType);
 	if (accepted.find("*/*") != string::npos)
@@ -245,8 +251,9 @@ string ARequest::checkContentType(string &contentType, const Server &server)
 	throw exception();
 }
 
-string ARequest::getContentType(const string &filePath) const
+string ARequest::getContentType() const
 {
+	string filePath = _path;
 	size_t pos = filePath.rfind('.');
 	if (pos == string::npos)
 		return "application/octet-stream";
@@ -306,4 +313,9 @@ map<string, string> parseQuery(const string &query)
 		value = query.substr(equalPos + 1, amperPos - equalPos - 1);
 	}
 	return (map);
+}
+
+int	ARequest::getMethod() const
+{
+	return (_method);
 }

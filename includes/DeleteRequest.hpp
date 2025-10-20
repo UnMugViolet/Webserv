@@ -15,12 +15,13 @@ class DeleteRequest: public ARequest
 		/*constructors and destructor*/
 		DeleteRequest();
 		DeleteRequest(map<string, string> header);
-		DeleteRequest(DeleteRequest &src);
+		DeleteRequest(const DeleteRequest &src);
 		~DeleteRequest();
 
 		/*member functions*/
 		int	delete_file(int fd, Server &serv);
 		int	handleDelete(int fd, Server &server, const ConfigParser *config, const string &path);
+		ARequest*	clone() const;
 
 		/*operator overloads*/
 		DeleteRequest &operator=(DeleteRequest &src);

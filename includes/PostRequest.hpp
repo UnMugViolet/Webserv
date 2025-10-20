@@ -16,7 +16,7 @@ public:
 	/*constructors and destructor*/
 	PostRequest();
 	PostRequest(map<string, string> header);
-	PostRequest(PostRequest& src);
+	PostRequest(const PostRequest& src);
 	~PostRequest();
 
 	/*member functions*/
@@ -24,6 +24,7 @@ public:
 	int	UploadContent(map<string, string> content, string path);
 	int	createPost(string body, string postpath, string uploadpath);
 	int	handlePost(int fd, Server &server, const string &body, const ConfigParser *config);
+	ARequest*	clone() const;
 
 	/*operator overloads*/
 	PostRequest	&operator=(PostRequest& src);

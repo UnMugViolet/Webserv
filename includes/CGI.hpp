@@ -32,7 +32,7 @@ public:
 
 	/*member functions*/
 	
-	static int	interpret(const string &path, const Server &Server, map<string, string> &cgi_list, size_t timeout_seconds);
+	static int	interpret(const string &path, Server &Server, map<string, string> &cgi_list, size_t timeout_seconds);
 
 	/*operator overloads*/
 

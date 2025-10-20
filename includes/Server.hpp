@@ -14,7 +14,9 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include "Logger.hpp"
+#include "sys/wait.h"
 
+class ARequest;
 class RequestHandler;
 
 class Server
@@ -30,6 +32,10 @@ private:
 	RequestHandler				*_handler;
 	ConfigParser				*_config;
 	map<int, bool>				_keepalive;
+	map<int, int>				_cgi_for_client;
+	map<int, pid_t>				_pid_for_cgi;
+	map<int, ARequest*>			_cgi_request;
+
 
 public:
 	/*constructors and destructor*/
@@ -56,6 +62,14 @@ public:
 	void		clearClientBuffer(int clientFd);
 	bool		keepaliveStatus(int fd) const;
 	void		keepaliveDefine(int fd, bool status);
+	void		setCgiFdforClient(int clientFd, int cgiFd);
+	int			hasCgiforClient(int clientFd) const;
+	int			getCgiforClient(int clientFd) const;
+	void		eraseCgiFd(int clientFd, int cgiFd);
+	int			storeCgiReturn(int clientFd, int cgiFd);
+	void		setCgiRequest(int cgiFd, ARequest &request);
+	void		setPidforCgi(int cgiFd, pid_t pid);
+	int			getPidForCgi(int cgiFd) const;
 
 	// Env handling methods
 	void		initEnv(char **env);

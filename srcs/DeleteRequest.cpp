@@ -18,7 +18,7 @@ DeleteRequest::DeleteRequest(map<string, string> header)
 	return ;
 }
 
-DeleteRequest::DeleteRequest(DeleteRequest &src) : ARequest(src)
+DeleteRequest::DeleteRequest(const DeleteRequest &src) : ARequest(src)
 {
 	return ;
 }
@@ -87,3 +87,7 @@ DeleteRequest	&DeleteRequest::operator=(DeleteRequest &src)
 	return (*this);
 }
 
+ARequest*	DeleteRequest::clone() const
+{
+	return (new DeleteRequest(*this));
+}

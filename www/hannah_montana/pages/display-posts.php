@@ -76,7 +76,7 @@
 					echo "<img src='$filepath' class='image-file'>";
 				}
 				else{
-					echo "<button onclick='downloadFile(\"$filepath\")' class='download-file'>Download : $filename</a>";
+					echo "<button onclick='downloadFile(\"$filepath\", \"$filename\")' class='download-file'>Download : $filename</a>";
 				}
 			}
 			else

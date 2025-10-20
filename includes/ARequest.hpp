@@ -14,7 +14,7 @@
 
 // Forward declaration
 class ConfigParser;
-
+// class Server;
 #define GET 0
 #define POST 1
 #define DELETE 2
@@ -28,22 +28,26 @@ protected:
 	string	_host;
 	bool	_keep_alive;
 	string	_client;
+	string	_accepted_mime;
 public:
 	/*constructors and destructor*/
 	ARequest();
-	ARequest(ARequest& src);
-	~ARequest();
+	ARequest(const ARequest& src);
+	virtual ~ARequest();
 
 	/*member functions*/
 	int			isKeepalive() const;
-	string		sendCGIResponse(const string &scriptPath, const ConfigParser *config, const Server &Server);
+	int			sendCGIResponse(int fd, const string &scriptPath, const ConfigParser *config, Server &Server);
 	string		writeHTTPResponse(int statusCode, const string &body, const string &contentType = "text/html");
 	string		loadErrorPage(int statusCode, const ConfigParser *config, const string &serverUid) const;
-	string		getContentType(const string &filePath) const;
-	string		checkContentType(string &contentType, const Server &server);
+	string		getContentType() const;
+	string		checkContentType(string &contentType);
+	int			getMethod() const;
+
+	virtual ARequest*	clone() const = 0;
 
 	/*operator overloads*/
-	ARequest&	operator=(ARequest& src);
+	ARequest&	operator=(const ARequest& src);
 };
 
 map<string, string> 	parseQuery(const string &query);

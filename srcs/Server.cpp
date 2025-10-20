@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include "RequestHandler.hpp"
 #include <unistd.h>
+class ARequest;
+
 
 Server::Server()
 {
@@ -17,6 +19,10 @@ Server::Server(const Server &other)
 		this->_handler = new RequestHandler();
 		this->_env = other._env;
 		this->_server_names = other._server_names;
+		this->_keepalive = other._keepalive;
+		this->_cgi_for_client = other._cgi_for_client;
+		this->_pid_for_cgi = other._pid_for_cgi;
+		this->_cgi_request = other._cgi_request;
 
 		// Transfer ownership of the socket to avoid double-close
 
@@ -380,8 +386,116 @@ void	Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser* confi
 			}
 			if (res >= 1)
 			{
+				if (hasCgiforClient(_clientFds[i])) {
+					FD_SET(getCgiforClient(_clientFds[i]), &fullReadFd);
+				} else {
+					FD_SET(_clientFds[i], &fullWriteFd);
+				}
 				FD_CLR(_clientFds[i], &fullReadFd);
-				FD_SET(_clientFds[i], &fullWriteFd);
+			}
+		}
+	}
+	map<int, int>::iterator it = _cgi_for_client.begin();
+	for (;it != _cgi_for_client.end(); it++)
+	{
+		if (it->first == -1 || it->second == -1)
+		{
+			eraseCgiFd(it->first, it->second);
+			if (_cgi_for_client.empty() || it == _cgi_for_client.end())
+				break;
+			continue;
+		}
+		if (FD_ISSET(it->second, &readFd))
+		{
+			int res = storeCgiReturn(it->first, it->second);
+			FD_CLR(it->second, &readFd);
+			if (res == -1)
+			{
+				FD_CLR(it->second, &fullReadFd);
+				eraseCgiFd(it->first, it->second);
+				it = _cgi_for_client.begin();
+				if (_cgi_for_client.empty() || it == _cgi_for_client.end())
+					break;
+			} else if (res == 0) {
+				string body = getClientBuffer(it->second);
+				if (!body.empty()) {
+					ARequest *requestObject = _cgi_request[it->second];
+
+					string contentType = requestObject->getContentType();
+					contentType = requestObject->checkContentType(contentType);
+					
+					string response = requestObject->writeHTTPResponse(200, body, contentType);
+					
+					keepaliveDefine(it->first, true);
+					fillClientBuffer(it->first, response);
+					clearClientBuffer(it->second);
+					FD_SET(it->first, &fullWriteFd);
+				}
+				
+				pid_t pid = getPidForCgi(it->second);
+				if (pid > 0)
+				{
+					int		status;
+					pid_t	result = waitpid(pid, &status, WNOHANG);
+					if (result == -1) {
+						GetRequest requestObject;
+
+						string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), getUid(), 500);
+						string response = requestObject.writeHTTPResponse(500, errorPage, "text/html");
+						keepaliveDefine(it->first, false);
+						fillClientBuffer(it->first, response);
+					}
+				}
+				FD_CLR(it->second, &fullReadFd);
+				eraseCgiFd(it->first, it->second);
+				it = _cgi_for_client.begin();
+				if (_cgi_for_client.empty() || it == _cgi_for_client.end())
+					break;
+			}
+		} else {
+			string body = getClientBuffer(it->second);
+			if (!body.empty()) {
+				ARequest *requestObject = _cgi_request[it->second];
+
+				string contentType = requestObject->getContentType();
+				contentType = requestObject->checkContentType(contentType);
+	
+				string response = requestObject->writeHTTPResponse(200, body, contentType);
+	
+				keepaliveDefine(it->first, true);
+				fillClientBuffer(it->first, response);
+				clearClientBuffer(it->second);
+				FD_SET(it->first, &fullWriteFd);
+			}
+
+
+			pid_t pid = getPidForCgi(it->second);
+			if (pid <= 0)
+				continue;
+			int		status;
+			pid_t	result = waitpid(pid, &status, WNOHANG);
+
+			if (result == -1) {
+				GetRequest requestObject;
+
+				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), getUid(), 500);
+				string response = requestObject.writeHTTPResponse(500, errorPage, "text/html");
+				keepaliveDefine(it->first, false);
+				fillClientBuffer(it->first, response);
+				FD_CLR(it->second, &fullReadFd);
+				eraseCgiFd(it->first, it->second);
+				it = _cgi_for_client.begin();
+				if (_cgi_for_client.empty() || it == _cgi_for_client.end())
+					break;
+			} else if (result > 0) {
+				//cgi process finished
+				FD_CLR(it->second, &fullReadFd);
+				eraseCgiFd(it->first, it->second);
+				it = _cgi_for_client.begin();
+				if (_cgi_for_client.empty() || it == _cgi_for_client.end())
+					break;
+			} else {
+				FD_SET(it->second, &fullReadFd);
 			}
 		}
 	}
@@ -419,6 +533,7 @@ void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 			clearClientBuffer(fd);
 			if (response != "")
 			{
+				// cout << response << endl;
 				int res = send(fd, response.c_str(), response.length(), 0);
 				if (res == -1)
 				{
@@ -431,9 +546,8 @@ void	Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 				}
 				FD_CLR(fd, &fullWriteFd);
 				if (!keepaliveStatus(fd))
-				{
 					unsetClient(i);
-				} else {
+				else {
 					FD_SET(fd, &fullReadFd);
 				}
 			}
@@ -556,4 +670,88 @@ void	Server::printEnv() const
 vector<string> Server::getServerNames() const
 {
 	return (_server_names);
+}
+
+void	Server::setCgiFdforClient(int clientFd, int cgiFd)
+{
+	if (clientFd != -1 && cgiFd != -1)
+	{
+		_cgi_for_client[clientFd] = cgiFd;
+	}
+}
+
+void	Server::eraseCgiFd(int clientFd, int cgiFd)
+{
+	map<int, int>::iterator it = _cgi_for_client.find(clientFd);
+	if (it->second == cgiFd)
+	{
+		close(cgiFd);
+		_cgi_for_client.erase(it);
+		delete _cgi_request[cgiFd];
+		_cgi_request.erase(_cgi_request.find(cgiFd));
+		_pid_for_cgi.erase(_pid_for_cgi.find(cgiFd));
+	}
+	else {
+		Logger::error(getUid(), "wrong cgi fd");
+	}
+}
+
+int	Server::hasCgiforClient(int clientFd) const
+{
+	map<int, int>::const_iterator it = _cgi_for_client.find(clientFd);
+	if (it != _cgi_for_client.end())
+		return (1);
+	return (0);
+}
+
+int	Server::getCgiforClient(int clientFd) const
+{
+	map<int, int>::const_iterator it = _cgi_for_client.find(clientFd);
+	return (it->second);
+}
+
+int	Server::storeCgiReturn(int clientFd, int cgiFd)
+{
+	int		received;
+	char	buff[BUFFER_SIZE];
+
+	memset(buff, 0, BUFFER_SIZE);
+
+	received = read(cgiFd, buff, BUFFER_SIZE - 1);
+	if (received <= 0)
+		return (received);
+	string body = getClientBuffer(cgiFd);
+	body.append(buff, received);
+	fillClientBuffer(cgiFd, body);
+	(void)clientFd;
+	// ARequest *requestObject = _cgi_request[cgiFd];
+
+	
+	// string contentType = requestObject->getContentType();
+	// contentType = requestObject->checkContentType(contentType);
+	
+	// string response = requestObject->writeHTTPResponse(200, body, contentType);
+	
+	// keepaliveDefine(clientFd, true);
+	return (received);
+}
+
+void	Server::setCgiRequest(int cgiFd, ARequest &request)
+{
+	_cgi_request[cgiFd] = request.clone();
+}
+
+void	Server::setPidforCgi(int cgiFd, pid_t pid)
+{
+	if (cgiFd != -1)
+	{
+		_pid_for_cgi[cgiFd] = pid;
+	}
+}
+pid_t	Server::getPidForCgi(int cgiFd) const
+{
+	map<int, pid_t>::const_iterator it = _pid_for_cgi.find(cgiFd);
+	if (it != _pid_for_cgi.end())
+		return (it->second);
+	return (0);
 }

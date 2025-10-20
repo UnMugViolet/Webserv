@@ -20,7 +20,7 @@ PostRequest::PostRequest(map<string, string> header)
 	return ;
 }
 
-PostRequest::PostRequest(PostRequest& src) : ARequest(src)
+PostRequest::PostRequest(const PostRequest& src) : ARequest(src)
 {
 	this->_Content_type = src._Content_type;
 	this->_body = src._body;
@@ -268,3 +268,7 @@ PostRequest&	PostRequest::operator=(PostRequest& src)
 	return (*this);
 }
 
+ARequest*	PostRequest::clone() const
+{
+	return (new PostRequest(*this));
+}

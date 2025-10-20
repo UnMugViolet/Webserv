@@ -60,5 +60,6 @@ using namespace std;
 
 // Consts 
 #define MAX_BODY_SIZE 1048576
+#define BUFFER_SIZE 4096
 
 #endif

@@ -16,10 +16,12 @@ GetRequest::GetRequest(map<string, string> header)
 			_keep_alive = false;
 	_client = header["User-agent"];
 	_host = header["Host"];
+	if (header.find("Accept") != header.end())
+		_accepted_mime = header["Accept"];
 	return;
 }
 
-GetRequest::GetRequest(GetRequest &src) : ARequest(src) {return ;}
+GetRequest::GetRequest(const GetRequest &src) : ARequest(src) {return ;}
 
 GetRequest &GetRequest::operator=(GetRequest &src)
 {
@@ -131,12 +133,7 @@ int GetRequest::handleFile(int fd, Server &server, ConfigParser const *config, s
 		return sendErrorResponse(fd, 403, config, server);
 
 	cout << CYAN << BOLD << "File requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << endl;
-	string response = sendCGIResponse(decodedUrl, config, server);
-
-	server.fillClientBuffer(fd, response);	
-	server.keepaliveDefine(fd, isKeepalive());
-
-	return 1;
+	return (sendCGIResponse(fd, decodedUrl, config, server));
 }
 
 /**
@@ -176,12 +173,7 @@ int GetRequest::serveIndexFile(int fd, Server &server, ConfigParser const *confi
 	string indexFullPath = decodedUrl + indexFileName;
 	cout << CYAN << BOLD << "Serving index file: " << NEUTRAL << CYAN << indexFullPath << NEUTRAL << endl;
 
-	string response = sendCGIResponse(indexFullPath, config, server);
-
-	server.fillClientBuffer(fd, response);
-	server.keepaliveDefine(fd, isKeepalive());
-
-	return 1;
+	return (sendCGIResponse(fd, indexFullPath, config, server));
 }
 
 /**
@@ -237,3 +229,7 @@ int GetRequest::sendErrorResponse(int fd, int errorCode, ConfigParser const *con
 	return 1;
 }
 
+ARequest*	GetRequest::clone() const
+{
+	return (new GetRequest(*this));
+}

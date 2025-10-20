@@ -72,7 +72,7 @@ function showSubmitMessage() {
 }
 
 
-function downloadFile(filepath) {
+function downloadFile(filepath, filename) {
 	fetch(filepath, {
 		method: 'GET',
 		headers: {
@@ -90,7 +90,7 @@ function downloadFile(filepath) {
 
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = 'filename.bin';
+		a.download = filename;
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);

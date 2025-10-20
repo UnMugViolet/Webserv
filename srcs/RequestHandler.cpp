@@ -185,7 +185,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 		server.fillClientBuffer(fd, response);
 		return 2;
 	}
-	string max_body_size = config->getServerValue(serverUid, "client_max_body_size");
+	string max_body_size = config->getLocationValueForPath(headermap["path"], serverUid, "client_max_body_size", true);
 	if (max_body_size.empty())
 		max_body_size = config->getValue("client_max_body_size");
 	setMaxBodySize(max_body_size);
@@ -208,12 +208,13 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 			string response = requestObject.writeHTTPResponse(400, errorPage, "text/html");
 			server.keepaliveDefine(fd, false);
 			server.fillClientBuffer(fd, response);
-			return 2;
+			return (2);
 		}
 
 		// Check against max body size
 		if (_maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
 		{
+			cout << "ColeTCHEUBEST" << endl;
 			GetRequest requestObject;
 
 			cerr << "Request body too large: " << contentLength << " > " << _maxBodySize << endl;
@@ -236,7 +237,6 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 {
 	string	serverUid = server.getUid();
-	size_t	const BUFFER_SIZE = 512;
 	char	buff[BUFFER_SIZE];
 	int		received;
 	string	body = "";
@@ -264,15 +264,28 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		savestring.append(buff, received);
 		server.fillClientBuffer(fd, savestring);
 		if (savestring.find("\r\n\r\n") != string::npos)
-		{
+		{	
+			headerlimit = savestring.find("\r\n\r\n");
+			body = savestring.substr(headerlimit + 4, string::npos);
+			header = savestring;
+			header.erase(headerlimit, string::npos);
+			if (header.size() > MAX_HEADER_SIZE)
+				{
+					cout << "pouetCHEUBEST" << endl;
+					GetRequest requestObject;
+
+					string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
+					string response = requestObject.writeHTTPResponse(413, errorPage, "text/html");
+					server.keepaliveDefine(fd, false);
+					server.fillClientBuffer(fd, response);
+					return (Logger::error(serverUid, "Header too large"), 2);
+				}
 			if (savestring.find("Content-Length") == string::npos && savestring.find("Transfer-Encoding: chunked") == string::npos)
 				return (1);
 			else {
-				headerlimit = savestring.find("\r\n\r\n");
-				body = savestring.substr(headerlimit + 4, string::npos);
-				header = savestring;
-				header.erase(headerlimit, string::npos);
+				
 
+				
 				headermap = parseHeader(header);
 				return (checkHeader(fd, server, config, headermap, body, savestring));
 			}
@@ -284,6 +297,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 	headerlimit = savestring.find("\r\n\r\n");
 	if (headerlimit == string::npos)
 	{
+	
 		// Prevent header from being too large
 		if (savestring.size() > MAX_HEADER_SIZE)
 		{
@@ -342,7 +356,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		{
 			memset(buff, 0, BUFFER_SIZE);
 
-			received = recv(fd, buff, min(BUFFER_SIZE - 1, contentLength - body.size()), 0);
+			received = recv(fd, buff, min((size_t)BUFFER_SIZE - 1, contentLength - body.size()), 0);
 			if (received <= 0)
 			{
 				server.clearClientBuffer(fd);
@@ -413,7 +427,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		string fullPath = serverRoot + headermap["path"];
 	
 
-		server.setEnvValue("ACCEPT_MIME_TYPE", headermap["Accept"]);
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headermap["path"]);
 		size_t questionPos = headermap["path"].find('?');
@@ -583,7 +596,6 @@ int	RequestHandler::handleChunkedRequest(int fd, string &savestring, string &bod
 	size_t				hexlen;
 	size_t				totallen = 0;
 	size_t				pos = 0;
-	size_t const		BUFFER_SIZE = 51;
 	char				buff[BUFFER_SIZE];
 
 	while (true)
@@ -635,7 +647,7 @@ int	RequestHandler::handleChunkedRequest(int fd, string &savestring, string &bod
 				if (!can_read)
 					return (0);
 				memset(buff, 0, BUFFER_SIZE);
-				int received = recv(fd, buff, min(BUFFER_SIZE - 1, totallen - fullbody.size()), 0);
+				int received = recv(fd, buff, min((size_t)BUFFER_SIZE - 1, totallen - fullbody.size()), 0);
 				if (received <= 0)
 				{
 					server.clearClientBuffer(fd);
