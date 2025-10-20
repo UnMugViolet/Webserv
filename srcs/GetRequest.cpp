@@ -167,9 +167,9 @@ int GetRequest::tryServeIndexFile(int fd, Server &server, ConfigParser const *co
  */
 int GetRequest::serveIndexFile(int fd, Server &server, ConfigParser const *config, string const &decodedUrl, string const &indexFileName)
 {
-	cout << GREEN << BOLD << "Index files found: " << indexFileName << NEUTRAL << endl;
+	// cout << GREEN << BOLD << "Index files found: " << indexFileName << NEUTRAL << endl;
 	string indexFullPath = decodedUrl + indexFileName;
-	cout << CYAN << BOLD << "Serving index file: " << NEUTRAL << CYAN << indexFullPath << NEUTRAL << endl;
+	// cout << CYAN << BOLD << "Serving index file: " << NEUTRAL << CYAN << indexFullPath << NEUTRAL << endl;
 
 	string response = sendCGIResponse(indexFullPath, config, server);
 

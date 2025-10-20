@@ -102,7 +102,7 @@ map<string, size_t> getIndex(string const &indexes, string const &root)
 
 		size_t status = RequestHandler::_checkAccess(fullPath);
 
-		cout << CYAN << BOLD << "Checking index: " << goodIndex << " -> " << fullPath << " (status: " << status << ")" << NEUTRAL << endl;
+		// cout << CYAN << BOLD << "Checking index: " << goodIndex << " -> " << fullPath << " (status: " << status << ")" << NEUTRAL << endl;
 
 		// If we find a 200 (accessible), return it immediately
 		if (status == 200)
