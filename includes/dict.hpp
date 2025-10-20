@@ -14,7 +14,7 @@
 #pragma once
 
 #ifndef DICT_HPP
-# define DICT_HPP
+#define DICT_HPP
 
 using namespace std;
 
@@ -58,8 +58,9 @@ using namespace std;
 #define MP3 14
 #define FOLDER 15
 
-// Consts 
+// Consts
 #define MAX_BODY_SIZE 1048576
 #define BUFFER_SIZE 4096
+#define PATH_MAX 4096
 
 #endif

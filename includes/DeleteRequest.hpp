@@ -7,7 +7,7 @@
 #include "ARequest.hpp"
 #include "RequestHandler.hpp"
 
-class DeleteRequest: public ARequest
+class DeleteRequest : public ARequest
 {
 	private:
 		/*attributes here*/
@@ -23,7 +23,6 @@ class DeleteRequest: public ARequest
 		int	handleDelete(int fd, Server &server, const ConfigParser *config, const string &path);
 		ARequest*	clone() const;
 
-		/*operator overloads*/
-		DeleteRequest &operator=(DeleteRequest &src);
+	/*operator overloads*/
+	DeleteRequest &operator=(DeleteRequest &src);
 };
-

@@ -7,11 +7,12 @@
 #include "ARequest.hpp"
 #include "Logger.hpp"
 
-class PostRequest: public ARequest
+class PostRequest : public ARequest
 {
 private:
-	string		_Content_type;
-	string		_body;
+	string _Content_type;
+	string _body;
+
 public:
 	/*constructors and destructor*/
 	PostRequest();
@@ -27,6 +28,5 @@ public:
 	ARequest*	clone() const;
 
 	/*operator overloads*/
-	PostRequest	&operator=(PostRequest& src);
+	PostRequest &operator=(PostRequest &src);
 };
-

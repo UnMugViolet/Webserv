@@ -1,16 +1,12 @@
 #include "CGI.hpp"
 
-CGI::CGI()
-{
-}
+CGI::CGI() {}
 
-CGI::~CGI()
-{
-}
+CGI::~CGI() {}
 
 int CGI::_checkAccess(const string &path, int type)
 {
-	DIR* dir = opendir(path.c_str());
+	DIR *dir = opendir(path.c_str());
 
 	if (type == BINARY && access(path.c_str(), X_OK) == -1)
 		return (0);
@@ -21,10 +17,9 @@ int CGI::_checkAccess(const string &path, int type)
 	if (access(path.c_str(), F_OK) == -1)
 		return (-1);
 	return (2);
-	
 }
 
-string	CGI::_getExtension(const string &path)
+string CGI::_getExtension(const string &path)
 {
 	size_t pos = path.rfind('.');
 	if (pos == string::npos)
@@ -32,7 +27,7 @@ string	CGI::_getExtension(const string &path)
 	return (path.substr(pos));
 }
 
-int	CGI::_getType(string ext)
+int CGI::_getType(string ext)
 {
 	if (ext == ".py")
 		return (PYTHON);
@@ -66,19 +61,17 @@ int	CGI::_getType(string ext)
 		return (UNKNOWN);
 }
 
-
-int	CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_list, size_t timeout_seconds)
+int CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_list, size_t timeout_seconds)
 {
-	string	extension = _getExtension(path);
+	string extension = _getExtension(path);
 	int type = _getType(extension);
 
 	(void)timeout_seconds;
-	switch (_checkAccess(path, type))
-	{
+	switch (_checkAccess(path, type)) {
 		case -1:
-			throw CGIException("file " + path + " does not exist", false, 404, Server.getUid());
+			throw(CGIException("file " + path + " does not exist", false, 404, Server.getUid()));
 		case 0:
-			throw CGIException("Do not have permission to access :" + path + " on this server", false, 403, Server.getUid());
+			throw(CGIException("Do not have permission to access :" + path + " on this server", false, 403, Server.getUid()));
 		case 1:
 			break;
 		case 2:
@@ -93,14 +86,14 @@ int	CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_
 		Server.setPidforCgi(fd, 0);
 		return (fd);
 	}
-	
-	int	fd[2];
+
+	int fd[2];
 	if (pipe(fd) == -1)
-		throw CGIException("Internal error: pipe failed", false, 500, Server.getUid());
-	pid_t	pid;
+		throw(CGIException("Internal error: pipe failed", false, 500, Server.getUid()));
+	pid_t pid;
 	pid = fork();
 	if (pid == -1)
-		throw CGIException("Internal error: fork failed", false, 500, Server.getUid());
+		throw(CGIException("Internal error: fork failed", false, 500, Server.getUid()));
 	if (pid == 0)
 	{
 		string basename = path;
@@ -110,27 +103,27 @@ int	CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_
 			string directory = path.substr(0, path.rfind('/'));
 
 			if (chdir(directory.c_str()) == -1)
-				throw CGIException("Error: access denied", true, 403, Server.getUid());
+				throw(CGIException("Error: access denied", true, 403, Server.getUid()));
 		}
-		const char	*cpath = basename.c_str();
-		string	interpreter = cgi_list.find(extension)->second;
-		
+		const char *cpath = basename.c_str();
+		string interpreter = cgi_list.find(extension)->second;
+
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
 		dup2(fd[1], STDERR_FILENO); // Redirect stderr to the pipe as well to get the error output on the client side
 		close(fd[1]);
-		if (type == BINARY) {
+		if (type == BINARY)
+		{
 			string tmp = "./" + basename;
 			char *arg[2] = {(char *)tmp.c_str(), NULL};
 			execve(tmp.c_str(), arg, Server.getEnvAsArray());
-			throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
-			
+			throw(CGIException("Internal error: execve failed", true, 500, Server.getUid()));
 		}
-		
+
 		const char *arg[3] = {interpreter.c_str(), cpath, NULL};
 
 		execve(interpreter.c_str(), (char *const *)arg, Server.getEnvAsArray());
-        throw CGIException("Internal error: execve failed", true, 500, Server.getUid());
+		throw(CGIException("Internal error: execve failed", true, 500, Server.getUid()));
 	}
 	Server.setPidforCgi(fd[0], pid);
 	close(fd[1]);
@@ -138,10 +131,10 @@ int	CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_
 	// Timeout mechanism using select() with waitpid()
 	// int status;
 	// time_t startTime = time(NULL);
-	
+
 	// while (true) {
 	// 	pid_t result = waitpid(pid, &status, WNOHANG);
-		
+
 	// 	if (result == pid) {
 	// 		// Child process finished
 	// 		break;
@@ -156,14 +149,14 @@ int	CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_
 	// 				kill(pid, SIGKILL);
 	// 				waitpid(pid, &status, 0);
 	// 			}
-				
+
 	// 			// Close original pipe and return -2 to indicate timeout
 	// 			return (close(fd[0]), -2);
 	// 		}
 	// 		usleep(100000);  // Sleep 100ms
 	// 	}
 	// }
-	
+
 	// if (WIFEXITED(status))
 	// {
 	// 	int exitStatus = WEXITSTATUS(status);
@@ -171,12 +164,12 @@ int	CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_
 	// 		return fd[0];
 	// 	else
 	// 	{
-	// 		// For script errors (like PHP syntax/runtime errors), 
+	// 		// For script errors (like PHP syntax/runtime errors),
 	// 		// still return the file descriptor so we can read any error output
 	// 		// The caller will decide what to do with the content
 	// 		return fd[0];
 	// 	}
 	// }
-    // else
-    //     throw CGIException("Internal error: exit failed", true, 500, Server.getUid());
+	// else
+	//     throw CGIException("Internal error: exit failed", true, 500, Server.getUid());
 }

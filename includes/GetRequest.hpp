@@ -6,10 +6,11 @@
 #include "ARequest.hpp"
 #include "RequestHandler.hpp"
 
-class GetRequest: public ARequest
+class GetRequest : public ARequest
 {
 public:
-	enum PathType {
+	enum PathType
+	{
 		PATH_NOT_EXISTS,
 		PATH_DIRECTORY,
 		PATH_FILE
@@ -17,7 +18,7 @@ public:
 
 private:
 	/*attributes here*/
-	
+
 	/*private helper methods*/
 	PathType getPathType(string const &path);
 	int handleDirectory(int fd, Server &server, ConfigParser const *config, string const &decodedUrl);
@@ -40,6 +41,5 @@ public:
 	ARequest*	clone() const;
 
 	/*operator overloads*/
-	GetRequest &operator=(GetRequest& src);
+	GetRequest &operator=(GetRequest &src);
 };
-

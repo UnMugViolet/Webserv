@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: unmugviolet <unmugviolet@student.42.fr>    +#+  +:+       +#+        */
+/*   By: fureimu <fureimu@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/09 11:49:10 by yguinio           #+#    #+#             */
-/*   Updated: 2025/10/14 16:21:53 by unmugviolet      ###   ########.fr       */
+/*   Updated: 2025/10/19 23:14:37 by fureimu          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,15 +99,16 @@ int Logger::countLines(const string &filename)
 {
 	ifstream file(filename.c_str());
 	if (!file.is_open())
-		return 0;
+		return (0);
 		
 	int lineCount = 0;
 	string line;
+	
 	while (getline(file, line))
 		lineCount++;
 		
 	file.close();
-	return lineCount;
+	return (lineCount);
 }
 
 // Rotate log file by keeping only the most recent lines
@@ -118,10 +119,11 @@ void Logger::rotateLogFile(const string &filename, ofstream &stream)
 	// Read all lines
 	ifstream file(filename.c_str());
 	if (!file.is_open())
-		return;
+		return ;
 		
 	vector<string> lines;
 	string line;
+
 	while (getline(file, line))
 		lines.push_back(line);
 	file.close();

@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
-
 #include <fstream>
+
 #include "dict.hpp"
 #include "Server.hpp"
 
@@ -50,5 +50,5 @@ public:
 	ARequest&	operator=(const ARequest& src);
 };
 
-map<string, string> 	parseQuery(const string &query);
-string 						generateDirectoryListing(string const &dirPath, string const &requestPath);
+map<string, string> parseQuery(const string &query);
+string generateDirectoryListing(string const &dirPath, string const &requestPath);
