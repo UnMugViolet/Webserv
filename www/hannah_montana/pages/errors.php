@@ -139,9 +139,11 @@ $errors_arr = [
 	"403" => ["Forbidden", "You do not have permission to access this resource."],
 	"404" => ["Not Found", "The requested resource could not be found on this server."],
 	"405" => ["Method Not Allowed", "The request method is not supported for the requested resource."],
-	"413" => ["Payload Too Large", "When the server refuses to accept the request because the payload is too large."],
+	"414" => ["Payload Too Large", "When the server refuses to accept the request because the payload is too large."],
+	"414" => ["Request URI too large", "The Uri exceed the max len of 4096 thus the server will not render it."],
 	"415" => ["Unsupported Media Type", "When the server refuses to accept the request because the payload format is in an unsupported format."],
 	"500" => ["Internal Server Error", "The server encountered an internal error and was unable to complete your request."],
+	"504" => ["Gateway timeout", "The CGI of the server took to much time for interpreting your code, you can change the value of that timeout in the config file."],
 ];
 ?>
 
