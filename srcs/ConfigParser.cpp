@@ -450,8 +450,8 @@ string	ConfigParser::getLocationValueForPath(const string &path, const string &s
 	values = getLocationValue(serverUid, currentLocation, parameter);
 	if (values.empty() && must_check_server)
 		values = getServerValue(serverUid, parameter);
-	if (values.empty())
-		cout << YELLOW << "Parameter '" << parameter << "' not found in location '" << currentLocation << "' or server '" << serverUid << "'" << NEUTRAL << endl;
+	// if (values.empty())
+	// 	cout << YELLOW << "Parameter '" << parameter << "' not found in location '" << currentLocation << "' or server '" << serverUid << "'" << NEUTRAL << endl;
 	return (values);
 }
 
