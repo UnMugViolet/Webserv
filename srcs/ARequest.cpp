@@ -67,6 +67,14 @@ string generateDirectoryListing(string const &dirPath, string const &requestPath
     return (html.str());
 }
 
+/**
+ * Writes an HTTP response string based on the provided status code and body.
+ * @param server The server instance handling the request.
+ * @param statusCode The HTTP status code to include in the response.
+ * @param body The body content of the response.
+ * @param contentType The MIME type of the response content.
+ * @return A formatted HTTP response string.
+ */
 string ARequest::writeHTTPResponse(const Server &server, int statusCode, const string &body, const string& contentType)
 {
 	ostringstream response;
