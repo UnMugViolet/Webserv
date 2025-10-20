@@ -685,6 +685,8 @@ int RequestHandler::handleChunkedRequest(int fd, string &savestring, string &bod
 		       pos += hexlen + 2;
 	       } else {
 		       // Not enough data for a full chunk size line, wait for more
+		       if (!can_read)
+			       return (0);
 		       memset(buff, 0, BUFFER_SIZE);
 		       int received = recv(fd, buff, BUFFER_SIZE - 1, 0);
 		       if (received <= 0)

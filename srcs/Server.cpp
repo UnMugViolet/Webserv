@@ -413,36 +413,33 @@ void Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 		// Check if the file descriptor is valid
 		if (fd < 0)
 		{
-			if (fd < 0)
-			{
-				// Invalid file descriptor, remove it
-				unsetClient(i);
-				continue;
-			}
-			if (FD_ISSET(fd, &writeFd))
-			{
-				string response = getClientBuffer(fd);
+			// Invalid file descriptor, remove it
+			unsetClient(i);
+			continue;
+		}
+		if (FD_ISSET(fd, &writeFd))
+		{
+			string response = getClientBuffer(fd);
 
-				clearClientBuffer(fd);
-				if (response != "")
+			clearClientBuffer(fd);
+			if (response != "")
+			{
+				int res = send(fd, response.c_str(), response.length(), 0);
+				if (res == -1)
 				{
-					int res = send(fd, response.c_str(), response.length(), 0);
-					if (res == -1)
-					{
-						perror("");
-						FD_CLR(fd, &fullWriteFd);
-						cerr << "failed to send http response" << endl;
-						unsetClient(i);
-						cout << "Client disconnected" << endl;
-						continue;
-					}
-
+					perror("");
 					FD_CLR(fd, &fullWriteFd);
-					if (!keepaliveStatus(fd))
-						unsetClient(i);
-					else
-						FD_SET(fd, &fullReadFd);
+					cerr << "failed to send http response" << endl;
+					unsetClient(i);
+					cout << "Client disconnected" << endl;
+					continue;
 				}
+
+				FD_CLR(fd, &fullWriteFd);
+				if (!keepaliveStatus(fd))
+					unsetClient(i);
+				else
+					FD_SET(fd, &fullReadFd);
 			}
 		}
 	}
