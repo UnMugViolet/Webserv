@@ -401,16 +401,19 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			body = "";
 		}
-
 		headermap = parseHeader(header);
+		cout << GREEN << headermap["Cookie"] << NEUTRAL << endl;
+		string session_id;
 
 		// Handle cookies
 		if (headermap.find("Cookie") == headermap.end() || headermap["Cookie"].find("session_id=") == string::npos)
 		{
 			server.clearCookieHeader();
-			string server_id = server.generateSessionId();
-			server.setCookie(server_id, "session_id", server_id);
+			session_id = server.generateSessionId();
+			if (headermap["Cookie"].find("session_id=") == string::npos)
+				server.setCookie(session_id, "session_id", session_id);
 		}
+		server.parseCookie(session_id, headermap["Cookie"]);
 
 		Logger::access(serverUid, "http request: " + header);
 

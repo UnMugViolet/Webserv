@@ -774,8 +774,30 @@ string Server::getCookieValue(const string &session_id, const string &key) const
 
 void Server::setCookie(const string &session_id, const string &key, const string &value)
 {
+	// Ensure internal cookie map is updated
 	_cookies[session_id][key] = value;
-	_cookie_header = _cookie_header + "Set-Cookie: " + key + "=" + value + " Path=/" + "\r\n";
+
+	// Build the Set-Cookie header line to add
+	string cookieLine = "Set-Cookie: " + key + "=" + value + "; Path=/\r\n";
+
+	// Remove any existing Set-Cookie lines for the same cookie name to avoid duplicates
+	string prefix = "Set-Cookie: " + key + "=";
+	size_t pos = 0;
+	while ((pos = _cookie_header.find(prefix, pos)) != string::npos)
+	{
+		size_t line_end = _cookie_header.find("\r\n", pos);
+		if (line_end == string::npos)
+		{
+			// malformed header; clear and break
+			_cookie_header.clear();
+			break;
+		}
+		// erase the existing header line (including CRLF)
+		_cookie_header.erase(pos, line_end + 2 - pos);
+	}
+
+	// Append the new cookie line
+	_cookie_header += cookieLine;
 }
 
 string Server::getCookieHeader() const
@@ -783,6 +805,23 @@ string Server::getCookieHeader() const
 	if (_cookie_header.empty())
 		return ("");
 	return (_cookie_header);
+}
+
+void	Server::parseCookie(const string &sessionId, const string &cookies)
+{
+	(void)sessionId;
+	if (cookies.empty())
+		return ;
+	
+	istringstream iss(cookies);
+	string cookie;
+
+	while (iss >> cookie)
+	{
+		string key = cookie.substr(0, cookie.find("="));
+		string value = cookie.substr(cookie.find("=") + 1);
+		_cookies[sessionId][key] = value;
+	}
 }
 
 string Server::generateSessionId() const
@@ -794,7 +833,7 @@ string Server::generateSessionId() const
 
 	for (size_t i = 0; i < 16; i++)
 		oss << charset[rand() % max_index];
-	cout << GREEN << BOLD << "Generated session ID: " << oss.str() << NEUTRAL << endl;
+	cout << YELLOW << BOLD << "Generated session ID: " <<NEUTRAL << oss.str() << endl;
 	return (oss.str());
 }
 

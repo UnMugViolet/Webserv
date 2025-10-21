@@ -44,16 +44,21 @@ GetRequest::~GetRequest() {}
 int GetRequest::handleGet(int fd, Server &server, ConfigParser const *config, string const &fullPath)
 {
 	string decodedUrl = urlDecode(fullPath.c_str());
-	PathType pathType = getPathType(decodedUrl);
+	string cleanPath = decodedUrl;
+	size_t queryPos = decodedUrl.find('?');
+	if (queryPos != string::npos)
+		cleanPath = decodedUrl.substr(0, queryPos);
+
+	PathType pathType = getPathType(cleanPath);
 
 	if (pathType == PATH_NOT_EXISTS)
 		return (sendErrorResponse(fd, 404, config, server));
 
 	if (pathType == PATH_DIRECTORY)
-		return (handleDirectory(fd, server, config, decodedUrl));
+		return (handleDirectory(fd, server, config, cleanPath));
 
 	if (pathType == PATH_FILE)
-		return (handleFile(fd, server, config, decodedUrl));
+		return (handleFile(fd, server, config, cleanPath));
 
 	return (sendErrorResponse(fd, 500, config, server));
 }

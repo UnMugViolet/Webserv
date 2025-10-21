@@ -79,6 +79,7 @@ public:
 
 	// Cookie handling methods
 	void setCookie(const string &sesion_id, const string &key, const string &value);
+	void parseCookie(const string &sessionId, const string &cookies);
 	string getCookieHeader() const;
 	string getCookieValue(const string &session_id, const string &key) const;
 	string generateSessionId() const;
