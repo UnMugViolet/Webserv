@@ -375,7 +375,12 @@ void Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *confi
 		}
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-
+			if (hasCgiforClient(_clientFds[i])) {
+				clearClientBuffer(_clientFds[i]);
+				FD_CLR(getCgiforClient(_clientFds[i]), &fullReadFd);
+				FD_CLR(getCgiforClient(_clientFds[i]), &readFd);
+				eraseCgiFd(_clientFds[i], getCgiforClient(_clientFds[i]));
+			}
 			int res = _handler->handleRequest(_clientFds[i], *this, config);
 
 			if (res == -1)
@@ -706,6 +711,7 @@ void	Server::eraseCgiFd(int clientFd, int cgiFd)
 	map<int, int>::iterator it = _cgi_for_client.find(clientFd);
 	if (it != _cgi_for_client.end() && it->second == cgiFd)
 	{
+		clearClientBuffer(cgiFd);
 		close(cgiFd);
 		_cgi_for_client.erase(it);
 		
@@ -872,9 +878,9 @@ int Server::checkCgiTimeouts(size_t timeout_seconds, ConfigParser *config, fd_se
 	// Kill timed-out processes
 	for (vector<int>::iterator it = timed_out_cgis.begin(); it != timed_out_cgis.end(); ++it)
 	{	
+		GetRequest requestObject;
 		int ClientFd = getClientforCgi(*it);
 		killTimedOutCgi(*it, timeout_seconds);
-		GetRequest requestObject;
 
 		string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), getUid(), 504);
 		string response = requestObject.writeHTTPResponse(*this, 504, errorPage, "text/html");
