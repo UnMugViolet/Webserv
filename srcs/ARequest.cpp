@@ -188,18 +188,10 @@ int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigPars
 		return (1);
 	}
 
+	// Execute CGI script
 	try
 	{
-		// Execute CGI script
 		map<string, string> cgi_list;
-		string timeout_str = config->getLocationValueForPath(pathForConfig, Server.getUid(), "cgi_timeout", true);
-		size_t timeout_seconds = timeout_str.empty() ? 5 : ft_atoi(timeout_str); // Default timeout 5 seconds if not set
-
-		if (timeout_seconds == 0 || timeout_seconds > 5)
-		{
-			cout << RED << BOLD << "Warning: Invalid CGI timeout value. Using default of 5 seconds." << NEUTRAL << endl;
-			timeout_seconds = 5;
-		}
 
 		for (vector<string>::iterator it = location_cgi.begin(); it != location_cgi.end(); it++)
 		{
@@ -224,26 +216,11 @@ int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigPars
 			}
 		}
 
-		cgiOutputFd = CGI::interpret(scriptPath, Server, cgi_list, timeout_seconds);
-
-		cout << "fd for " << scriptPath << ": " << cgiOutputFd << endl;
-		// Check for timeout error avoid reading from fd (-2) in that case
-		if (cgiOutputFd == -2)
-		{
-			cout << RED << BOLD << "CGI execution timed out after " << timeout_seconds << " seconds." << NEUTRAL << endl;
-			// Force connection close on timeout to prevent browsers from hanging
-			_keep_alive = false;
-			string errorPage = loadErrorPage(504, config, Server.getUid());
-			string response = writeHTTPResponse(Server, 504, errorPage, "text/html");
-			Server.fillClientBuffer(fd, response);
-			Server.keepaliveDefine(fd, isKeepalive());
-			return (1);
-		}
+		cgiOutputFd = CGI::interpret(scriptPath, Server, cgi_list);
 
 		Server.setCgiFdforClient(fd, cgiOutputFd);
 		_path = scriptPath;
 		Server.setCgiRequest(cgiOutputFd, *this);
-		// Send successful response with CGI output
 
 		return (1);
 	}

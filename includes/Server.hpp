@@ -23,7 +23,6 @@ class RequestHandler;
 class Server
 {
 private:
-	/*attributes here*/
 	string _uid;
 	map<string, string> _env;
 	vector<string> _server_names;
@@ -36,6 +35,7 @@ private:
 	map<int, int> _cgi_for_client;
 	map<int, pid_t> _pid_for_cgi;
 	map<int, ARequest *> _cgi_request;
+	map<int, time_t> _cgi_start_time;
 	string _cookie_header;
 	map<string, map<string, string> > _cookies;
 
@@ -56,6 +56,7 @@ public:
 	string getClientBuffer(int clientFd) const;
 	int getPidForCgi(int cgiFd) const;
 	int getCgiforClient(int clientFd) const;
+	int getClientforCgi(int cgiFd) const;
 	
 	// Setters
 	int setClient(int _socketfd);
@@ -74,6 +75,8 @@ public:
 	int hasCgiforClient(int clientFd) const;
 	void eraseCgiFd(int clientFd, int cgiFd);
 	int storeCgiReturn(int cgiFd);
+	int checkCgiTimeouts(size_t timeout_seconds, ConfigParser *config, fd_set &fullReadFd, fd_set &fullWriteFd, fd_set &readFd);
+	int killTimedOutCgi(int cgiFd, size_t timeout_seconds);
 	vector<int> checkPorts(const ConfigParser &config, const string &serverUid);
 	void createSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs);
 
