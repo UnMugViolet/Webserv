@@ -84,7 +84,8 @@ $color = $theme === 'yellow' ? '#b8860b' : '#c71585';
       document.cookie = "theme=" + theme + "; path=/; max-age=3600; SameSite=Lax";
       // update styles
       document.body.style.background = (theme === 'yellow') ? '#ffe066' : '#c71585';
-      document.body.style.color = (theme === 'yellow') ? '#b8860b' : '#c71585';
+      document.body.style.color = (theme === 'yellow') ? '#b8860b' : '#ff4800ff';
+      document.querySelector('h1').style.color = (theme === 'yellow') ? '#ff0000ff' : '#6fcf89ff';
       // update active link
       links.forEach(function(x){ x.classList.remove('active'); });
       this.classList.add('active');
