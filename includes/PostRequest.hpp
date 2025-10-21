@@ -14,19 +14,16 @@ private:
 	string _body;
 
 public:
-	/*constructors and destructor*/
 	PostRequest();
 	PostRequest(map<string, string> header);
-	PostRequest(const PostRequest& src);
+	PostRequest(const PostRequest &src);
+	PostRequest &operator=(PostRequest &src);
 	~PostRequest();
 
-	/*member functions*/
-	int	UploadFile(string body, string path);
-	int	UploadContent(map<string, string> content, string path);
-	int	createPost(string body, string postpath, string uploadpath);
-	int	handlePost(int fd, Server &server, const string &body, const ConfigParser *config);
-	ARequest*	clone() const;
+	int UploadFile(string body, string path);
+	int UploadContent(map<string, string> content, string path);
+	int createPost(string body, string postpath, string uploadpath);
+	int handlePost(int fd, Server &server, const string &body, const ConfigParser *config);
 
-	/*operator overloads*/
-	PostRequest &operator=(PostRequest &src);
+	ARequest *clone() const;
 };
