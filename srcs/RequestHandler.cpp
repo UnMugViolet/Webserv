@@ -209,16 +209,7 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 
 	if (headermap.find("Host") == headermap.end())
 	{
-		GetRequest requestObject;
-
-		cerr << "No server_name, bad request" << endl;
-
-		string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 400);
-		string response = requestObject.writeHTTPResponse(server, 400, errorPage, "text/html");
-
-		server.keepaliveDefine(fd, false);
-		server.fillClientBuffer(fd, response);
-		return (2);
+		return (fetchErrorPageWithCode(fd, 400, server, config, "No server_name found in header", false), 2);
 	}
 	string max_body_size = config->getLocationValueForPath(headermap["path"], serverUid, "client_max_body_size", true);
 	if (max_body_size.empty())
@@ -288,16 +279,9 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 			header = savestring;
 			header.erase(headerlimit, string::npos);
 			if (header.size() > MAX_HEADER_SIZE)
-				{
-					cout << "pouetCHEUBEST" << endl;
-					GetRequest requestObject;
-
-					string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
-					string response = requestObject.writeHTTPResponse(server, 413, errorPage, "text/html");
-					server.keepaliveDefine(fd, false);
-					server.fillClientBuffer(fd, response);
-					return (Logger::error(serverUid, "Header too large"), 2);
-				}
+			{
+				return (fetchErrorPageWithCode(fd, 413, server, config, "Header too large", false), 2);
+			}
 			if (savestring.find("Content-Length") == string::npos && savestring.find("Transfer-Encoding: chunked") == string::npos)
 				return (1);
 			else {
@@ -316,14 +300,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		// Prevent header from being too large
 		if (savestring.size() > MAX_HEADER_SIZE)
 		{
-			GetRequest requestObject;
-
-			string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), serverUid, 413);
-			string response = requestObject.writeHTTPResponse(server, 413, errorPage, "text/html");
-
-			server.keepaliveDefine(fd, false);
-			server.fillClientBuffer(fd, response);
-			return (Logger::error(serverUid, "Header too large"), 2);
+			return (fetchErrorPageWithCode(fd, 413, server, config, "Header too large", false), 2);
 		}
 		memset(buff, 0, BUFFER_SIZE);
 
