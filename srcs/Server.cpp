@@ -60,7 +60,7 @@ Server::Server(ConfigParser &config, string serverUid)
 		portvector = checkPorts(config, serverUid);
 
 		// fill sockFds
-		CreateSockets(serverUid, portvector, sockvector);
+		createSockets(serverUid, portvector, sockvector);
 
 		// put max body size in handler
 		if (config.hasServerKey(serverUid, "client_max_body_size"))
@@ -158,7 +158,7 @@ Server &Server::operator=(const Server &other)
 	return (*this);
 }
 
-void Server::CreateSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs)
+void Server::createSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs)
 {
 	ostringstream oss;
 

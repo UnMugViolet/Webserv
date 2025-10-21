@@ -40,39 +40,42 @@ private:
 	map<string, map<string, string> > _cookies;
 
 public:
-	/*constructors and destructor*/
 	Server();
 	Server(const Server &other);
 	Server(ConfigParser &config, string Name);
+	Server &operator=(const Server &other);
 	~Server();
 
-	/*member functions*/
-	vector<sockaddr_in> setServerNames(const ConfigParser &config, const string &serverUid);
-	vector<int> checkPorts(const ConfigParser &config, const string &serverUid);
-	void CreateSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs);
-
-	// int			addVirtualHost(ConfigParser &config, string serverUid);
+	
+	// Getters 
 	vector<int> getSocket() const;
 	string getUid() const;
 	vector<string> getServerNames() const;
 	const ConfigParser &getConfig() const;
-	int setClient(int _socketfd);
-	void unsetClient(int position);
 	void getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *config, fd_set &fullWriteFd);
+	string getClientBuffer(int clientFd) const;
+	int getPidForCgi(int cgiFd) const;
+	int getCgiforClient(int clientFd) const;
+	
+	// Setters
+	int setClient(int _socketfd);
+	void setPidforCgi(int cgiFd, pid_t pid);
+	void setCgiRequest(int cgiFd, ARequest &request);
+	void setCgiFdforClient(int clientFd, int cgiFd);
+	vector<sockaddr_in> setServerNames(const ConfigParser &config, const string &serverUid);
+	
+	// Member functions
+	void unsetClient(int position);
 	void sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullReadFd);
 	void fillClientBuffer(int clientFd, const string &buff);
-	string getClientBuffer(int clientFd) const;
 	void clearClientBuffer(int clientFd);
 	bool keepaliveStatus(int fd) const;
 	void keepaliveDefine(int fd, bool status);
-	void setCgiFdforClient(int clientFd, int cgiFd);
 	int hasCgiforClient(int clientFd) const;
-	int getCgiforClient(int clientFd) const;
 	void eraseCgiFd(int clientFd, int cgiFd);
 	int storeCgiReturn(int cgiFd);
-	void setCgiRequest(int cgiFd, ARequest &request);
-	void setPidforCgi(int cgiFd, pid_t pid);
-	int getPidForCgi(int cgiFd) const;
+	vector<int> checkPorts(const ConfigParser &config, const string &serverUid);
+	void createSockets(const string &serverUid, vector<int> &ports, vector<sockaddr_in> &sockaddrs);
 
 	// Cookie handling methods
 	void setCookie(const string &sesion_id, const string &key, const string &value);
@@ -90,9 +93,6 @@ public:
 	void setEnvValue(const string &key, const string &value);
 	char **getEnvAsArray() const;
 	const map<string, string> getEnv() const;
-
-	/*operator overloads*/
-	Server &operator=(const Server &other);
 
 	class ServException : public exception
 	{
