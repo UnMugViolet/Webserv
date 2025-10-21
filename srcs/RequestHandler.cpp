@@ -148,7 +148,7 @@ string trim(const string &str)
  * @param errorMessage Optional error message for logging.
  * @param keepAlive Whether to keep the connection alive after sending the error page (default: true).
  */
-void RequestHandler::loadErrorPage(int fd, int errorCode, Server &server, ConfigParser *config, string errorMessage, bool keepAlive)
+void RequestHandler::fetchErrorPageWithCode(int fd, int errorCode, Server &server, ConfigParser *config, string errorMessage, bool keepAlive)
 {
 	GetRequest requestObject;
 
@@ -234,13 +234,13 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 		istringstream iss(headermap["Content-Length"]);
 		size_t contentLength;
 		if (!(iss >> contentLength))
-			return (loadErrorPage(fd, 400, server, config, "Invalid Content-Length header", false), 2);
+			return (fetchErrorPageWithCode(fd, 400, server, config, "Invalid Content-Length header", false), 2);
 
 		// Check against max body size
 		if (_maxBodySize > 0 && contentLength > static_cast<size_t>(_maxBodySize))
 		{
 			string errormsg = "Content-Length " + ft_itos(contentLength) + " exceeds max body size of " + ft_itos(_maxBodySize);
-			return (loadErrorPage(fd, 413, server, config, errormsg, false), 2);
+			return (fetchErrorPageWithCode(fd, 413, server, config, errormsg, false), 2);
 		}
 		if (body.size() == contentLength)
 		{
@@ -484,7 +484,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 
 		// Check for path too long before proceeding
 		if (cleanPath.length() >= PATH_MAX)
-			return (loadErrorPage(fd, 414, server, config, "Request URI too long", false), 1);
+			return (fetchErrorPageWithCode(fd, 414, server, config, "Request URI too long", false), 1);
 
 		try
 		{
@@ -503,11 +503,11 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			}
 			// Case no methods allowed for the location
 			if (status == 0)
-				return (loadErrorPage(fd, 403, server, config), 1);
+				return (fetchErrorPageWithCode(fd, 403, server, config), 1);
 		}
 		catch (exception const &e)
 		{
-			return (loadErrorPage(fd, 403, server, config), 1);
+			return (fetchErrorPageWithCode(fd, 403, server, config), 1);
 		}
 
 		if (headermap["method"] == "GET")
@@ -638,11 +638,11 @@ int RequestHandler::handleChunkedRequest(int fd, string &savestring, string &bod
 			// We have a full chunk size line
 			std::string chunk_size_line = body.substr(pos, rn_pos - pos);
 			if (chunk_size_line.empty())
-				return (loadErrorPage(fd, 400, server, config, "Empty chunk size line", false), -1);
+				return (fetchErrorPageWithCode(fd, 400, server, config, "Empty chunk size line", false), -1);
 			istringstream iss(chunk_size_line);
 			if (!(iss >> std::hex >> hexlen))
 			{
-				return (loadErrorPage(fd, 400, server, config, "Malformed chunk size line", false), -1);
+				return (fetchErrorPageWithCode(fd, 400, server, config, "Malformed chunk size line", false), -1);
 			}
 			totallen += hexlen;
 			pos = rn_pos + 2;
