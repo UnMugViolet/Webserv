@@ -26,7 +26,8 @@
 		["Redirect internal", "redirect-internal"],
 		["Redirect external", "redirect-external"],
 		"Errors",
-		["Infinite Loop", "infloop"]
+		["Infinite Loop", "infloop"],
+		["Php innterpretation error", "php-errors"]
 	]
 ?>
 
