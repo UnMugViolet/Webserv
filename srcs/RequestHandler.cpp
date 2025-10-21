@@ -415,6 +415,29 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		}
 		server.parseCookie(session_id, headermap["Cookie"]);
 
+		// Make the raw Cookie header available to CGI via the environment
+		if (headermap.find("Cookie") != headermap.end())
+			server.setEnvValue("HTTP_COOKIE", headermap["Cookie"]);
+		else
+			server.setEnvValue("HTTP_COOKIE", "");
+
+		// Extract a 'theme' cookie value (if present) and expose it as THEME env var for server-side usage
+		{
+			string theme_value = "";
+			if (headermap.find("Cookie") != headermap.end()) {
+				size_t pos = headermap["Cookie"].find("theme=");
+				if (pos != string::npos) {
+					size_t start = pos + strlen("theme=");
+					size_t end = headermap["Cookie"].find(';', start);
+					theme_value = headermap["Cookie"].substr(start, (end == string::npos) ? string::npos : end - start);
+					// trim possible whitespace
+					size_t first = theme_value.find_first_not_of(' ');
+					if (first != string::npos) theme_value = theme_value.substr(first);
+					server.setEnvValue("THEME", theme_value);
+				}
+			}
+		}
+
 		Logger::access(serverUid, "http request: " + header);
 
 		size_t colonPos = headermap["Host"].find(':');

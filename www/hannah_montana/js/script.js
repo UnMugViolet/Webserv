@@ -1,4 +1,3 @@
-
 function playAudio(audioFile) {
 	var audio = new Audio(audioFile);
 	audio.play().catch(function(error) {
@@ -101,3 +100,19 @@ function downloadFile(filepath, filename) {
 		console.error('Download failed:', error);
 	});
 }
+
+document.querySelectorAll('.theme-link').forEach(a => {
+  a.addEventListener('click', function(e){
+    e.preventDefault();
+    const theme = this.dataset.theme;
+    // set cookie (max-age en secondes)
+    document.cookie = "Theme=" + theme + "; path=/; max-age=3600; SameSite=Lax";
+    // update page styles immediately
+    document.body.style.background = (theme === 'yellow') ? '#ffe066' : '#c71585';
+    document.body.style.color = (theme === 'yellow') ? '#b8860b' : '#c71585';
+    // update active class
+    document.querySelectorAll('.theme-link').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
