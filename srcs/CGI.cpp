@@ -61,12 +61,11 @@ int CGI::_getType(string ext)
 		return (UNKNOWN);
 }
 
-int CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_list, size_t timeout_seconds)
+int CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_list)
 {
 	string extension = _getExtension(path);
 	int type = _getType(extension);
 
-	(void)timeout_seconds;
 	switch (_checkAccess(path, type)) {
 		case -1:
 			throw(CGIException("file " + path + " does not exist", false, 404, Server.getUid()));
@@ -128,48 +127,4 @@ int CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_
 	Server.setPidforCgi(fd[0], pid);
 	close(fd[1]);
 	return (fd[0]);
-	// Timeout mechanism using select() with waitpid()
-	// int status;
-	// time_t startTime = time(NULL);
-
-	// while (true) {
-	// 	pid_t result = waitpid(pid, &status, WNOHANG);
-
-	// 	if (result == pid) {
-	// 		// Child process finished
-	// 		break;
-	// 	} else if (result == -1) {
-	// 		throw CGIException("Internal error: waitpid failed", true, 500, Server.getUid());
-	// 	} else if (result == 0) {
-	// 		// Child still running, check timeout
-	// 		if (static_cast<size_t>(time(NULL) - startTime) > timeout_seconds) {
-	// 			kill(pid, SIGTERM);
-	// 			usleep(500000);
-	// 			if (waitpid(pid, &status, WNOHANG) == 0) {
-	// 				kill(pid, SIGKILL);
-	// 				waitpid(pid, &status, 0);
-	// 			}
-
-	// 			// Close original pipe and return -2 to indicate timeout
-	// 			return (close(fd[0]), -2);
-	// 		}
-	// 		usleep(100000);  // Sleep 100ms
-	// 	}
-	// }
-
-	// if (WIFEXITED(status))
-	// {
-	// 	int exitStatus = WEXITSTATUS(status);
-	// 	if (exitStatus == 0)
-	// 		return fd[0];
-	// 	else
-	// 	{
-	// 		// For script errors (like PHP syntax/runtime errors),
-	// 		// still return the file descriptor so we can read any error output
-	// 		// The caller will decide what to do with the content
-	// 		return fd[0];
-	// 	}
-	// }
-	// else
-	//     throw CGIException("Internal error: exit failed", true, 500, Server.getUid());
 }
