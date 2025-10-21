@@ -2,7 +2,6 @@
 #include <sstream>
 #include <vector>
 
-#include "CGI.hpp"
 #include "ARequest.hpp"
 #include "ConfigParser.hpp"
 #include "RequestHandler.hpp"
@@ -15,6 +14,7 @@ ARequest::ARequest()
 	_keep_alive = true;
 	_client = "";
 	_accepted_mime = "*/*";
+	_tmp_file = "";
 }
 
 ARequest::ARequest(const ARequest &src)
@@ -40,6 +40,7 @@ ARequest &ARequest::operator=(const ARequest &src)
 		this->_keep_alive = src._keep_alive;
 		this->_client = src._client;
 		this->_accepted_mime = src._accepted_mime;
+		this->_tmp_file = src._tmp_file;
 	}
 	return (*this);
 }
@@ -175,7 +176,6 @@ string ARequest::writeHTTPResponse(const Server &server, int statusCode, const s
 int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigParser *config, Server &Server)
 {
 	int cgiOutputFd = -1;
-	vector<string> location_cgi = config->getLocationVectorforPath(scriptPath, Server.getUid(), "cgi");
 	string autoindex = config->getLocationValueForPath(scriptPath, Server.getUid(), "autoindex", true);
 	struct stat pathStat;
 
@@ -206,6 +206,7 @@ int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigPars
 		}
 		else
 		{
+			cout << "1" << endl;
 			string errorPage = loadErrorPage(403, config, Server.getUid());
 			string response = writeHTTPResponse(Server, 403, errorPage, "text/html");
 			Server.fillClientBuffer(fd, response);
@@ -217,32 +218,9 @@ int ARequest::sendCGIResponse(int fd, const string &scriptPath, const ConfigPars
 	// Execute CGI script
 	try
 	{
-		map<string, string> cgi_list;
+		map<string, string> cgi_list = CGI::_getCgiList(Server, config, scriptPath);
 
-		for (vector<string>::iterator it = location_cgi.begin(); it != location_cgi.end(); it++)
-		{
-			if (it->find(' ') != string::npos)
-			{
-				string extension = it->substr(0, it->find(' '));
-				string cgi = it->substr(it->find(' ') + 1);
-
-				cgi_list[extension] = cgi;
-			}
-			else
-			{
-
-				if (*it == ".py")
-					cgi_list[*it] = "/usr/bin/python3";
-				if (*it == ".php")
-					cgi_list[*it] = "/usr/bin/php";
-				if (*it == ".sh")
-					cgi_list[*it] = "/usr/bin/sh";
-				if (*it == ".pl")
-					cgi_list[*it] = "/usr/bin/perl";
-			}
-		}
-
-		cgiOutputFd = CGI::interpret(scriptPath, Server, cgi_list);
+		cgiOutputFd = CGI::interpret(scriptPath, Server, cgi_list, "", _tmp_file);
 
 		Server.setCgiFdforClient(fd, cgiOutputFd);
 		_path = scriptPath;
@@ -373,4 +351,14 @@ map<string, string> parseQuery(const string &query)
 int ARequest::getMethod() const
 {
 	return (_method);
+}
+
+string ARequest::getPath() const
+{
+	return (_path);
+}
+
+string ARequest::getTmpFile() const
+{
+	return (_tmp_file);
 }

@@ -15,9 +15,12 @@ PostRequest &PostRequest::operator=(PostRequest &src)
 	return (*this);
 }
 
-PostRequest::PostRequest(map<string, string> header)
+PostRequest::PostRequest(map<string, string> header, const string &session_id)
 {
 	_path = header["path"];
+	size_t queryPos = header["path"].find('?');
+	if (queryPos != string::npos)
+		_path = header["path"].substr(0, queryPos);
 	_method = POST;
 	_keep_alive = true;
 
@@ -27,7 +30,7 @@ PostRequest::PostRequest(map<string, string> header)
 	_client = header["User-Agent"];
 	_Content_type = header["Content-Type"];
 	_host = header["Host"];
-
+	_tmp_file = "tmpfile_" + session_id + ".txt";
 	return;
 }
 
@@ -230,6 +233,30 @@ int PostRequest::handlePost(int fd, Server &server, const string &body, const Co
 		return (fetchErrorPageWithCode(fd, 500, server, config, "Posts directory inaccessible", isKeepalive()), 1);
 	}
 	closedir(dir);
+
+	map<string, string> cgi_list = CGI::_getCgiList(server, config, cleanPath);
+	if (cleanPath.find('.') != string::npos) {
+		string ext = cleanPath.substr(cleanPath.rfind('.'));
+		for (map<string, string>::iterator it = cgi_list.begin(); it != cgi_list.end(); it++)
+		{
+			if (ext == it->first) {
+				
+				string fullPath;
+				if (serverRoot.rfind('/') == serverRoot.size() && cleanPath.find('/') == 0)
+					fullPath = serverRoot + cleanPath.substr(1);
+				else
+					fullPath = serverRoot + cleanPath;
+				int cgiOutputFd = CGI::interpret(serverRoot + cleanPath, server, cgi_list, body, _tmp_file);
+
+				server.setCgiFdforClient(fd, cgiOutputFd);
+				_path = cleanPath;
+				server.setCgiRequest(cgiOutputFd, *this);
+
+				cout << "went through cgi" << endl;
+				return (1);
+			}
+		}
+	}
 	int res = createPost(body, postdir, uploadir);
 	if (res == -1)
 	{
@@ -238,6 +265,7 @@ int PostRequest::handlePost(int fd, Server &server, const string &body, const Co
 	string response = writeHTTPResponse(server, 204, "", "");
 	server.fillClientBuffer(fd, response);
 	server.keepaliveDefine(fd, isKeepalive());
+
 	return (1);
 }
 

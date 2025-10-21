@@ -22,6 +22,7 @@ class DeleteRequest : public ARequest
 		int	delete_file(int fd, Server &serv);
 		int	handleDelete(int fd, Server &server, const ConfigParser *config, const string &path);
 		ARequest*	clone() const;
+		int UploadFile(string body, string path);
 
 	/*operator overloads*/
 	DeleteRequest &operator=(DeleteRequest &src);

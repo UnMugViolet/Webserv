@@ -15,7 +15,7 @@ private:
 
 public:
 	PostRequest();
-	PostRequest(map<string, string> header);
+	PostRequest(map<string, string> header, const string &session_id);
 	PostRequest(const PostRequest &src);
 	PostRequest &operator=(PostRequest &src);
 	~PostRequest();

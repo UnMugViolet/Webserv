@@ -17,7 +17,7 @@
 	<a href="/" class="go-back-button">Go BAck</a>
 	<h2>Post</h2>
 	<div class="form-container" >
-		<form action="/pages/post.php" method="POST" enctype="multipart/form-data" id="form" onsubmit="showSubmitMessage()">
+		<form action="/pages/post" method="POST" enctype="multipart/form-data" id="form" onsubmit="showSubmitMessage()">
 			<label for="name">Name:</label>
 			<input type="text" id="name" name="name" required><br><br>
 

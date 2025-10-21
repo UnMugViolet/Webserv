@@ -57,11 +57,13 @@ int RequestHandler::_checkAccess(const string &path)
 		return (404);
 
 	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
+	{
 		return (403);
-
+	}
 	if (access(path.c_str(), R_OK) == -1)
+	{
 		return (403);
-
+	}
 	return (200);
 }
 
@@ -402,7 +404,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			body = "";
 		}
 		headermap = parseHeader(header);
-		cout << GREEN << headermap["Cookie"] << NEUTRAL << endl;
 		string session_id;
 
 		// Handle cookies
@@ -489,7 +490,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		{
 			return (fetchErrorPageWithCode(fd, 403, server, config), 1);
 		}
-
 		if (headermap["method"] == "GET")
 		{
 			GetRequest requestObject(headermap);
@@ -498,7 +498,7 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		}
 		else if (headermap["method"] == "POST")
 		{
-			PostRequest requestObject(headermap);
+			PostRequest requestObject(headermap, session_id);
 
 			return (requestObject.handlePost(fd, server, body, config));
 		}

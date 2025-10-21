@@ -5,6 +5,9 @@ DeleteRequest::DeleteRequest() {}
 DeleteRequest::DeleteRequest(map<string, string> header)
 {
 	_path = header["path"];
+	size_t queryPos = header["path"].find('?');
+	if (queryPos != string::npos)
+		_path = header["path"].substr(0, queryPos);
 	_method = DELETE;
 	_keep_alive = true;
 
@@ -82,4 +85,11 @@ DeleteRequest	&DeleteRequest::operator=(DeleteRequest &src)
 ARequest*	DeleteRequest::clone() const
 {
 	return (new DeleteRequest(*this));
+}
+
+int DeleteRequest::UploadFile(string body, string path)
+{
+	(void)body;
+	(void)path;
+	return (0);
 }

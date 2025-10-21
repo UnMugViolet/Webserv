@@ -3,7 +3,6 @@
 #include <unistd.h>
 class ARequest;
 
-
 Server::Server() {}
 
 Server::Server(const Server &other)
@@ -350,7 +349,6 @@ int Server::setClient(int _socketfd)
 	string logInfo = connexion + " [Server: " + _uid + ", Root: " + _config->getServerValue(_uid, "root") + "]";
 
 	Logger::access(this->_uid, logInfo);
-	cout << logInfo << endl;
 
 	_clientFds.push_back(cfd);
 	return (cfd);
@@ -375,7 +373,8 @@ void Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *confi
 		}
 		if (FD_ISSET(_clientFds[i], &readFd))
 		{
-			if (hasCgiforClient(_clientFds[i])) {
+			if (hasCgiforClient(_clientFds[i]))
+			{
 				clearClientBuffer(_clientFds[i]);
 				FD_CLR(getCgiforClient(_clientFds[i]), &fullReadFd);
 				FD_CLR(getCgiforClient(_clientFds[i]), &readFd);
@@ -393,25 +392,28 @@ void Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *confi
 
 			if (res == 1)
 			{
-				if (hasCgiforClient(_clientFds[i])) {
+				if (hasCgiforClient(_clientFds[i]))
+				{
 					FD_SET(getCgiforClient(_clientFds[i]), &fullReadFd);
-				} else {
+				}
+				else
+				{
 					FD_SET(_clientFds[i], &fullWriteFd);
 				}
 				FD_CLR(_clientFds[i], &fullReadFd);
 			}
 		}
 	}
-	
-	// Check for CGI timeouts before processing CGI outputs 5 is default 
+
+	// Check for CGI timeouts before processing CGI outputs 5 is default
 	string timeout_str = config->getServerValue(_uid, "cgi_timeout");
 	size_t timeout_seconds = timeout_str.empty() ? 5 : ft_atoi(timeout_str); // Default timeout 5 seconds if not set
 	if (timeout_seconds == 0 || timeout_seconds > 5)
 		timeout_seconds = 5;
 	checkCgiTimeouts(timeout_seconds, config, fullReadFd, fullWriteFd, readFd);
-	
+
 	map<int, int>::iterator it = _cgi_for_client.begin();
-	for (;it != _cgi_for_client.end(); it++)
+	for (; it != _cgi_for_client.end(); it++)
 	{
 		if (it->first == -1 || it->second == -1)
 		{
@@ -431,28 +433,56 @@ void Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *confi
 				it = _cgi_for_client.begin();
 				if (_cgi_for_client.empty() || it == _cgi_for_client.end())
 					break;
-			} else if (res == 0) {
+			}
+			else if (res == 0)
+			{
 				string body = getClientBuffer(it->second);
-				if (!body.empty()) {
+				if (!body.empty())
+				{
 					ARequest *requestObject = _cgi_request[it->second];
 
-					string contentType = requestObject->getContentType();
-					contentType = requestObject->checkContentType(contentType);
-					
-					string response = requestObject->writeHTTPResponse(*this, 200, body, contentType);
-					
-					keepaliveDefine(it->first, true);
-					fillClientBuffer(it->first, response);
-					clearClientBuffer(it->second);
-					FD_SET(it->first, &fullWriteFd);
+					if (requestObject->getMethod() == GET)
+					{
+						string contentType = requestObject->getContentType();
+						contentType = requestObject->checkContentType(contentType);
+
+						string response = requestObject->writeHTTPResponse(*this, 200, body, contentType);
+
+						keepaliveDefine(it->first, true);
+						fillClientBuffer(it->first, response);
+						clearClientBuffer(it->second);
+						FD_SET(it->first, &fullWriteFd);
+					}
+					if (requestObject->getMethod() == POST)
+					{
+						string serverRoot = config->getServerValue(getUid(), "root");
+						string path = "post.txt";
+						string postdir = config->getLocationValueForPath(requestObject->getPath(), getUid(), "put_posts", true);
+
+						if (serverRoot.rfind('/') == serverRoot.size() - 1 && postdir.find('/') == 0)
+							postdir.erase(0, 1);
+						if (postdir.rfind('/') != postdir.size())
+							postdir += '/';
+						path = serverRoot + postdir + path;
+
+						requestObject->UploadFile(body, path);
+						unlink(requestObject->getTmpFile().c_str());
+						string response = requestObject->writeHTTPResponse(*this, 204, "", "");
+
+						keepaliveDefine(it->first, true);
+						fillClientBuffer(it->first, response);
+						clearClientBuffer(it->second);
+						FD_SET(it->first, &fullWriteFd);
+					}
 				}
-				
+
 				pid_t pid = getPidForCgi(it->second);
 				if (pid > 0)
 				{
-					int		status;
-					pid_t	result = waitpid(pid, &status, WNOHANG);
-					if (result == -1) {
+					int status;
+					pid_t result = waitpid(pid, &status, WNOHANG);
+					if (result == -1)
+					{
 						GetRequest requestObject;
 
 						string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), getUid(), 500);
@@ -467,30 +497,57 @@ void Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *confi
 				if (_cgi_for_client.empty() || it == _cgi_for_client.end())
 					break;
 			}
-		} else {
+		}
+		else
+		{
 			string body = getClientBuffer(it->second);
-			if (!body.empty()) {
+			if (!body.empty())
+			{
 				ARequest *requestObject = _cgi_request[it->second];
 
-				string contentType = requestObject->getContentType();
-				contentType = requestObject->checkContentType(contentType);
-	
-				string response = requestObject->writeHTTPResponse(*this, 200, body, contentType);
-	
-				keepaliveDefine(it->first, true);
-				fillClientBuffer(it->first, response);
-				clearClientBuffer(it->second);
-				FD_SET(it->first, &fullWriteFd);
-			}
+				if (requestObject->getMethod() == GET)
+				{
+					string contentType = requestObject->getContentType();
+					contentType = requestObject->checkContentType(contentType);
 
+					string response = requestObject->writeHTTPResponse(*this, 200, body, contentType);
+
+					keepaliveDefine(it->first, true);
+					fillClientBuffer(it->first, response);
+					clearClientBuffer(it->second);
+					FD_SET(it->first, &fullWriteFd);
+				}
+				if (requestObject->getMethod() == POST)
+				{
+					string serverRoot = config->getServerValue(getUid(), "root");
+					string path = "post.txt";
+					string postdir = config->getLocationValueForPath(requestObject->getPath(), getUid(), "put_posts", true);
+
+					if (serverRoot.rfind('/') == serverRoot.size() && postdir.find('/') == 0)
+						postdir.erase(0, 1);
+					if (postdir.rfind('/') != postdir.size())
+						postdir += '/';
+					path = serverRoot + postdir + path;
+
+					requestObject->UploadFile(body, path);
+					unlink(requestObject->getTmpFile().c_str());
+					string response = requestObject->writeHTTPResponse(*this, 204, "", "");
+
+					keepaliveDefine(it->first, true);
+					fillClientBuffer(it->first, response);
+					clearClientBuffer(it->second);
+					FD_SET(it->first, &fullWriteFd);
+				}
+			}
 
 			pid_t pid = getPidForCgi(it->second);
 			if (pid <= 0)
 				continue;
-			int		status;
-			pid_t	result = waitpid(pid, &status, WNOHANG);
+			int status;
+			pid_t result = waitpid(pid, &status, WNOHANG);
 
-			if (result == -1) {
+			if (result == -1)
+			{
 				GetRequest requestObject;
 
 				string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), getUid(), 500);
@@ -502,14 +559,18 @@ void Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *confi
 				it = _cgi_for_client.begin();
 				if (_cgi_for_client.empty() || it == _cgi_for_client.end())
 					break;
-			} else if (result > 0) {
-				//cgi process finished
+			}
+			else if (result > 0)
+			{
+				// cgi process finished
 				FD_CLR(it->second, &fullReadFd);
 				eraseCgiFd(it->first, it->second);
 				it = _cgi_for_client.begin();
 				if (_cgi_for_client.empty() || it == _cgi_for_client.end())
 					break;
-			} else {
+			}
+			else
+			{
 				FD_SET(it->second, &fullReadFd);
 			}
 		}
@@ -551,7 +612,6 @@ void Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 			clearClientBuffer(fd);
 			if (response != "")
 			{
-				// cout << response << endl;
 				int res = send(fd, response.c_str(), response.length(), 0);
 				if (res == -1)
 				{
@@ -566,7 +626,8 @@ void Server::sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullRead
 				FD_CLR(fd, &fullWriteFd);
 				if (!keepaliveStatus(fd))
 					unsetClient(i);
-				else {
+				else
+				{
 					FD_SET(fd, &fullReadFd);
 				}
 			}
@@ -698,7 +759,7 @@ vector<string> Server::getServerNames() const
 	return (_server_names);
 }
 
-void	Server::setCgiFdforClient(int clientFd, int cgiFd)
+void Server::setCgiFdforClient(int clientFd, int cgiFd)
 {
 	if (clientFd != -1 && cgiFd != -1)
 	{
@@ -706,7 +767,7 @@ void	Server::setCgiFdforClient(int clientFd, int cgiFd)
 	}
 }
 
-void	Server::eraseCgiFd(int clientFd, int cgiFd)
+void Server::eraseCgiFd(int clientFd, int cgiFd)
 {
 	map<int, int>::iterator it = _cgi_for_client.find(clientFd);
 	if (it != _cgi_for_client.end() && it->second == cgiFd)
@@ -714,7 +775,7 @@ void	Server::eraseCgiFd(int clientFd, int cgiFd)
 		clearClientBuffer(cgiFd);
 		close(cgiFd);
 		_cgi_for_client.erase(it);
-		
+
 		// Clean up CGI request if it exists
 		map<int, ARequest *>::iterator req_it = _cgi_request.find(cgiFd);
 		if (req_it != _cgi_request.end())
@@ -722,23 +783,24 @@ void	Server::eraseCgiFd(int clientFd, int cgiFd)
 			delete req_it->second;
 			_cgi_request.erase(req_it);
 		}
-		
+
 		// Clean up PID tracking
 		map<int, pid_t>::iterator pid_it = _pid_for_cgi.find(cgiFd);
 		if (pid_it != _pid_for_cgi.end())
 			_pid_for_cgi.erase(pid_it);
-		
+
 		// Clean up start time tracking
 		map<int, time_t>::iterator time_it = _cgi_start_time.find(cgiFd);
 		if (time_it != _cgi_start_time.end())
 			_cgi_start_time.erase(time_it);
 	}
-	else {
+	else
+	{
 		Logger::error(getUid(), "wrong cgi fd");
 	}
 }
 
-int	Server::hasCgiforClient(int clientFd) const
+int Server::hasCgiforClient(int clientFd) const
 {
 	map<int, int>::const_iterator it = _cgi_for_client.find(clientFd);
 	if (it != _cgi_for_client.end())
@@ -746,7 +808,7 @@ int	Server::hasCgiforClient(int clientFd) const
 	return (0);
 }
 
-int	Server::getCgiforClient(int clientFd) const
+int Server::getCgiforClient(int clientFd) const
 {
 	map<int, int>::const_iterator it = _cgi_for_client.find(clientFd);
 	return (it->second);
@@ -762,10 +824,10 @@ int Server::getClientforCgi(int cgiFd) const
 	return (-1);
 }
 
-int	Server::storeCgiReturn(int cgiFd)
+int Server::storeCgiReturn(int cgiFd)
 {
-	int		received;
-	char	buff[BUFFER_SIZE];
+	int received;
+	char buff[BUFFER_SIZE];
 
 	memset(buff, 0, BUFFER_SIZE);
 
@@ -778,21 +840,21 @@ int	Server::storeCgiReturn(int cgiFd)
 	return (received);
 }
 
-void	Server::setCgiRequest(int cgiFd, ARequest &request)
+void Server::setCgiRequest(int cgiFd, ARequest &request)
 {
 	_cgi_request[cgiFd] = request.clone();
 }
 
-void	Server::setPidforCgi(int cgiFd, pid_t pid)
+void Server::setPidforCgi(int cgiFd, pid_t pid)
 {
 	if (cgiFd != -1)
 	{
 		_pid_for_cgi[cgiFd] = pid;
-		if (pid > 0)  // Only track start time for actual CGI processes (not regular files)
+		if (pid > 0) // Only track start time for actual CGI processes (not regular files)
 			_cgi_start_time[cgiFd] = time(NULL);
 	}
 }
-pid_t	Server::getPidForCgi(int cgiFd) const
+pid_t Server::getPidForCgi(int cgiFd) const
 {
 	map<int, pid_t>::const_iterator it = _pid_for_cgi.find(cgiFd);
 	if (it != _pid_for_cgi.end())
@@ -848,12 +910,12 @@ string Server::getCookieHeader() const
 	return (_cookie_header);
 }
 
-void	Server::parseCookie(const string &sessionId, const string &cookies)
+void Server::parseCookie(const string &sessionId, const string &cookies)
 {
 	(void)sessionId;
 	if (cookies.empty())
-		return ;
-	
+		return;
+
 	istringstream iss(cookies);
 	string cookie;
 
@@ -874,7 +936,7 @@ string Server::generateSessionId() const
 
 	for (size_t i = 0; i < 16; i++)
 		oss << charset[rand() % max_index];
-	cout << YELLOW << BOLD << "Generated session ID: " <<NEUTRAL << oss.str() << endl;
+	cout << YELLOW << BOLD << "Generated session ID: " << NEUTRAL << oss.str() << endl;
 	return (oss.str());
 }
 
@@ -901,22 +963,22 @@ int Server::checkCgiTimeouts(size_t timeout_seconds, ConfigParser *config, fd_se
 {
 	time_t current_time = time(NULL);
 	vector<int> timed_out_cgis;
-	
+
 	// Find all timed-out CGI processes
 	for (map<int, time_t>::iterator it = _cgi_start_time.begin(); it != _cgi_start_time.end(); ++it)
 	{
 		int cgiFd = it->first;
 		time_t start_time = it->second;
-		
+
 		if (static_cast<size_t>(current_time - start_time) > timeout_seconds)
 		{
 			timed_out_cgis.push_back(cgiFd);
 		}
 	}
-	
+
 	// Kill timed-out processes
 	for (vector<int>::iterator it = timed_out_cgis.begin(); it != timed_out_cgis.end(); ++it)
-	{	
+	{
 		GetRequest requestObject;
 		int ClientFd = getClientforCgi(*it);
 		killTimedOutCgi(*it, timeout_seconds);
@@ -938,14 +1000,14 @@ int Server::killTimedOutCgi(int cgiFd, size_t timeout_seconds)
 	pid_t pid = getPidForCgi(cgiFd);
 	if (pid == 0)
 		return -1;
-	
+
 	cout << RED << BOLD << "CGI script timeout detected after " << timeout_seconds << " seconds - killing process " << pid << " (fd: " << cgiFd << ")" << NEUTRAL << endl;
-	
+
 	// Try graceful termination first
 	if (kill(pid, SIGTERM) == 0)
 	{
 		usleep(500000); // Wait 500ms
-		
+
 		// Check if process is still running
 		int status;
 		pid_t result = waitpid(pid, &status, WNOHANG);
@@ -956,6 +1018,6 @@ int Server::killTimedOutCgi(int cgiFd, size_t timeout_seconds)
 			waitpid(pid, &status, 0); // Clean up zombie
 		}
 	}
-	
+
 	return 504;
 }

@@ -33,7 +33,8 @@ public:
 
 	/*member functions*/
 	
-	static int	interpret(const string &path, Server &Server, map<string, string> &cgi_list);
+	static map<string, string> _getCgiList(Server &server, const ConfigParser *config, string scriptPath);
+	static int	interpret(const string &path, Server &Server, map<string, string> &cgi_list, const string &body, const string &tmpFile);
 
 	/*operator overloads*/
 

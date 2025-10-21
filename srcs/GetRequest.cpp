@@ -5,6 +5,9 @@ GetRequest::GetRequest() {}
 GetRequest::GetRequest(map<string, string> header)
 {
 	_path = header["path"];
+	size_t queryPos = header["path"].find('?');
+	if (queryPos != string::npos)
+		_path = header["path"].substr(0, queryPos);
 	_method = GET;
 	_keep_alive = true;
 
@@ -233,4 +236,11 @@ int GetRequest::sendErrorResponse(int fd, int errorCode, ConfigParser const *con
 ARequest*	GetRequest::clone() const
 {
 	return (new GetRequest(*this));
+}
+
+int GetRequest::UploadFile(string body, string path)
+{
+	(void)body;
+	(void)path;
+	return (0);
 }

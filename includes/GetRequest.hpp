@@ -39,6 +39,7 @@ public:
 	/*member functions*/
 	int	handleGet(int fd, Server &server, const ConfigParser *config, const string &fullPath);
 	ARequest*	clone() const;
+	int UploadFile(string body, string path);
 
 	/*operator overloads*/
 	GetRequest &operator=(GetRequest &src);
