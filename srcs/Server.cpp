@@ -381,9 +381,9 @@ void Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *confi
 				eraseCgiFd(_clientFds[i], getCgiforClient(_clientFds[i]));
 			}
 			int res = _handler->handleRequest(_clientFds[i], *this, config);
-
 			if (res == -1)
 			{
+				
 				FD_CLR(_clientFds[i], &fullReadFd);
 				unsetClient(i);
 				cout << "Client disconnected" << endl;

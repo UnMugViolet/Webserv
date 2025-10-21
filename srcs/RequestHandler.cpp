@@ -263,7 +263,10 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 
 		received = recv(fd, buff, BUFFER_SIZE - 1, 0);
 		if (received <= 0)
+		{
+			Logger::error(server.getUid(), "recv error");
 			return (-1);
+		}
 
 		// Quick exit for HTTPS/TLS handshake
 		if ((unsigned char)buff[0] == 0x16)
@@ -310,6 +313,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		if (received <= 0)
 		{
 			server.clearClientBuffer(fd);
+			Logger::error(server.getUid(), "recv error");
 			return (-1);
 		}
 
@@ -358,6 +362,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 			if (received <= 0)
 			{
 				server.clearClientBuffer(fd);
+				Logger::error(server.getUid(), "recv error");
 				return (-1);
 			}
 			body.append(buff, received);
@@ -391,7 +396,10 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 	{
 		header = server.getClientBuffer(fd);
 		if (header.size() <= 0)
+		{
+			cout << "body empty?" << endl;
 			return (-1);
+		}
 
 		headerlimit = header.find("\r\n\r\n");
 		if (headerlimit != string::npos && headerlimit + 4 <= header.length())
