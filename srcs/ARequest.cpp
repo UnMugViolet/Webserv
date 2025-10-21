@@ -72,6 +72,32 @@ string generateDirectoryListing(string const &dirPath, string const &requestPath
 }
 
 /**
+ * Load and send an error page to the client.
+ * @param fd The file descriptor of the client socket.
+ * @param errorCode The HTTP error code to send.
+ * @param server The server instance handling the request.
+ * @param config The configuration parser instance.
+ * @param errorMessage Optional error message for logging.
+ * @param keepAlive Whether to keep the connection alive after sending the error page (default: true).
+ */
+void ARequest::fetchErrorPageWithCode(int fd, int errorCode, Server &server, ConfigParser const *config, string errorMessage, bool keepAlive)
+{
+	GetRequest requestObject;
+
+	if (!errorMessage.empty())
+	{
+		cout << RED << BOLD << "[Loading Error Page]: " << errorCode << " " << NEUTRAL << RED << errorMessage << NEUTRAL << endl;
+		Logger::error(server.getUid(), "[Loading Error Page]: " + ft_itos(errorCode) + " " + errorMessage);
+	}
+
+	string errorPage = config->getErrorPageContent(const_cast<ConfigParser &>(*config), server.getUid(), errorCode);
+	string response = requestObject.writeHTTPResponse(server, errorCode, errorPage, "text/html");
+	server.keepaliveDefine(fd, keepAlive);
+	server.fillClientBuffer(fd, response);
+}
+
+
+/**
  * Writes an HTTP response string based on the provided status code and body.
  * @param server The server instance handling the request.
  * @param statusCode The HTTP status code to include in the response.

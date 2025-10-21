@@ -619,7 +619,6 @@ void RequestHandler::setMaxBodySize(string size)
 				_maxBodySize = 0;
 			}
 		}
-		// cout << "Body size = " << value << endl; TODO - Convert the figure in MB and set the value to the attribute
 	}
 	else
 		_maxBodySize = MAX_BODY_SIZE; // Default 1MB if invalid
