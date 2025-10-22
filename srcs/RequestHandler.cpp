@@ -555,7 +555,10 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			return (requestObject.handleDelete(fd, server, config, fullPath));
 		}
 		else
-			return (Logger::error(serverUid, "Unknown method in HEADER: " + headermap["method"]), -1);
+		{
+			fetchErrorPageWithCode(fd, 405, server, config, "Unknown method", false);
+			return (Logger::error(serverUid, "Unknown method in HEADER: " + headermap["method"]), 1);
+		}
 	}
 	catch (const exception &e)
 	{

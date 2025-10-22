@@ -66,9 +66,7 @@ int DeleteRequest::handleDelete(int fd, Server &server, const ConfigParser *conf
 		server.fillClientBuffer(fd, response);
 	}
 
-	if (!isKeepalive())
-		return (-1);
-	return (0);
+	return (1);
 }
 
 DeleteRequest::~DeleteRequest() {}
