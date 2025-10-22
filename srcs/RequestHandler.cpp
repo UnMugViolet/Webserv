@@ -485,8 +485,6 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 			headerpath.replace(headerpath.find(location), location.size(), rootForLocation);
 		}
 		string fullPath = serverRoot + headerpath;
-		cout << "HEadermap: " << headerpath << endl;
-		cout << "fullpath: " << fullPath << endl;
 
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
 		server.setEnvValue("REQUEST_URI", headerpath);

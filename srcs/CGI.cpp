@@ -127,6 +127,7 @@ int CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_
 	if (pid == 0)
 	{
 		Server.garbageDestructor();
+		Server.clearCgiRequests();
 		string basename = path;
 		if (!body.empty())
 		{

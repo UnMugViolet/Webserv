@@ -31,12 +31,6 @@ Webserv::Webserv(ConfigParser &config)
 			cerr << RED << e.what() << NEUTRAL << endl;
 		}
 	}
-
-	cout << BOLD YELLOW << "all fds" << endl;
-	for (vector<int>::iterator it = allFds.begin(); it != allFds.end(); it++)
-	{
-		cout << YELLOW << *it << endl;
-	}
 }
 
 Webserv::~Webserv() {}

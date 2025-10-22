@@ -62,6 +62,7 @@ public:
 	int setClient(int _socketfd);
 	void setPidforCgi(int cgiFd, pid_t pid);
 	void setCgiRequest(int cgiFd, ARequest &request);
+	void clearCgiRequests();
 	void setCgiFdforClient(int clientFd, int cgiFd);
 	vector<sockaddr_in> setServerNames(const ConfigParser &config, const string &serverUid);
 	void garbageDestructor();

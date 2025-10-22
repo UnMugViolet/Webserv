@@ -865,6 +865,14 @@ void Server::setCgiRequest(int cgiFd, ARequest &request)
 	_cgi_request[cgiFd] = request.clone();
 }
 
+void Server::clearCgiRequests()
+{
+	for (map<int, ARequest*>::iterator it = _cgi_request.begin(); it != _cgi_request.end(); it++)
+	{
+		delete it->second;
+	}
+}
+
 void Server::setPidforCgi(int cgiFd, pid_t pid)
 {
 	if (cgiFd != -1)
