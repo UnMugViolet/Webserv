@@ -31,7 +31,7 @@
 	]
 ?>
 
-<body onclick="playAudio('./assets/music/theme_song.mp3')">
+<body>
 	<?php echo "<h1>$project_name</h1>"; ?>
 	<?php echo "<p>$small_desc</p>"; ?>
 
@@ -44,7 +44,7 @@
 			<?php echo "<p>$big_desc</p>"; ?>
 			<div class="audio-container">
 				<button class="play-button" onclick="playAudio('./assets/music/theme_song.mp3')">Play Song ►</button>
-				<button id="stop-button" class="stop-button">Reset Song ⏹</button>
+				<button id="stop-button" onclick="playAudio('./assets/music/theme_song.mp3')" class="stop-button">Reset Song ⏹</button>
 			</div>
 		</div>
 	</section>
