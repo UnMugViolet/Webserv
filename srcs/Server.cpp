@@ -881,7 +881,7 @@ void Server::setCookie(const string &session_id, const string &key, const string
 	_cookies[session_id][key] = value;
 
 	// Build the Set-Cookie header line to add
-	string cookieLine = "Set-Cookie: " + key + "=" + value + "; Path=/\r\n";
+	string cookieLine = "Set-Cookie: " + key + "=" + value + "; Max-Age=86400; Path=/; \r\n";
 
 	// Remove any existing Set-Cookie lines for the same cookie name to avoid duplicates
 	string prefix = "Set-Cookie: " + key + "=";
