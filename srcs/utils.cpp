@@ -1,18 +1,20 @@
 #include "utils.hpp"
 
-void	*ft_memset(void *s, int c, unsigned long int n)
+void *ft_memset(void *s, int c, unsigned long int n)
 {
-	unsigned long int	i;
+    unsigned long int i;
 
-	i = 0;
-	while (i < n) {
-		((unsigned char *)s)[i] = c;
-		i++;
-	}
-	return (s);
+    i = 0;
+    while (i < n)
+    {
+        ((unsigned char *)s)[i] = c;
+        i++;
+    }
+    return (s);
 }
 
-int ft_atoi(string const &str) {
+int ft_atoi(string const &str)
+{
     int i = 0;
     int n = str.size();
 
@@ -20,14 +22,16 @@ int ft_atoi(string const &str) {
         i++;
 
     int sign = 1;
-    if (i < n && (str[i] == '+' || str[i] == '-')) {
+    if (i < n && (str[i] == '+' || str[i] == '-'))
+    {
         if (str[i] == '-')
-			sign = -1;
+            sign = -1;
         i++;
     }
 
     long result = 0;
-    while (i < n && (str[i] >= '0' && str[i] <= '9')) {
+    while (i < n && (str[i] >= '0' && str[i] <= '9'))
+    {
         int digit = str[i] - '0';
         if (result > (LONG_MAX - digit) / 10)
             return ((sign == 1) ? INT_MAX : INT_MIN);
@@ -37,15 +41,16 @@ int ft_atoi(string const &str) {
 
     result *= sign;
 
-    if (result > INT_MAX) 
-		return (INT_MAX);
-    if (result < INT_MIN) 
-		return (INT_MIN);
+    if (result > INT_MAX)
+        return (INT_MAX);
+    if (result < INT_MIN)
+        return (INT_MIN);
 
     return (static_cast<int>(result));
 }
 
-int ft_inet_pton4(string &src, struct in_addr *dst) {
+int ft_inet_pton4(string &src, struct in_addr *dst)
+{
     istringstream iss(src);
     string token;
     unsigned char bytes[4];
@@ -54,7 +59,8 @@ int ft_inet_pton4(string &src, struct in_addr *dst) {
     if (src == "localhost")
         src = "127.0.0.1";
 
-    while (getline(iss, token, '.')) {
+    while (getline(iss, token, '.'))
+    {
         if (i >= 4)
             return (0);
         int val = ft_atoi(token);
@@ -72,7 +78,7 @@ int ft_inet_pton4(string &src, struct in_addr *dst) {
     return (1);
 }
 
-string  ft_itos(int n)
+string ft_itos(int n)
 {
     ostringstream oss;
     oss << n;

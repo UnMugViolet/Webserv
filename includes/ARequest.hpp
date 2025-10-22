@@ -51,7 +51,6 @@ public:
 	virtual int UploadFile(string body, string path) = 0;
 
 	virtual ARequest *clone() const = 0;
-
 };
 
 map<string, string> parseQuery(const string &query);

@@ -46,8 +46,7 @@ public:
 	Server &operator=(const Server &other);
 	~Server();
 
-	
-	// Getters 
+	// Getters
 	vector<int> getSocket() const;
 	string getUid() const;
 	vector<string> getServerNames() const;
@@ -57,14 +56,14 @@ public:
 	int getPidForCgi(int cgiFd) const;
 	int getCgiforClient(int clientFd) const;
 	int getClientforCgi(int cgiFd) const;
-	
+
 	// Setters
 	int setClient(int _socketfd);
 	void setPidforCgi(int cgiFd, pid_t pid);
 	void setCgiRequest(int cgiFd, ARequest &request);
 	void setCgiFdforClient(int clientFd, int cgiFd);
 	vector<sockaddr_in> setServerNames(const ConfigParser &config, const string &serverUid);
-	
+
 	// Member functions
 	void unsetClient(int position);
 	void sendResponse(fd_set &writeFd, fd_set &fullWriteFd, fd_set &fullReadFd);

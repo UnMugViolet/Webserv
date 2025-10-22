@@ -247,15 +247,15 @@ int RequestHandler::checkHeader(int fd, Server &server, ConfigParser *config, ma
 
 int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 {
-	string	serverUid = server.getUid();
-	char	buff[BUFFER_SIZE];
-	int		received;
-	string	body = "";
-	string	header;
-	string	savestring = "";
-	size_t	const MAX_HEADER_SIZE = 8192; // 8KB for headers
-	size_t	headerlimit;
-	map<string, string>	headermap;
+	string serverUid = server.getUid();
+	char buff[BUFFER_SIZE];
+	int received;
+	string body = "";
+	string header;
+	string savestring = "";
+	size_t const MAX_HEADER_SIZE = 8192; // 8KB for headers
+	size_t headerlimit;
+	map<string, string> headermap;
 
 	if (server.getClientBuffer(fd) == "")
 	{
@@ -278,7 +278,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 		savestring.append(buff, received);
 		server.fillClientBuffer(fd, savestring);
 		if (savestring.find("\r\n\r\n") != string::npos)
-		{	
+		{
 			headerlimit = savestring.find("\r\n\r\n");
 			body = savestring.substr(headerlimit + 4, string::npos);
 			header = savestring;
@@ -289,7 +289,8 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 			}
 			if (savestring.find("Content-Length") == string::npos && savestring.find("Transfer-Encoding: chunked") == string::npos)
 				return (1);
-			else {
+			else
+			{
 				headermap = parseHeader(header);
 				return (checkHeader(fd, server, config, headermap, body, savestring));
 			}
@@ -301,7 +302,7 @@ int RequestHandler::readOnce(int fd, Server &server, ConfigParser *config)
 	headerlimit = savestring.find("\r\n\r\n");
 	if (headerlimit == string::npos)
 	{
-	
+
 		// Prevent header from being too large
 		if (savestring.size() > MAX_HEADER_SIZE)
 		{
@@ -433,15 +434,18 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		// Extract a 'theme' cookie value (if present) and expose it as THEME env var for server-side usage
 		{
 			string theme_value = "";
-			if (headermap.find("Cookie") != headermap.end()) {
+			if (headermap.find("Cookie") != headermap.end())
+			{
 				size_t pos = headermap["Cookie"].find("theme=");
-				if (pos != string::npos) {
+				if (pos != string::npos)
+				{
 					size_t start = pos + strlen("theme=");
 					size_t end = headermap["Cookie"].find(';', start);
 					theme_value = headermap["Cookie"].substr(start, (end == string::npos) ? string::npos : end - start);
 					// trim possible whitespace
 					size_t first = theme_value.find_first_not_of(' ');
-					if (first != string::npos) theme_value = theme_value.substr(first);
+					if (first != string::npos)
+						theme_value = theme_value.substr(first);
 					server.setEnvValue("THEME", theme_value);
 				}
 			}
@@ -634,11 +638,11 @@ void RequestHandler::setMaxBodySize(string size)
 
 int RequestHandler::handleChunkedRequest(int fd, string &savestring, string &body, Server &server, ConfigParser *config, int can_read)
 {
-	static string		fullbody;
-	size_t				hexlen;
-	size_t				totallen = 0;
-	size_t				pos = 0;
-	char				buff[BUFFER_SIZE];
+	static string fullbody;
+	size_t hexlen;
+	size_t totallen = 0;
+	size_t pos = 0;
+	char buff[BUFFER_SIZE];
 
 	while (true)
 	{

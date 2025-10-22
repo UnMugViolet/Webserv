@@ -97,7 +97,6 @@ void ARequest::fetchErrorPageWithCode(int fd, int errorCode, Server &server, Con
 	server.fillClientBuffer(fd, response);
 }
 
-
 /**
  * Writes an HTTP response string based on the provided status code and body.
  * @param server The server instance handling the request.

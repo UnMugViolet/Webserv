@@ -33,12 +33,12 @@ public:
 	/*constructors and destructor*/
 	GetRequest();
 	GetRequest(map<string, string> header);
-	GetRequest(const GetRequest& src);
+	GetRequest(const GetRequest &src);
 	~GetRequest();
 
 	/*member functions*/
-	int	handleGet(int fd, Server &server, const ConfigParser *config, const string &fullPath);
-	ARequest*	clone() const;
+	int handleGet(int fd, Server &server, const ConfigParser *config, const string &fullPath);
+	ARequest *clone() const;
 	int UploadFile(string body, string path);
 
 	/*operator overloads*/

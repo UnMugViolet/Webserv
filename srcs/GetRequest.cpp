@@ -105,8 +105,8 @@ int GetRequest::handleDirectory(int fd, Server &server, ConfigParser const *conf
 	string url = decodedUrl;
 
 	// Ensure directory paths end with '/'
-		if (url[url.length() - 1] != '/')
-			url += '/';
+	if (url[url.length() - 1] != '/')
+		url += '/';
 	string pathForConfig = getPathForConfig(url);
 	string indexPages = config->getLocationValueForPath(pathForConfig, server.getUid(), "index", true);
 
@@ -198,11 +198,12 @@ int GetRequest::handleDirectoryListing(int fd, Server &server, ConfigParser cons
 
 	cout << CYAN << BOLD << "Directory requested: " << NEUTRAL << CYAN << decodedUrl << NEUTRAL << endl;
 
-	if (autoindex == "on") {
+	if (autoindex == "on")
+	{
 		string listing = generateDirectoryListing(decodedUrl, _path);
 		string response = writeHTTPResponse(server, 200, listing, "text/html");
 		server.fillClientBuffer(fd, response);
-	} 
+	}
 	else
 		return (sendErrorResponse(fd, 403, config, server));
 	server.keepaliveDefine(fd, isKeepalive());
@@ -233,7 +234,7 @@ int GetRequest::sendErrorResponse(int fd, int errorCode, ConfigParser const *con
 	return (1);
 }
 
-ARequest*	GetRequest::clone() const
+ARequest *GetRequest::clone() const
 {
 	return (new GetRequest(*this));
 }

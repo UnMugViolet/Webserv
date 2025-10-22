@@ -235,12 +235,14 @@ int PostRequest::handlePost(int fd, Server &server, const string &body, const Co
 	closedir(dir);
 
 	map<string, string> cgi_list = CGI::_getCgiList(server, config, cleanPath);
-	if (cleanPath.find('.') != string::npos) {
+	if (cleanPath.find('.') != string::npos)
+	{
 		string ext = cleanPath.substr(cleanPath.rfind('.'));
 		for (map<string, string>::iterator it = cgi_list.begin(); it != cgi_list.end(); it++)
 		{
-			if (ext == it->first) {
-				
+			if (ext == it->first)
+			{
+
 				string fullPath;
 				if (serverRoot.rfind('/') == serverRoot.size() && cleanPath.find('/') == 0)
 					fullPath = serverRoot + cleanPath.substr(1);
