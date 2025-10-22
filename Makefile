@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: andrean <andrean@student.42.fr>            +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2025/04/24 11:06:17 by unmugviolet       #+#    #+#              #
-#    Updated: 2025/10/22 14:55:04 by andrean          ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 NAME = 			webserv
 
 ARGS =			./configs/default.conf
@@ -73,7 +61,7 @@ go: all
 	@rm -rf $(NAME)
 
 gov: all
-	@ valgrind --leak-check=full --show-leak-kinds=all --track-fds=yes --trace-children=yes ./$(NAME) $(ARGS)
+	@ valgrind --leak-check=full --show-leak-kinds=all --track-fds=yes ./$(NAME) $(ARGS)
 	@rm -rf $(NAME)
 
 stress: all

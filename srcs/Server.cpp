@@ -1052,13 +1052,8 @@ int Server::killTimedOutCgi(int cgiFd, size_t timeout_seconds)
 
 void Server::garbageDestructor()
 {
-	for (vector<int>::iterator it = _allFds->begin(); it != _allFds->end(); it++)
-	{
-		cout << "fd: " << *it << endl;
+	for (vector<int>::iterator it = _allFds->begin(); it != _allFds->end(); it++) {
 		if (*it > 0)
-		{
-			cout << "closed fd: " << *it << endl;
 			close(*it);
-		}
 	}
 }

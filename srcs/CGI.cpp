@@ -161,7 +161,7 @@ int CGI::interpret(const string &path, Server &Server, map<string, string> &cgi_
 
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
-		// dup2(fd[1], STDERR_FILENO); // Redirect stderr to the pipe as well to get the error output on the client side
+		dup2(fd[1], STDERR_FILENO); // Redirect stderr to the pipe as well to get the error output on the client side
 		close(fd[1]);
 		if (type == BINARY)
 		{
