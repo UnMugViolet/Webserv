@@ -457,6 +457,23 @@ void ConfigParser::_checkSemicolons(const string &filePath) const
 		throw(ErrorException("Block error in config file: " + filePath));
 }
 
+string ConfigParser::getLocation(const string &path, const string &serverUid) const
+{
+	string currentLocation = "";
+	vector<string> temp = getLocationPaths(serverUid);
+	vector<string>::iterator it = temp.begin();
+
+	for (; it != temp.end(); it++)
+	{
+		if (path.find((*it)) == 0)
+		{
+			if (currentLocation.size() < (*it).size())
+				currentLocation = *it;
+		}
+	}
+	return (currentLocation);
+}
+
 /**
  * Checks the most specific location block that matches the given path for a server,
  * and retrieves the value of the specified parameter from that location block.
@@ -470,19 +487,9 @@ void ConfigParser::_checkSemicolons(const string &filePath) const
  */
 string ConfigParser::getLocationValueForPath(const string &path, const string &serverUid, const string &parameter, bool must_check_server) const
 {
-	string currentLocation = "";
+	string currentLocation = getLocation(path, serverUid);
 	string values = "";
-	vector<string> temp = getLocationPaths(serverUid);
-	vector<string>::iterator it = temp.begin();
-
-	for (; it != temp.end(); it++)
-	{
-		if (path.find((*it)) != string::npos)
-		{
-			if (currentLocation.size() < (*it).size())
-				currentLocation = *it;
-		}
-	}
+	
 	values = getLocationValue(serverUid, currentLocation, parameter);
 	if (values.empty() && must_check_server)
 		values = getServerValue(serverUid, parameter);

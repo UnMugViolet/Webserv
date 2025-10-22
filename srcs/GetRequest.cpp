@@ -54,6 +54,7 @@ int GetRequest::handleGet(int fd, Server &server, ConfigParser const *config, st
 
 	PathType pathType = getPathType(cleanPath);
 
+	
 	if (pathType == PATH_NOT_EXISTS)
 		return (sendErrorResponse(fd, 404, config, server));
 

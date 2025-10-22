@@ -390,7 +390,7 @@ void Server::getRequests(fd_set &readFd, fd_set &fullReadFd, ConfigParser *confi
 				continue;
 			}
 
-			if (res == 1)
+			if (res >= 1)
 			{
 				if (hasCgiforClient(_clientFds[i]))
 				{
@@ -833,7 +833,7 @@ int Server::storeCgiReturn(int cgiFd)
 
 	received = read(cgiFd, buff, BUFFER_SIZE - 1);
 	if (received <= 0)
-		return (received);
+		return (received); 
 	string body = getClientBuffer(cgiFd);
 	body.append(buff, received);
 	fillClientBuffer(cgiFd, body);

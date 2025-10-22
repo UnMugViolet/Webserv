@@ -38,6 +38,7 @@ public:
 	vector<string> getLocationPaths(const string &serverUid) const;
 	string getLocationValueForPath(const string &path, const string &serverUid, const string &parameter, bool must_check_server) const;
 	vector<string> getLocationVectorforPath(const string &path, const string &serverUid, const string &parameter) const;
+	string getLocation(const string &path, const string &serverUid) const;
 
 	void printConfig() const;
 

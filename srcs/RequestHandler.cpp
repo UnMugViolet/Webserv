@@ -53,15 +53,15 @@ string urlDecode(const string &src)
 
 int RequestHandler::_checkAccess(const string &path)
 {
-	if (access(path.c_str(), F_OK) == -1)
+	if (access(path.c_str(), F_OK) == -1) {
 		return (404);
+	}
 
-	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1)
-	{
+	if (getExtension(path) == "cgi" && access(path.c_str(), X_OK) == -1) {
 		return (403);
 	}
-	if (access(path.c_str(), R_OK) == -1)
-	{
+
+	if (access(path.c_str(), R_OK) == -1) {
 		return (403);
 	}
 	return (200);
@@ -104,7 +104,7 @@ map<string, size_t> getIndex(string const &indexes, string const &root)
 
 		size_t status = RequestHandler::_checkAccess(fullPath);
 
-		// cout << CYAN << BOLD << "Checking index: " << goodIndex << " -> " << fullPath << " (status: " << status << ")" << NEUTRAL << endl;
+		cout << CYAN << BOLD << "Checking index: " << goodIndex << " -> " << fullPath << " (status: " << status << ")" << NEUTRAL << endl;
 
 		// If we find a 200 (accessible), return it immediately
 		if (status == 200)
@@ -475,22 +475,33 @@ int RequestHandler::handleRequest(int fd, Server &server, ConfigParser *config)
 		if (!serverRoot.empty() && serverRoot[serverRoot.length() - 1] == '/')
 			serverRoot = serverRoot.substr(0, serverRoot.length() - 1);
 
-		string fullPath = serverRoot + headermap["path"];
+		string headerpath = headermap["path"];
+		
+		string rootForLocation = config->getLocationValueForPath(headerpath, serverUid, "root", 0);
+
+		if (!rootForLocation.empty())
+		{
+			string location = config->getLocation(headerpath, serverUid);
+			headerpath.replace(headerpath.find(location), location.size(), rootForLocation);
+		}
+		string fullPath = serverRoot + headerpath;
+		cout << "HEadermap: " << headerpath << endl;
+		cout << "fullpath: " << fullPath << endl;
 
 		server.setEnvValue("REQUEST_METHOD", headermap["method"]);
-		server.setEnvValue("REQUEST_URI", headermap["path"]);
-		size_t questionPos = headermap["path"].find('?');
+		server.setEnvValue("REQUEST_URI", headerpath);
+		size_t questionPos = headerpath.find('?');
 
-		if (questionPos != string::npos && questionPos + 1 < headermap["path"].length())
-			server.setEnvValue("QUERY_STRING", headermap["path"].substr(questionPos + 1));
+		if (questionPos != string::npos && questionPos + 1 < headerpath.length())
+			server.setEnvValue("QUERY_STRING", headerpath.substr(questionPos + 1));
 		else
 			server.setEnvValue("QUERY_STRING", "");
 
 		// Checks if the path is allowed by the location for the requested method
-		string cleanPath = headermap["path"];
-		size_t queryPos = headermap["path"].find('?');
+		string cleanPath = headerpath;
+		size_t queryPos = headerpath.find('?');
 		if (queryPos != string::npos)
-			cleanPath = headermap["path"].substr(0, queryPos);
+			cleanPath = headerpath.substr(0, queryPos);
 
 		// Check for redirects before method validation
 		string redirect = config->getLocationValueForPath(cleanPath, server.getUid(), "return", false);
