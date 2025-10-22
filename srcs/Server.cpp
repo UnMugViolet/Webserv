@@ -20,6 +20,7 @@ Server::Server(const Server &other)
 		this->_cgi_for_client = other._cgi_for_client;
 		this->_pid_for_cgi = other._pid_for_cgi;
 		this->_cgi_request = other._cgi_request;
+		this->_allFds = other._allFds;
 
 		// Transfer ownership of the socket to avoid double-close
 
@@ -31,7 +32,7 @@ Server::Server(const Server &other)
 	}
 }
 
-Server::Server(ConfigParser &config, string serverUid)
+Server::Server(ConfigParser &config, string serverUid, vector<int> *allFds)
 {
 	vector<sockaddr_in> sockvector;
 	vector<int> portvector;
@@ -40,7 +41,7 @@ Server::Server(ConfigParser &config, string serverUid)
 	this->_handler = NULL;
 	// this->_socketfd = -1;
 	this->_uid = serverUid;
-
+	this->_allFds = allFds;
 	try
 	{
 		this->_handler = new RequestHandler;
@@ -84,7 +85,7 @@ Server::Server(ConfigParser &config, string serverUid)
 				{
 					close(*it);
 					*it = -1;
-				}
+				} 
 			}
 		}
 		throw; // Re-throw the original exception to parent Webserv
@@ -127,7 +128,7 @@ Server &Server::operator=(const Server &other)
 	if (this != &other)
 	{
 		// Close current socket if we have one
-		if (_socketfds.empty())
+		if (!_socketfds.empty())
 		{
 			for (vector<int>::iterator it = _socketfds.begin(); it != _socketfds.end(); it++)
 			{
@@ -143,6 +144,7 @@ Server &Server::operator=(const Server &other)
 		this->_clientFds = other._clientFds;
 		this->_uid = other._uid;
 		this->_config = other._config;
+		this->_allFds = other._allFds;
 		if (this->_handler)
 			delete this->_handler;
 		this->_handler = new RequestHandler();
@@ -198,6 +200,7 @@ void Server::createSockets(const string &serverUid, vector<int> &ports, vector<s
 				throw(ServException("listen failed for server: " + _uid + " on port " + oss.str()));
 			}
 			_socketfds.push_back(_socketfd);
+			_allFds->push_back(_socketfd);
 		}
 	}
 }
@@ -356,6 +359,14 @@ int Server::setClient(int _socketfd)
 
 void Server::unsetClient(int position)
 {
+	vector<int>::iterator pos = _allFds->begin();
+	for (; pos != _allFds->end(); pos++)
+	{
+		if (*pos == _clientFds[position])
+			break;
+	}
+	if (pos != _allFds->end())
+		_allFds->erase(pos);
 	close(_clientFds[position]);
 	_clientFds.erase(_clientFds.begin() + position);
 }
@@ -763,12 +774,21 @@ void Server::setCgiFdforClient(int clientFd, int cgiFd)
 {
 	if (clientFd != -1 && cgiFd != -1)
 	{
+		_allFds->push_back(cgiFd);
 		_cgi_for_client[clientFd] = cgiFd;
 	}
 }
 
 void Server::eraseCgiFd(int clientFd, int cgiFd)
 {
+	vector<int>::iterator pos = _allFds->begin();
+	for (; pos != _allFds->end(); pos++)
+	{
+		if (*pos == cgiFd)
+			break;
+	}
+	if (pos != _allFds->end())
+		_allFds->erase(pos);
 	map<int, int>::iterator it = _cgi_for_client.find(clientFd);
 	if (it != _cgi_for_client.end() && it->second == cgiFd)
 	{
@@ -1020,4 +1040,17 @@ int Server::killTimedOutCgi(int cgiFd, size_t timeout_seconds)
 	}
 
 	return 504;
+}
+
+void Server::garbageDestructor()
+{
+	for (vector<int>::iterator it = _allFds->begin(); it != _allFds->end(); it++)
+	{
+		cout << "fd: " << *it << endl;
+		if (*it > 0)
+		{
+			cout << "closed fd: " << *it << endl;
+			close(*it);
+		}
+	}
 }

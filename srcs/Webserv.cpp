@@ -22,7 +22,7 @@ Webserv::Webserv(ConfigParser &config)
 
 		try
 		{
-			Server server(config, serverUid);
+			Server server(config, serverUid, &allFds);
 			_servers.push_back(server);
 		}
 		catch (const exception &e)
@@ -30,6 +30,12 @@ Webserv::Webserv(ConfigParser &config)
 			// Failed to create server, log error and continue
 			cerr << RED << e.what() << NEUTRAL << endl;
 		}
+	}
+
+	cout << BOLD YELLOW << "all fds" << endl;
+	for (vector<int>::iterator it = allFds.begin(); it != allFds.end(); it++)
+	{
+		cout << YELLOW << *it << endl;
 	}
 }
 
@@ -159,6 +165,7 @@ void Webserv::serverLoop()
 						fd = _servers[i].setClient(*it);
 						if (fd != -1)
 						{ // Only add valid client file descriptors
+							allFds.push_back(fd);
 							FD_SET(fd, &fullReadFd);
 							if (fd > maxFd)
 								maxFd = fd;

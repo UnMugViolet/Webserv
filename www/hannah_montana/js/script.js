@@ -1,8 +1,14 @@
 function playAudio(audioFile) {
+	if (!isMusic)
+		return ;
 	var audio = new Audio(audioFile);
 	audio.play().catch(function(error) {
 		console.error("Error playing audio:", error);
 	});
+}
+
+function unMusic() {
+	isMusic = false;
 }
 
 function sendDelete(file, uploadFile) {

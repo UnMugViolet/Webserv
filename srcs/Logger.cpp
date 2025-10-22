@@ -47,6 +47,14 @@ void Logger::init()
 	_errorLogStream.open(_errorFile.c_str(), ios::app);
 }
 
+void Logger::closeFrancois()
+{
+	if (_errorLogStream.is_open())
+		_errorLogStream.close();
+	if (_accessLogStream.is_open())
+		_accessLogStream.close();
+}
+
 void Logger::info(const string &msg)
 {
 	if (msg.empty())

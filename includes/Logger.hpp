@@ -31,4 +31,5 @@ public:
 	static void access(const string &serverUid, const string &msg);
 	static void error(const string &serverUid, const string &msg);
 	static void info(const string &msg);
+	static void closeFrancois();
 };

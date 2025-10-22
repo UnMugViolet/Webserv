@@ -31,7 +31,10 @@
 	]
 ?>
 
-<body>
+<body onclick="playAudio('./assets/music/theme_song.mp3')">
+	<script>
+		var isMusic = true;
+	</script>
 	<?php echo "<h1>$project_name</h1>"; ?>
 	<?php echo "<p>$small_desc</p>"; ?>
 
@@ -43,8 +46,8 @@
 		<div class="dual-image-container-right">
 			<?php echo "<p>$big_desc</p>"; ?>
 			<div class="audio-container">
-				<button class="play-button" onclick="playAudio('./assets/music/theme_song.mp3')">Play Song ►</button>
-				<button id="stop-button" onclick="playAudio('./assets/music/theme_song.mp3')" class="stop-button">Reset Song ⏹</button>
+				<button class="play-button" >Play Song ►</button>
+				<button id="stop-button" class="stop-button">Reset Song ⏹</button>
 			</div>
 		</div>
 	</section>
@@ -62,7 +65,7 @@
 						$page_url = strtolower(str_replace(" ", "-", $feature));
 						$page_ext = strlen ($page_url) == 0 ? "" : "php";
 					}
-					echo "<a href=\"pages/$page_url.$page_ext\" class=\"feature-card\">$feature_name</a>";
+					echo "<a href=\"pages/$page_url.$page_ext\" onclick=\"unMusic()\" class=\"feature-card\">$feature_name </a> ";
 				}
 			?>
 		</div>

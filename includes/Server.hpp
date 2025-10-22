@@ -38,11 +38,12 @@ private:
 	map<int, time_t> _cgi_start_time;
 	string _cookie_header;
 	map<string, map<string, string> > _cookies;
+	vector<int> *_allFds;
 
 public:
 	Server();
 	Server(const Server &other);
-	Server(ConfigParser &config, string Name);
+	Server(ConfigParser &config, string Name, vector<int> *allFds);
 	Server &operator=(const Server &other);
 	~Server();
 
@@ -63,6 +64,7 @@ public:
 	void setCgiRequest(int cgiFd, ARequest &request);
 	void setCgiFdforClient(int clientFd, int cgiFd);
 	vector<sockaddr_in> setServerNames(const ConfigParser &config, const string &serverUid);
+	void garbageDestructor();
 
 	// Member functions
 	void unsetClient(int position);

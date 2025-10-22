@@ -23,6 +23,7 @@ private:
 	vector<Server> _servers;
 	ConfigParser *_config;
 	static bool _shutdown;
+	vector<int> allFds;
 
 public:
 	Webserv();
